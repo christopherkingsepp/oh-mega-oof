@@ -19,8 +19,9 @@ export const ICONS = {
 
 const NAV = [
   { href: '/mida-viiu', label: 'MIDA V!!!U', isNew: true },
-  { href: '/#mangud', label: 'Kõik mängud' },
-  { href: '/#kuidas', label: 'Kuidas mängida' },
+  { href: '/oled-semu', label: 'Oled Semu?' },
+  { href: '/vigur', label: 'Vigur' },
+  { href: '/#komplekt', label: 'Komplektid' },
   { href: '/kkk', label: 'KKK' },
 ];
 
@@ -233,7 +234,7 @@ function renderDrawerContents() {
   const foot = drawer.querySelector('[data-cart-foot]');
   const t = Cart.totals();
   if (!t.lines.length) {
-    body.innerHTML = `<div class="empty-state"><div class="big" aria-hidden="true">🃏</div><p>Ostukorv on veel tühi.<br>Pidu ootab!</p><a class="btn btn--primary" href="/mida-viiu">Vaata MIDA V!!!U ${ICONS.arrow}</a></div>`;
+    body.innerHTML = `<div class="empty-state"><div class="big" aria-hidden="true"><svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"><rect x="10" y="14" width="30" height="42" rx="5" transform="rotate(-12 25 35)" opacity=".45"/><rect x="24" y="8" width="30" height="42" rx="5" transform="rotate(8 39 29)" stroke="#ff2fa8"/></svg></div><p>Ostukorv on veel tühi.<br>Pidu ootab!</p><a class="btn btn--primary" href="/mida-viiu">Vaata MIDA V!!!U ${ICONS.arrow}</a></div>`;
     foot.innerHTML = '';
     return;
   }

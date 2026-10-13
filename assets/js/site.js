@@ -1,5 +1,6 @@
 // Ettevõtte ja kontaktide andmed ühes kohas. MUUDA SIIN, kui midagi muutub.
 export const SITE = {
+  url: '', // TODO: veebilehe aadress pärast domeeni ostmist, nt 'https://www.age.ee'
   brand: 'ÄGE',
   legalName: 'Äärmiselt Geniaalne Ettevõtmine', // TODO: lisa "OÜ" ja registrikood, kui OÜ on loodud
   regCode: '', // TODO: äriregistri kood, nt '16xxxxxx'

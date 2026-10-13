@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="et">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ostukorv ja kassa | ÄGE</title>
+  <meta name="description" content="Vormista oma ÄGE tellimus: vali pakiautomaat, sisesta kontaktandmed ja maksa turvaliselt Stripe'i kaudu. Tarne üle Eesti 1–3 tööpäevaga, tasuta alates 30 €.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#07030a">
+  <link rel="icon" type="image/png" href="/assets/img/brand/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/img/brand/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ÄGE">
+  <meta property="og:title" content="Ostukorv | ÄGE">
+  <meta property="og:description" content="Eesti seltskonnamängud, mis panevad inimesed rääkima, naerma ja teineteist uuest küljest avastama.">
+  <meta property="og:image" content="/assets/img/brand/og-image.jpg">
+  <meta property="og:locale" content="et_EE">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800;900&display=swap">
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/checkout.css">
+  <script type="module" src="/assets/js/main.js"></script>
+  <script type="module" src="/assets/js/checkout.js"></script>
+</head>
+<body class="page-checkout">
+  <div data-site-header></div>
+
+  <main id="main" class="co">
+    <!-- ================= Ülaosa: pealkiri + sammud ================= -->
+    <section class="co-hero grain" aria-labelledby="co-title">
+      <div class="bg-blobs" aria-hidden="true">
+        <span style="--x:-12%;--y:-60%;--s:52vw;--o:.55;--d:22s"></span>
+        <span style="--x:62%;--y:-80%;--s:46vw;--c:rgba(139,44,255,.45);--o:.6;--d:26s;--dx:-5vw"></span>
+        <span style="--x:30%;--y:10%;--s:30vw;--c:rgba(255,47,168,.35);--o:.5;--d:19s;--dy:3vh"></span>
+      </div>
+      <div class="container co-hero__inner">
+        <div class="co-hero__text">
+          <p class="eyebrow">Kassa</p>
+          <h1 id="co-title" class="co-title">Ostukorv <span class="co-title__count" data-title-count hidden></span></h1>
+          <p class="co-hero__sub" data-hero-sub>Paar klikki ja pidu on teel. Saadame 1–3 tööpäevaga sinu lähimasse pakiautomaati.</p>
+        </div>
+        <nav class="co-steps" aria-label="Tellimuse sammud" data-steps hidden>
+          <ol role="list">
+            <li class="co-step" data-step="1"><a href="#samm-ostukorv"><span class="co-step__dot" aria-hidden="true"><span>1</span></span><span class="co-step__label">Ostukorv</span><span class="sr-only" data-step-state></span></a></li>
+            <li class="co-step" data-step="2"><a href="#samm-tarne"><span class="co-step__dot" aria-hidden="true"><span>2</span></span><span class="co-step__label">Tarne</span><span class="sr-only" data-step-state></span></a></li>
+            <li class="co-step" data-step="3"><a href="#samm-kontakt"><span class="co-step__dot" aria-hidden="true"><span>3</span></span><span class="co-step__label">Kontakt</span><span class="sr-only" data-step-state></span></a></li>
+            <li class="co-step" data-step="4"><a href="#samm-makse"><span class="co-step__dot" aria-hidden="true"><span>4</span></span><span class="co-step__label">Makse</span><span class="sr-only" data-step-state></span></a></li>
+          </ol>
+          <div class="co-steps__bar" aria-hidden="true"><span data-steps-fill></span></div>
+        </nav>
+      </div>
+    </section>
+
+    <div class="container co-body">
+      <noscript>
+        <div class="co-banner co-banner--warn"><p>Ostukorv ja kassa vajavad töötamiseks JavaScripti. Lülita see brauseris sisse ja värskenda lehte.</p></div>
+      </noscript>
+
+      <!-- Makse katkestati -->
+      <div class="co-banner" data-cancel-banner role="status" hidden>
+        <span class="co-banner__icon" aria-hidden="true">↩</span>
+        <p><strong>Makse katkestati</strong> — sinu ostukorv on alles, proovi uuesti.</p>
+        <button class="icon-btn co-banner__close" type="button" data-close-banner aria-label="Sulge teade"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+
+      <!-- Tühi ostukorv -->
+      <section class="co-empty" data-empty hidden aria-labelledby="empty-title">
+        <div class="co-empty__art" aria-hidden="true">
+          <img class="co-empty__card co-empty__card--1" src="/assets/img/cards/back-sh.webp" alt="" width="760" height="509">
+          <img class="co-empty__card co-empty__card--2" src="/assets/img/cards/back-shot.webp" alt="" width="760" height="509">
+          <img class="co-empty__card co-empty__card--3" src="/assets/img/cards/back-ot.webp" alt="" width="760" height="509">
+        </div>
+        <div class="co-empty__text">
+          <h2 id="empty-title" class="co-empty__title">Korv on tühi. <span class="neon">Pidu veel mitte.</span></h2>
+          <p class="lead">Vali mäng, mis teeb järgmisest õhtust legendi. Saadame selle 1–3 tööpäevaga sinu lähimasse pakiautomaati.</p>
+          <div class="cluster co-empty__cta">
+            <a class="btn btn--primary btn--lg" href="/mida-viiu">Vaata MIDA V!!!U <svg class="icon arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a class="btn btn--ghost btn--lg" href="/#mangud">Kõik mängud</a>
+          </div>
+        </div>
+        <div class="co-recs">
+          <h3 class="co-recs__title">Rahva lemmikud</h3>
+          <div class="co-recs__grid" data-recs></div>
+        </div>
+      </section>
+
+      <!-- Kassa -->
+      <form class="co-grid" id="checkout-form" data-checkout novalidate hidden>
+        <div class="co-main">
+
+          <!-- 1. Ostukorv -->
+          <section class="co-card" id="samm-ostukorv" aria-labelledby="h-ostukorv" data-section="1">
+            <header class="co-card__head">
+              <span class="co-num" aria-hidden="true"><span>1</span></span>
+              <div>
+                <h2 id="h-ostukorv">Sinu ostukorv</h2>
+                <p class="co-card__sub" data-cart-sub>Kontrolli üle, mis pakki läheb.</p>
+              </div>
+            </header>
+            <ul class="co-lines" role="list" data-lines></ul>
+            <div data-bundle-hint></div>
+            <div class="co-free" data-free></div>
+
+            <div class="co-code" data-code>
+              <div class="co-code__form" data-code-form>
+                <label class="label" for="code-input">Sooduskood</label>
+                <div class="co-code__row">
+                  <input class="input co-code__input" id="code-input" name="code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="nt AGE15" aria-describedby="code-error" maxlength="32">
+                  <button class="btn co-code__btn" type="button" data-apply-code>Rakenda</button>
+                </div>
+                <p class="field-error" id="code-error" aria-live="polite"></p>
+              </div>
+              <div class="co-code__applied" data-code-applied hidden>
+                <span class="co-code__ticket" aria-hidden="true">%</span>
+                <div class="co-code__info">
+                  <strong data-code-name>AGE15</strong>
+                  <span data-code-desc>−15% rakendatud</span>
+                </div>
+                <button class="btn btn--sm btn--ghost" type="button" data-remove-code>Eemalda</button>
+              </div>
+            </div>
+
+            <div class="co-upsell" data-upsell hidden></div>
+          </section>
+
+          <!-- 2. Tarne -->
+          <section class="co-card" id="samm-tarne" aria-labelledby="h-tarne" data-section="2">
+            <header class="co-card__head">
+              <span class="co-num" aria-hidden="true"><span>2</span></span>
+              <div>
+                <h2 id="h-tarne">Tarne pakiautomaati</h2>
+                <p class="co-card__sub">Vali vedaja ja automaat. Pakk jõuab kohale 1–3 tööpäevaga.</p>
+              </div>
+            </header>
+            <fieldset class="co-carriers" aria-describedby="carrier-error">
+              <legend class="sr-only">Vali vedaja</legend>
+              <label class="carrier carrier--omniva">
+                <input class="carrier__input" type="radio" name="carrier" value="omniva">
+                <span class="carrier__logo" aria-hidden="true"><span class="lg-omniva">omniva</span></span>
+                <span class="carrier__text"><span class="carrier__name">Omniva</span><span class="carrier__meta">1–3 tööpäeva</span></span>
+                <span class="carrier__price" data-ship-price>2,99 €</span>
+                <span class="carrier__tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></span>
+              </label>
+              <label class="carrier carrier--smartpost">
+                <input class="carrier__input" type="radio" name="carrier" value="smartpost">
+                <span class="carrier__logo" aria-hidden="true"><span class="lg-smartpost"><b>Smart</b>Post</span></span>
+                <span class="carrier__text"><span class="carrier__name">SmartPost</span><span class="carrier__meta">1–3 tööpäeva</span></span>
+                <span class="carrier__price" data-ship-price>2,99 €</span>
+                <span class="carrier__tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></span>
+              </label>
+              <label class="carrier carrier--dpd">
+                <input class="carrier__input" type="radio" name="carrier" value="dpd">
+                <span class="carrier__logo" aria-hidden="true"><span class="lg-dpd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>dpd</span></span>
+                <span class="carrier__text"><span class="carrier__name">DPD Pickup</span><span class="carrier__meta">1–3 tööpäeva</span></span>
+                <span class="carrier__price" data-ship-price>2,99 €</span>
+                <span class="carrier__tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></span>
+              </label>
+            </fieldset>
+            <p class="field-error co-carriers__error" id="carrier-error" aria-live="polite"></p>
+            <div class="co-locker" data-locker></div>
+            <p class="sr-only" role="status" data-lk-status></p>
+          </section>
+
+          <!-- 3. Kontakt -->
+          <section class="co-card" id="samm-kontakt" aria-labelledby="h-kontakt" data-section="3">
+            <header class="co-card__head">
+              <span class="co-num" aria-hidden="true"><span>3</span></span>
+              <div>
+                <h2 id="h-kontakt">Kontaktandmed</h2>
+                <p class="co-card__sub">Nimi läheb pakile, kviitung e-postile ja automaadi kood SMS-iga.</p>
+              </div>
+            </header>
+            <div class="co-fields">
+              <div class="field co-fields__full">
+                <label for="f-name">Ees- ja perekonnanimi</label>
+                <input class="input" id="f-name" name="name" type="text" autocomplete="name" autocapitalize="words" placeholder="Mari Maasikas" required aria-describedby="f-name-error" maxlength="80" data-validate="name">
+                <p class="field-error" id="f-name-error" aria-live="polite"></p>
+              </div>
+              <div class="field">
+                <label for="f-email">E-post</label>
+                <input class="input" id="f-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="mari@näide.ee" required aria-describedby="f-email-hint f-email-error" maxlength="120" data-validate="email">
+                <p class="co-hint" id="f-email-hint" data-email-suggest hidden></p>
+                <p class="field-error" id="f-email-error" aria-live="polite"></p>
+              </div>
+              <div class="field">
+                <label for="f-phone">Telefon <span class="co-label-note">(SMS pakiautomaadist)</span></label>
+                <div class="co-phone">
+                  <span class="co-phone__prefix" aria-hidden="true"><span class="co-flag"><i></i><i></i><i></i></span>+372</span>
+                  <input class="input co-phone__input" id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="5123 4567" required aria-describedby="f-phone-error" maxlength="20" data-validate="phone">
+                </div>
+                <p class="field-error" id="f-phone-error" aria-live="polite"></p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4. Kinnitused -->
+          <section class="co-card" id="samm-makse" aria-labelledby="h-makse" data-section="4">
+            <header class="co-card__head">
+              <span class="co-num" aria-hidden="true"><span>4</span></span>
+              <div>
+                <h2 id="h-makse">Kinnita ja maksa</h2>
+                <p class="co-card__sub">Viimane samm enne makset.</p>
+              </div>
+            </header>
+            <div class="co-checks">
+              <div class="co-check-wrap">
+                <label class="check co-check">
+                  <input type="checkbox" id="f-terms" name="terms" required aria-describedby="f-terms-error">
+                  <span>Nõustun <a href="/tingimused" target="_blank" rel="noopener">müügitingimustega</a> ja olen teadlik, et mänge ei saa tagastada.</span>
+                </label>
+                <p class="field-error" id="f-terms-error" aria-live="polite"></p>
+              </div>
+              <div class="co-check-wrap" data-age-wrap hidden>
+                <label class="check co-check co-check--age">
+                  <input type="checkbox" id="f-age" name="age" aria-describedby="f-age-error">
+                  <span>Kinnitan, et olen vähemalt <strong>18-aastane</strong>. <span class="badge badge--18">18+</span></span>
+                </label>
+                <p class="field-error" id="f-age-error" aria-live="polite"></p>
+              </div>
+              <div class="co-check-wrap">
+                <label class="check co-check">
+                  <input type="checkbox" id="f-news" name="newsletter">
+                  <span>Soovin uudiskirja ja eripakkumisi. <span class="co-label-note">Ainult head asjad, mitte spämm.</span></span>
+                </label>
+              </div>
+            </div>
+            <p class="co-return-note">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+              <span>Kuna tegu on seltskonnamängudega, siis tagastada neid ei saa. Kui pakk jõuab kohale vigasena, vahetame mängu kiirelt ja tasuta välja.</span>
+            </p>
+          </section>
+        </div>
+
+        <!-- Kokkuvõte -->
+        <aside class="co-side" aria-labelledby="h-summary">
+          <div class="co-summary" data-summary>
+            <div class="co-summary__head">
+              <h2 id="h-summary">Kokkuvõte</h2>
+              <span class="chip co-summary__count" data-sum-count></span>
+            </div>
+            <ul class="co-sum-lines" role="list" data-sum-lines></ul>
+            <div class="co-sum-rows">
+              <div class="sum-row"><span>Vahesumma</span><span data-sum-subtotal></span></div>
+              <div class="sum-row sum-row--discount" data-sum-discount-row hidden><span data-sum-discount-label>Soodustus</span><span data-sum-discount></span></div>
+              <div class="sum-row"><span data-sum-ship-label>Tarne pakiautomaati</span><span data-sum-ship></span></div>
+              <div class="co-sum-free" data-sum-free></div>
+            </div>
+            <div class="co-sum-total">
+              <span>Kokku</span>
+              <strong data-sum-total aria-live="polite"></strong>
+            </div>
+            <div class="co-pay-error" data-pay-error role="alert" hidden></div>
+            <button class="btn btn--primary btn--lg btn--block co-pay" type="submit" form="checkout-form" data-pay>
+              <span class="co-pay__spinner" aria-hidden="true"></span>
+              <svg class="icon co-pay__lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+              <span class="co-pay__label" data-pay-label>Maksa</span>
+            </button>
+            <div class="co-paymethods" aria-label="Makseviisid: Visa, Mastercard, Apple Pay, Google Pay">
+              <span class="pm pm--visa" title="Visa" aria-hidden="true"><svg viewBox="0 0 48 16"><text x="24" y="13.2" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="14.5" font-weight="900" font-style="italic" fill="#1a1f71" letter-spacing="-0.3">VISA</text></svg></span>
+              <span class="pm pm--mc" title="Mastercard" aria-hidden="true"><svg viewBox="0 0 40 24"><circle cx="15" cy="12" r="9" fill="#eb001b"/><circle cx="25" cy="12" r="9" fill="#f79e1b"/><path d="M20 4.6a9 9 0 0 1 0 14.8 9 9 0 0 1 0-14.8z" fill="#ff5f00"/></svg></span>
+              <span class="pm pm--apple" title="Apple Pay" aria-hidden="true"><svg viewBox="0 0 50 20"><path fill="#000" d="M9.4 5.1c.5-.6.9-1.5.8-2.4-.8 0-1.7.5-2.3 1.1-.5.5-.9 1.4-.8 2.3.9.1 1.7-.4 2.3-1zm.8 1.3c-1.3-.1-2.4.7-3 .7s-1.6-.7-2.6-.7C3.3 6.4 2 7.2 1.4 8.5c-1.4 2.4-.4 6 1 8 .7 1 1.5 2 2.5 2s1.4-.6 2.6-.6 1.5.6 2.6.6 1.7-1 2.4-2c.8-1.1 1.1-2.2 1.1-2.3 0 0-2.1-.8-2.1-3.2 0-2 1.6-2.9 1.7-3-.9-1.4-2.4-1.5-2.9-1.6z"/><text x="16.5" y="15.4" font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#000">Pay</text></svg></span>
+              <span class="pm pm--gpay" title="Google Pay" aria-hidden="true"><svg viewBox="0 0 50 20"><path fill="#4285f4" d="M15.2 10.2c0-.6 0-1.1-.1-1.6H8v3h4c-.2 1-.7 1.8-1.5 2.3v2h2.5c1.4-1.3 2.2-3.3 2.2-5.7z"/><path fill="#34a853" d="M8 17.7c2 0 3.8-.7 5-1.8l-2.4-1.9c-.7.5-1.6.8-2.6.8-2 0-3.7-1.4-4.3-3.2H1.2v2c1.3 2.5 3.9 4.1 6.8 4.1z"/><path fill="#fbbc04" d="M3.7 11.6c-.2-.5-.2-1-.2-1.6s.1-1.1.2-1.6v-2H1.2C.7 7.4.4 8.7.4 10s.3 2.6.8 3.6l2.5-2z"/><path fill="#ea4335" d="M8 5.2c1.1 0 2.1.4 2.9 1.1l2.2-2.2C11.8 2.9 10 2.2 8 2.2 5.1 2.2 2.5 3.9 1.2 6.4l2.5 2C4.3 6.6 6 5.2 8 5.2z"/><text x="19" y="14.6" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" fill="#5f6368">Pay</text></svg></span>
+            </div>
+            <p class="co-secure">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6z"/><path d="m8.8 12 2.3 2.3 4.2-4.6"/></svg>
+              <span>Makse toimub turvaliselt Stripe'i kaudu. Me ei näe ega salvesta sinu kaardiandmeid.</span>
+            </p>
+            <ul class="co-perks" role="list">
+              <li><span aria-hidden="true">📦</span>Saadame 1–3 tööpäevaga</li>
+              <li><span aria-hidden="true">⚡</span>Tasuta tarne alates 30 €</li>
+              <li><span aria-hidden="true">🇪🇪</span>Eesti noorte ettevõte</li>
+            </ul>
+          </div>
+        </aside>
+      </form>
+    </div>
+
+    <!-- Mobiili kleepuv makseriba -->
+    <div class="co-paybar" data-paybar aria-hidden="true">
+      <div class="co-paybar__total"><span>Kokku</span><strong data-paybar-total></strong></div>
+      <button class="btn btn--primary co-paybar__btn" type="submit" form="checkout-form" tabindex="-1" data-pay>
+        <span class="co-pay__spinner" aria-hidden="true"></span>
+        <span class="co-pay__label" data-pay-label>Maksa</span>
+      </button>
+    </div>
+  </main>
+
+  <div data-site-footer></div>
+</body>
+</html>

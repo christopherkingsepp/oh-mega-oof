@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="et">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Aitäh tellimuse eest! | ÄGE</title>
+  <meta name="description" content="Sinu ÄGE tellimus on makstud. Saadame mängud 1–3 tööpäevaga sinu valitud pakiautomaati.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#07030a">
+  <link rel="icon" type="image/png" href="/assets/img/brand/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/img/brand/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ÄGE">
+  <meta property="og:title" content="Aitäh! | ÄGE">
+  <meta property="og:description" content="Eesti seltskonnamängud, mis panevad inimesed rääkima, naerma ja teineteist uuest küljest avastama.">
+  <meta property="og:image" content="/assets/img/brand/og-image.jpg">
+  <meta property="og:locale" content="et_EE">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800;900&display=swap">
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/checkout.css">
+  <script type="module" src="/assets/js/main.js"></script>
+  <script type="module" src="/assets/js/aitah.js"></script>
+</head>
+<body class="page-thanks">
+  <div data-site-header></div>
+
+  <main id="main" class="ty">
+    <canvas class="ty-confetti" data-confetti aria-hidden="true"></canvas>
+
+    <!-- ================= Pidu! ================= -->
+    <section class="ty-hero grain" aria-labelledby="ty-title">
+      <div class="bg-blobs" aria-hidden="true">
+        <span style="--x:-14%;--y:-30%;--s:56vw;--o:.7;--d:20s"></span>
+        <span style="--x:58%;--y:-40%;--s:50vw;--c:rgba(139,44,255,.5);--o:.65;--d:24s;--dx:-6vw"></span>
+        <span style="--x:20%;--y:50%;--s:44vw;--c:rgba(255,47,168,.4);--o:.55;--d:18s;--dy:-5vh"></span>
+      </div>
+      <div class="container ty-hero__inner">
+        <div class="ty-burst" aria-hidden="true" data-burst>
+          <span class="ty-burst__ring"></span>
+          <span class="ty-burst__ring"></span>
+          <span class="ty-burst__ring"></span>
+          <span class="ty-burst__rays"></span>
+          <span class="ty-burst__core"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+        </div>
+        <p class="eyebrow" data-ty-eyebrow>Tellimus kinnitatud</p>
+        <h1 id="ty-title" class="ty-title"><span class="neon">Aitäh!</span> Tellimus on makstud <span class="ty-party" data-party title="Veel konfetit!" aria-hidden="true">🎉</span></h1>
+        <p class="ty-lead" data-ty-lead>Paneme su mängud kohe pakki. Valmistu õhtuks, millest räägitakse veel järgmisel päeval.</p>
+        <div class="ty-order" data-ty-order hidden></div>
+      </div>
+    </section>
+
+    <!-- ================= Mis edasi ================= -->
+    <section class="section--tight ty-next" aria-labelledby="ty-next-title">
+      <div class="container">
+        <div class="ty-next__head">
+          <p class="eyebrow">Mis nüüd saab?</p>
+          <h2 id="ty-next-title" style="margin-top:14px">Kolm sammu peoni</h2>
+        </div>
+        <ol class="ty-steps" role="list">
+          <li class="ty-step" data-n="1" data-reveal>
+            <span class="ty-step__icon" style="--g:var(--grad-sh)" aria-hidden="true">✉️</span>
+            <span class="ty-step__when">Kohe</span>
+            <h3>Saad e-kirjaga kviitungi</h3>
+            <p>Stripe saadab makse kviitungi sinu e-postile. Kui seda kohe näha pole, piiluge igaks juhuks ka rämpsposti kausta.</p>
+          </li>
+          <li class="ty-step" data-n="2" data-reveal style="--delay:.1s">
+            <span class="ty-step__icon" style="--g:var(--grad-ot)" aria-hidden="true">📦</span>
+            <span class="ty-step__when">1–3 tööpäeva</span>
+            <h3>Pakk läheb teele</h3>
+            <p>Pakime su mängud hoolega ja anname need vedajale 1–3 tööpäeva jooksul. Iga pakk läbib meie enda käe.</p>
+          </li>
+          <li class="ty-step" data-n="3" data-reveal style="--delay:.2s">
+            <span class="ty-step__icon" style="--g:var(--grad-age)" aria-hidden="true">📱</span>
+            <span class="ty-step__when">Kui pakk on kohal</span>
+            <h3>Pakiautomaat saadab SMS-i</h3>
+            <p>Saad SMS-i koodiga, millega automaadi ukse avad. Siis jääb üle vaid sõbrad kokku kutsuda ja kaardid lauale lüüa.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ================= Jaga ================= -->
+    <section class="section--tight" aria-labelledby="ty-share-title" style="padding-top:0">
+      <div class="container">
+        <div class="ty-share grain" data-reveal>
+          <div>
+            <p class="eyebrow">Jaga pidu</p>
+            <h2 id="ty-share-title" style="margin-top:14px">Mänguõhtu tuli legendaarne? Näita seda!</h2>
+            <p>Filmi paar hetke, märgi meid TikTokis või Instagramis ja näita, kes jäi vastuse võlgu. Kes teab — äkki jõuab just sinu klipp meie lehele.</p>
+            <span class="ty-share__handle neon">@ou.age</span>
+          </div>
+          <div class="ty-share__btns" data-share-btns>
+            <a class="btn btn--lg btn--tiktok" href="https://www.tiktok.com/@ou.age" target="_blank" rel="noopener" data-tiktok>
+              <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 3c.4 2.2 1.8 3.7 4 3.9v3.2c-1.5.1-2.9-.4-4-1.1v6.3c0 3.4-2.6 5.7-5.8 5.7-3.1 0-5.6-2.4-5.6-5.5 0-3.4 3-6 6.6-5.4v3.3c-1.6-.4-3.2.6-3.2 2.1 0 1.2 1 2.2 2.3 2.2 1.4 0 2.4-1 2.4-2.6V3z"/></svg>
+              <span>Jälgi TikTokis</span><small>@ou.age</small>
+            </a>
+            <a class="btn btn--lg btn--insta" href="https://www.instagram.com/ou.age/" target="_blank" rel="noopener" data-instagram>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+              <span>Jälgi Instagramis</span><small>@ou.age</small>
+            </a>
+            <button class="btn btn--lg btn--ghost" type="button" data-share hidden>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+              <span>Soovita sõbrale</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="ty-cta">
+          <a class="btn btn--primary btn--lg" href="/">Tagasi avalehele <svg class="icon arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn btn--ghost btn--lg" href="/#mangud">Vaata teisi mänge</a>
+        </div>
+        <p class="ty-help">Küsimusi tellimuse kohta? Kirjuta meile <a href="mailto:aarmiselt@gmail.com" data-mail>aarmiselt@gmail.com</a> või vaata <a href="/kkk">KKK-d</a>.</p>
+      </div>
+    </section>
+  </main>
+
+  <div data-site-footer></div>
+</body>
+</html>

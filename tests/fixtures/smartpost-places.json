@@ -1,0 +1,9 @@
+[
+  {"place_id":101,"name":"Tallinn Rocca al Mare Prisma","city":"Tallinn","address":"Paldiski mnt 102","country":"EE","postalcode":"13522","routingcode":"7101","availability":"E-P 8:00-22:00","description":"Prisma peasissepääsu juures","lat":"59.4256","lng":"24.6510","group_id":1,"group_name":"Tallinn / Harjumaa","group_sort":1,"created_date":"2015-03-01 12:00:00","active":1,"updated_date":"2026-02-11 09:10:00"},
+  {"place_id":102,"name":"Tallinn Mustika Prisma","city":"Tallinn","address":"Tammsaare tee 116","country":"EE","postalcode":"13417","availability":"E-P 8:00-22:00","active":1},
+  {"place_id":245,"name":"Tartu Annelinna Prisma","city":"Tartu","address":"Nõlvaku 2","country":"EE","postalcode":"50708","active":"1"},
+  {"place_id":310,"name":"Viljandi Uku keskus","city":"Viljandi linn","address":"Tallinna 41","country":"EE","postalcode":"71008","active":1},
+  {"place_id":399,"name":"Suletud automaat","city":"Narva","address":"Tallinna mnt 6","country":"EE","active":0},
+  {"place_id":3001,"name":"Helsinki Kamppi","city":"Helsinki","address":"Urho Kekkosen katu 1","country":"FI","active":1},
+  {"place_id":"","name":"","city":"Tallinn"}
+]

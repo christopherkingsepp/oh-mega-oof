@@ -1,0 +1,8 @@
+{
+  "locations": [
+    {"id":"a1b2c3","pupCode":"3101","type":"SMARTPOST","countryCode":"EE","publicName":{"en":"Tallinn Rocca al Mare Prisma","fi":"Tallinn Rocca al Mare Prisma","et":"Tallinn Rocca al Mare Prisma"},"labelName":{"en":"Rocca al Mare"},"address":{"en":{"address":"Paldiski mnt 102","postalCode":"13522","postalCodeName":"Tallinn","municipality":"Tallinn"},"fi":{"address":"Paldiski mnt 102","postalCode":"13522","municipality":"Tallinna"}},"location":{"lat":59.4256,"lon":24.651}},
+    {"id":"d4e5f6","pupCode":"3245","type":"SMARTPOST","countryCode":"EE","publicName":{"en":"Tartu Annelinna Prisma"},"address":{"en":{"streetName":"Nõlvaku","streetNumber":"2","postalCode":"50708","postalCodeName":"Tartu"}}},
+    {"id":"x0","pupCode":"9001","type":"POSTOFFICE","countryCode":"EE","publicName":{"en":"Some post office"},"address":{"en":{"address":"Narva mnt 1","municipality":"Tallinn"}}},
+    {"id":"fi1","pupCode":"0001","type":"SMARTPOST","countryCode":"FI","publicName":{"fi":"Helsinki Kamppi"},"address":{"fi":{"address":"Urho Kekkosen katu 1","municipality":"Helsinki"}}}
+  ]
+}

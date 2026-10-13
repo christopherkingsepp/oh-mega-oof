@@ -1,0 +1,15 @@
+[
+  {"ZIP":"96331","NAME":"Tallinna Kristiine keskuse pakiautomaat","TYPE":"0","A0_NAME":"EE","A1_NAME":"Harju maakond","A2_NAME":"Tallinn","A3_NAME":"Kristiine linnaosa","A4_NAME":"NULL","A5_NAME":"Endla tn","A6_NAME":"NULL","A7_NAME":"45","A8_NAME":"NULL","X_COORDINATE":"24.7038","Y_COORDINATE":"59.4271","SERVICE_HOURS":"E-P 6:00-24:00","TEMP_SERVICE_HOURS":"","comment_est":"Asub keskuse I korrusel, Rimi poolses sissepääsus","MODIFIED":"2026-03-04T10:12:11+02:00"},
+  {"ZIP":"96085","NAME":"Tallinna Ülemiste keskuse pakiautomaat","TYPE":"0","A0_NAME":"EE","A1_NAME":"Harju maakond","A2_NAME":"Tallinn","A3_NAME":"Lasnamäe linnaosa","A4_NAME":"NULL","A5_NAME":"Suur-Sõjamäe tn","A6_NAME":"NULL","A7_NAME":"4","A8_NAME":"NULL","X_COORDINATE":"24.7988","Y_COORDINATE":"59.4223","SERVICE_HOURS":"","TEMP_SERVICE_HOURS":"","comment_est":"","MODIFIED":"2026-01-10T08:00:00+02:00"},
+  {"ZIP":"96051","NAME":"Tartu Lõunakeskuse pakiautomaat","TYPE":"0","A0_NAME":"EE","A1_NAME":"Tartu maakond","A2_NAME":"Tartu linn","A3_NAME":"Tartu linn","A4_NAME":"NULL","A5_NAME":"Ringtee tn","A6_NAME":"NULL","A7_NAME":"75","A8_NAME":"NULL","X_COORDINATE":"26.6997","Y_COORDINATE":"58.3591"},
+  {"ZIP":"96195","NAME":"Jüri Konsumi pakiautomaat","TYPE":"0","A0_NAME":"EE","A1_NAME":"Harju maakond","A2_NAME":"Rae vald","A3_NAME":"Jüri alevik","A4_NAME":"NULL","A5_NAME":"Aruküla tee","A6_NAME":"NULL","A7_NAME":"29","A8_NAME":"NULL"},
+  {"ZIP":"96310","NAME":"Kuressaare Auriga keskuse pakiautomaat","TYPE":"0","A0_NAME":"EE","A1_NAME":"Saare maakond","A2_NAME":"Saaremaa vald","A3_NAME":"Kuressaare linn","A4_NAME":"NULL","A5_NAME":"Tallinna tn","A6_NAME":"NULL","A7_NAME":"88","A8_NAME":"NULL"},
+  {"ZIP":"96412","NAME":"Viimsi Keskuse pakiautomaat","TYPE":"0","A0_NAME":"EE","A1_NAME":"Harju maakond","A2_NAME":"Viimsi vald","A3_NAME":"Haabneeme alevik","A4_NAME":"NULL","A5_NAME":"NULL","A6_NAME":"NULL","A7_NAME":"NULL","A8_NAME":"NULL"},
+  {"ZIP":"96231","NAME":"Pärnu Kaubamajaka pakiautomaat","TYPE":0,"A0_NAME":"EE","A1_NAME":"Pärnu maakond","A2_NAME":"Pärnu linn","A3_NAME":"NULL","A5_NAME":"Papiniidu tn","A7_NAME":"8"},
+  {"ZIP":"10101","NAME":"Tallinna Postkontor","TYPE":"1","A0_NAME":"EE","A1_NAME":"Harju maakond","A2_NAME":"Tallinn","A3_NAME":"Kesklinna linnaosa","A5_NAME":"Narva mnt","A7_NAME":"1"},
+  {"ZIP":"9401","NAME":"Rīgas Origo pakomāts","TYPE":"0","A0_NAME":"LV","A1_NAME":"Rīga","A2_NAME":"Rīga","A3_NAME":"NULL","A5_NAME":"Stacijas laukums","A7_NAME":"2"},
+  {"ZIP":"02101","NAME":"Vilniaus Akropolio paštomatas","TYPE":"0","A0_NAME":"LT","A1_NAME":"Vilniaus apskritis","A2_NAME":"Vilnius","A3_NAME":"NULL","A5_NAME":"Ozo g.","A7_NAME":"25"},
+  {"ZIP":"96331","NAME":"Tallinna Kristiine keskuse pakiautomaat (duplikaat)","TYPE":"0","A0_NAME":"EE","A1_NAME":"Harju maakond","A2_NAME":"Tallinn","A3_NAME":"Kristiine linnaosa","A5_NAME":"Endla tn","A7_NAME":"45"},
+  {"ZIP":"","NAME":"Ilma indeksita automaat","TYPE":"0","A0_NAME":"EE","A2_NAME":"Tallinn"},
+  null
+]

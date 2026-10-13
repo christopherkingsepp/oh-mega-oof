@@ -1,0 +1,101 @@
+# ÄGE veebipoe Netlify seadistus.
+# Sait on puhas HTML/CSS/JS — ehitus-käsku pole vaja. Netlify paigaldab siiski
+# package.json sõltuvused (nt "stripe"), mida serverifunktsioonid kasutavad.
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[build.environment]
+  # Node 20 elutsükkel lõppes 2026. aasta aprillis, seega kasutame Node 22 LTS-i.
+  NODE_VERSION = "22"
+  # Playwright on ainult kohalikuks testimiseks — brausereid Netlifys alla ei laadita.
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Funktsioonide aadressid (/api/checkout, /api/pakiautomaadid) on määratud
+# funktsioonifailides endis: `export const config = { path: '/api/…' }`.
+# Lehekülje puudumisel näitab Netlify automaatselt juurkausta faili 404.html.
+# "Ilusad" aadressid töötavad vaikimisi: /mida-viiu → mida-viiu.html.
+
+# --- Turvapäised kõigile vastustele ------------------------------------------
+# CSP: skriptid ainult oma domeenilt (inline-skripte EI tohi kasutada;
+# <script type="application/ld+json"> on lubatud, sest seda ei käivitata).
+# Stilid: oma domeen + Google Fonts; inline style-atribuudid on lubatud.
+# Kaadrid: ainult Pacdora 3D-vaade. Makse toimub Stripe'i lehel (suunamine).
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    X-Frame-Options = "SAMEORIGIN"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; frame-src https://www.pacdora.com https://pacdora.com https://*.pacdora.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; frame-ancestors 'self'; upgrade-insecure-requests"
+
+# --- Puhverdamine ------------------------------------------------------------
+# Pildid muutuvad harva: brauser hoiab neid nädal. Kui vahetad pildi, anna
+# uuele failile uus nimi (nt mida-viiu-box-front-v2.webp), et kõik näeksid kohe uut.
+[[headers]]
+  for = "/assets/img/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+
+# CSS ja JS failinimedes pole versiooni-räsi ning JS-moodulid impordivad üksteist.
+# Kui brauser hoiaks neid tund aega, võiks pärast uut deploy'd segi minna vana ja
+# uus versioon (leht katki). Seepärast: alati kontrolli üle — Netlify vastab
+# muutmata failile kiire "304 Not Modified"-iga ja CDN serveerib neid niikuinii lähedalt.
+[[headers]]
+  for = "/assets/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/assets/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# --- Arendusfailid pole avalikud ---------------------------------------------
+# Kuna avaldatakse kogu repo juurkaust, peidame lähtekoodi ja tööriistad.
+[[redirects]]
+  from = "/netlify/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/tests/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/scripts/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/node_modules/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/package.json"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/package-lock.json"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/netlify.toml"
+  to = "/404.html"
+  status = 404
+  force = true

@@ -127,8 +127,7 @@ ol,
 figure {
   margin: 0;
 }
-ul[role='list'],
-ol[role='list'] {
+:where(ul[role='list'], ol[role='list']) {
   list-style: none;
   padding: 0;
 }
@@ -849,7 +848,9 @@ main {
   font-family: var(--font-display);
   font-weight: 900;
   font-size: clamp(4rem, 17vw, 15rem);
-  line-height: 0.8;
+  line-height: 1;
+  padding-top: 0.08em;
+  margin-bottom: -0.18em;
   letter-spacing: -0.04em;
   text-align: center;
   margin-top: 48px;

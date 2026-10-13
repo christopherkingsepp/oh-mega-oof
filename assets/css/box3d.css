@@ -135,7 +135,10 @@
 }
 .box3d__face--left .box3d__spine span,
 .box3d__face--right .box3d__spine span {
-  transform: rotate(-90deg);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
   font-size: calc(var(--d) * 0.32);
 }
 .box3d__face--top .box3d__spine,

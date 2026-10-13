@@ -1,0 +1,8 @@
+{
+  "lockers": [
+    {"parcelShopId":"EE90001","company":"DPD Pickup Tallinn Lõunakeskus","city":"Tallinn","street":"Pärnu mnt","houseNo":"238","countryCode":"EE","type":"PudoLocker"},
+    {"id":"EE90002","name":"DPD Pickup Pärnu Port Artur 2","address":{"city":"Pärnu","street":"Lai","houseNo":"11","country":"EE"},"type":"locker"},
+    {"id":"EE90003","name":"Rimi Hüper (pakipood)","city":"Tartu","address":"Turu 2","country":"EE","type":"ParcelShop"},
+    {"id":"LV1","name":"DPD Pickup Rīga","city":"Rīga","address":"Brīvības iela 1","country":"LV"}
+  ]
+}

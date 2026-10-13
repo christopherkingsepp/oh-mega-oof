@@ -6,8 +6,10 @@ import { cleanText } from './http.mjs';
 export const SOURCES = {
   omniva: 'https://www.omniva.ee/locations.json',
   smartpost: 'https://www.smartpost.ee/places.json',
-  // Varuallikas, kui vana smartpost.ee aadress enam ei vasta:
-  smartpostFallback: 'https://locationservice.posti.com/api/2/location?countryCode=EE&types=SMARTPOST',
+  // Varuallikas, kui vana smartpost.ee aadress enam ei vasta. Posti API
+  // dokumentatsioonis esineb nii `type` kui ka `types` — saadame mõlemad
+  // (tundmatut parameetrit API ignoreerib ja normalizePosti filtreerib tüübi niikuinii).
+  smartpostFallback: 'https://locationservice.posti.com/api/2/location?countryCode=EE&type=SMARTPOST&types=SMARTPOST',
 };
 
 export const MAX_LOCKERS = 3000;
@@ -190,7 +192,7 @@ export async function fetchJson(url, { fetchImpl = globalThis.fetch, timeoutMs =
       headers: { Accept: 'application/json', 'User-Agent': 'AGE-veebipood/1.0 (pakiautomaatide nimekiri)' },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = (await res.text()).replace(/^﻿/, '');
+    const text = (await res.text()).replace(/^\uFEFF/, '');
     return JSON.parse(text);
   } finally {
     clearTimeout(timer);

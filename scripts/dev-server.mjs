@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Lihtne kohalik arendusserver (ilma Netlify CLI-ta).
 //   node scripts/dev-server.mjs            -> http://localhost:8080
-//   MOCK_API=1 node scripts/dev-server.mjs -> /api/* vastused on näidisandmed (ei vaja Stripe'i ega internetti)
+//   node scripts/dev-server.mjs --mock    -> /api/* vastused on näidisandmed (ei vaja Stripe'i ega internetti)
 //
 // Ilma MOCK_API-ta kutsub server päris funktsioone kaustast netlify/functions
 // (selleks peab STRIPE_SECRET_KEY olema keskkonnas seatud).
@@ -12,7 +12,7 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const PORT = Number(process.env.PORT || 8080);
-const MOCK = process.env.MOCK_API === '1';
+const MOCK = process.env.MOCK_API === '1' || process.argv.includes('--mock');
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -55,7 +55,9 @@ const MOCK_LOCKERS = {
 };
 
 function send(res, status, body, headers = {}) {
-  res.writeHead(status, { 'Cache-Control': 'no-store', ...headers });
+  const h = { 'cache-control': 'no-store' };
+  for (const [k, v] of Object.entries(headers)) h[k.toLowerCase()] = v;
+  res.writeHead(status, h);
   res.end(body);
 }
 

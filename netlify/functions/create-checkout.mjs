@@ -8,7 +8,7 @@
 // ühisest kataloogist (assets/js/catalog.js). Kliendi saadetud summasid ei loeta.
 // Vajalik keskkonnamuutuja: STRIPE_SECRET_KEY (vt .env.example).
 import Stripe from 'stripe';
-import { json } from './_lib/http.mjs';
+import { json, readTextLimited } from './_lib/http.mjs';
 import { validateOrder } from './_lib/order.mjs';
 import { buildSessionParams, ensureCoupon, resolveOrigin, createOrderId } from './_lib/stripe-session.mjs';
 
@@ -17,6 +17,7 @@ export const MAX_BODY_BYTES = 20 * 1024;
 const MSG_NOT_CONFIGURED = 'Makse pole veel seadistatud. Võta meiega ühendust.';
 const MSG_STRIPE_FAILED = 'Makset ei õnnestunud alustada. Proovi uuesti.';
 const MSG_BAD_JSON = 'Vigane päring. Värskenda lehte ja proovi uuesti.';
+const MSG_TOO_LARGE = 'Päring on liiga suur. Värskenda lehte ja proovi uuesti.';
 
 // Stripe klient luuakse üks kord soojas funktsioonis ja taaskasutatakse.
 const clients = new Map();
@@ -55,13 +56,11 @@ export function createHandler({ stripeFactory = defaultStripeFactory, env = proc
       return json(405, { error: 'Lubatud on ainult POST-päring.' }, { Allow: 'POST' });
     }
 
-    // 1) Loe ja parsi keha (max ~20 KB).
-    const declared = Number(req.headers.get('content-length') || 0);
-    if (declared > MAX_BODY_BYTES) return json(413, { error: 'Päring on liiga suur.' });
+    // 1) Loe ja parsi keha (max ~20 KB; suuremat ei loeta isegi mällu).
     let body;
     try {
-      const text = await req.text();
-      if (Buffer.byteLength(text, 'utf8') > MAX_BODY_BYTES) return json(413, { error: 'Päring on liiga suur.' });
+      const { text, tooLarge } = await readTextLimited(req, MAX_BODY_BYTES);
+      if (tooLarge) return json(413, { error: MSG_TOO_LARGE });
       body = JSON.parse(text);
     } catch {
       return json(400, { error: MSG_BAD_JSON });

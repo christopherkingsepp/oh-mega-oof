@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="et">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>KKK — korduma kippuvad küsimused | ÄGE</title>
+  <meta name="description" content="Vastused tellimise, makseviiside, tarne, tagastamise, mängude ja soodustuste kohta. Tarne Eesti pakiautomaati 1–3 tööpäevaga, alates 30 € tasuta.">
+  <meta name="theme-color" content="#07030a">
+  <link rel="icon" type="image/png" href="/assets/img/brand/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/img/brand/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ÄGE">
+  <meta property="og:title" content="KKK — korduma kippuvad küsimused | ÄGE">
+  <meta property="og:description" content="Kõik, mida tahad teada tellimise, tarne, mängude ja soodustuste kohta — ühes kohas.">
+  <meta property="og:image" content="/assets/img/brand/og-image.jpg">
+  <meta property="og:locale" content="et_EE">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800;900&display=swap">
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/content.css">
+  <link rel="stylesheet" href="/assets/css/overlays.css">
+  <script type="module" src="/assets/js/main.js"></script>
+  <script type="module" src="/assets/js/kkk.js"></script>
+  <!-- FAQPage struktureeritud andmed (genereeritud allolevast HTML-ist; muutes küsimusi, uuenda ka siin) -->
+  <script type="application/ld+json" id="ld-faq">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "inLanguage": "et",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Kuidas tellida?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Lihtne nagu üks-kaks-kolm: vali mäng, vajuta „Lisa ostukorvi“ ja ava ostukorv. Sisesta oma nimi, e-post ja telefoninumber, vali sobiv pakiautomaat ning maksa turvaliselt. Kinnitus jõuab kohe sinu e-postile — kogu asi võtab umbes minuti."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Milliseid makseviise saab kasutada?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Saad maksta pangakaardiga (Visa, Mastercard), Apple Pay või Google Pay kaudu. Makse toimub rahvusvahelise makseteenuse Stripe turvalisel makselehel."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kas maksmine on turvaline?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Jah. Makseid töötleb Stripe, mida kasutavad miljonid e-poed üle maailma. Ühendus on krüpteeritud ja meie sinu kaardiandmeid ei näe ega salvesta — need liiguvad otse Stripe'ile."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kas ma saan arve või kviitungi?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Jah — pärast edukat makset saad e-postile tellimuse kinnituse koos kviitungiga. Kui vajad eraldi arvet (nt kuluaruande jaoks), kirjuta meile."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kas ettevõttena saab tellida arvega?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Saab küll! Kui soovid mänge firmapeoks, kliendikingitusteks või suurema koguse korraga, kirjuta meile aadressil aarmiselt@gmail.com ja teeme sulle arve. Suurema koguse puhul küsi julgelt ka eripakkumist."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kas saan tellimust pärast maksmist muuta?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Kirjuta meile esimesel võimalusel ja lisa oma tellimuse number või e-post. Kui pakk pole veel teele läinud, aitame hea meelega näiteks pakiautomaati muuta."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kuhu te pakke saadate?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Saadame tellimusi ainult Eesti pakiautomaatidesse: Omniva, SmartPost ja DPD. Sobiva automaadi valid ise kassas."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kui palju tarne maksab?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Tarne pakiautomaati maksab 2,99 €. Kui tellimuse summa on pärast soodustust vähemalt 30 €, on tarne tasuta."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kui kiiresti pakk kohale jõuab?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Paki saad kätte tavaliselt 1–3 tööpäevaga. Pühade ja suurte kampaaniate ajal võib see võtta veidi kauem."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kuidas ma tean, et pakk on kohal?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Kui pakk on automaadis, saadab pakiautomaadi operaator sulle SMS-i koos avamiskoodiga (vahel ka e-kirja). Seepärast palume kassas sisestada õige telefoninumbri."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kas saadate ka välismaale?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Hetkel saadame ainult Eestisse. Kui elad välismaal ja tahad mõnda meie mängu väga saada, kirjuta meile — proovime leida lahenduse."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Mis juhtub, kui ma ei jõua pakile õigel ajal järele?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Pakk ootab automaadis piiratud aja — täpse tähtaja leiad operaatori SMS-ist. Kui pakk jääb välja võtmata, saadab operaator selle meile tagasi. Sel juhul kirjuta meile ja lepime kokku, kuidas mäng sinuni uuesti jõuab."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kas mängu saab tagastada või vahetada?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Ei. Ostetud mänge me tagasi ei võta ega vaheta — kõik müügid on lõplikud. Seega vali julgelt, aga läbimõeldult 😉 Kui sa pole kindel, milline mäng sinu seltskonnale sobib, küsi meilt nõu!"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Pakk saabus katkisena. Mida teha?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Vabandame! Kirjuta meile 14 päeva jooksul pärast paki kättesaamist, lisa foto kahjustusest ja oma tellimuse number või e-post. Saadame sulle uue mängu tasuta."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Mängust on kaarte puudu või need on vigased. Mis nüüd?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Kirjuta meile 14 päeva jooksul ja lisa foto. Saadame puuduvad või vigased kaardid — või vajadusel terve uue mängu — sulle tasuta."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Mitmele mängijale mängud sobivad?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "MIDA V!!!U sobib 3–12 mängijale, Oled Semu? ja Vigur vähemalt kolmele. Rusikareegel: mida suurem seltskond, seda hullemaks läheb 🎉"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kui kaua üks mäng kestab?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Täpselt nii kaua, kui tahate. Üks ring võtab tavaliselt 30–60 minutit, aga hea seltskonnaga venib mäng sageli terveks õhtuks. Pausi võib teha igal hetkel ja hiljem jätkata."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kas MIDA V!!!U on ainult täiskasvanutele?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Jah. MIDA V!!!U on 18+ pidumäng: see sisaldab täiskasvanutele mõeldud küsimusi ja alkoholiga seotud ülesandeid. Tellides kinnitad, et oled vähemalt 18-aastane."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kas MIDA V!!!U-d saab mängida ka alkoholita?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Muidugi! „Shot“ võib olla ükskõik milline jook — mahl, limonaad, vesi või alkoholivaba kokteil. Mäng on sama naljakas ka ilma alkoholita. Ja kui keegi joob, siis vastutustundlikult."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Millised mängud sobivad perele ja noorematele?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Oled Semu? ja Vigur sobivad kõigile alates 12. eluaastast — nii sõprade-, klassi- kui ka pereõhtuks. Oled Semu? paneb proovile, kui hästi te üksteist tunnete, Vigur aga teie bluffimisoskuse."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Mis on MIDA V!!!U karbis?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "85 kaarti: 25 SH-kaarti („Oled Semu?“ stiilis küsimused), 25 OT-kaarti („Kes kõige tõenäolisemalt…“), 25 SHOT-kaarti (tee või joo), 5 ÄGE boonuskaarti, millest pääsu pole, 3 reeglikaarti — ja paar peidetud üllatust. Vaata lähemalt MIDA V!!!U lehelt."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kas kaardid peavad vastu?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Jah — kaardid on lamineeritud, nii et ka ümberläinud jook neid ei hirmuta. Pühi lihtsalt kuivaks ja mäng jätkub."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kuidas saan −15% soodustust?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Liitu ÄGE seltskonnaga: sisesta oma e-post soodushüpikus ja saad kohe −15% sooduskoodi esimesele tellimusele. Koodi saad sisestada ostukorvis või lasta selle kohe ostukorvi lisada."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kas komplektiga säästan?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Jah! Oled Semu? + Vigur maksavad koos 20,00 € (säästad 5,90 €) ja kõik 3 mängu 33,00 € (säästad 10,40 €). Vaata komplekte."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kas sooduskoode saab kombineerida?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Ei — ühe tellimuse kohta saab kasutada ühte sooduskoodi. Hea uudis: kood kehtib ka komplektidele, nii et säästad topelt."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kas tasuta tarne kehtib ka soodushinnaga?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Tasuta tarne kehtib, kui tellimuse summa on pärast soodustust vähemalt 30 €. Ostukorvis näed alati täpselt, kui palju on veel puudu."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kuidas teiega ühendust võtta?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Kirjuta e-posti aadressile aarmiselt@gmail.com või saada sõnum Instagramis või TikTokis (@ou.age). Vastame 1–2 tööpäeva jooksul."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kas saab teha koostööd või tellida mänge üritusele?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Jah, väga hea meelega! Olgu see firmapidu, kooliüritus, sisuloome või mõni muu äge idee — kirjuta meile ja räägime."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kes on ÄGE?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "ÄGE ehk Äärmiselt Geniaalne Ettevõtmine on Tallinna noorte ettevõte, mis sai alguse õpilasfirmast. 2024/25. õppeaastal müüsime üle 200 mängu ja võitsime JA Eesti „Sotsiaalmeedia täht“ auhinna. Teeme mänge, mis panevad inimesed rääkima, naerma ja üksteist uuest küljest avastama."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body class="page-kkk">
+  <div data-site-header></div>
+  <main id="main">
+
+    <!-- =====================================================================
+         PÄIS + OTSING
+         ===================================================================== -->
+    <section class="page-hero grain" aria-labelledby="kkk-title">
+      <div class="bg-blobs" aria-hidden="true">
+        <span style="--x:-14%;--y:-40%;--s:52vw;--c:rgba(255,20,160,.5);--d:18s"></span>
+        <span style="--x:58%;--y:-20%;--s:46vw;--c:rgba(139,44,255,.32);--d:22s;--dx:-5vw"></span>
+        <span style="--x:30%;--y:40%;--s:34vw;--c:rgba(255,40,170,.25);--d:26s"></span>
+      </div>
+      <div class="hero-cards" aria-hidden="true">
+        <img src="/assets/img/cards/back-sh.webp" alt="" width="760" height="509" decoding="async">
+        <img src="/assets/img/cards/back-shot.webp" alt="" width="760" height="509" decoding="async">
+        <img src="/assets/img/cards/back-age.webp" alt="" width="760" height="509" decoding="async">
+      </div>
+      <div class="container page-hero__inner">
+        <nav class="crumbs" aria-label="Asukoht">
+          <a href="/">Avaleht</a><span aria-hidden="true">/</span><span aria-current="page">KKK</span>
+        </nav>
+        <span class="eyebrow">Abi &amp; KKK</span>
+        <h1 id="kkk-title">Küsimus?<br><span class="neon">Vastus.</span></h1>
+        <p class="lead">Kõik, mida tahad teada tellimise, tarne, mängude ja soodustuste kohta. Ei leia? Kirjuta meile — vastame 1–2 tööpäevaga.</p>
+        <form class="faq-search" role="search" action="/kkk" data-faq-form>
+          <label class="sr-only" for="faq-q">Otsi korduma kippuvate küsimuste hulgast</label>
+          <svg class="faq-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input class="faq-search__input" id="faq-q" type="search" name="q" placeholder="Otsi, nt „tarne“ või „shot“" autocomplete="off" spellcheck="false" enterkeyhint="search" aria-controls="faq-results" aria-describedby="faq-status" data-faq-search>
+          <kbd class="faq-search__kbd" aria-hidden="true">/</kbd>
+          <button class="faq-search__clear" type="button" data-faq-clear>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            Tühjenda
+          </button>
+        </form>
+        <p class="faq-search__status" id="faq-status" role="status" aria-live="polite"></p>
+        <div class="faq-quick" aria-label="Populaarsed otsingud">
+          <span>Populaarsed:</span>
+          <button type="button" data-faq-suggest="tarne">tarne</button>
+          <button type="button" data-faq-suggest="makse">makseviisid</button>
+          <button type="button" data-faq-suggest="alkoholita">alkoholita</button>
+          <button type="button" data-faq-suggest="tagasta">tagastamine</button>
+          <button type="button" data-faq-suggest="soodus">soodustus</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         KÜSIMUSED
+         ===================================================================== -->
+    <div class="faq-wrap">
+      <div class="container faq-layout">
+        <aside class="faq-aside">
+          <nav class="faq-nav" aria-label="KKK teemad" data-spy>
+            <p class="faq-nav__title">Teemad</p>
+            <a href="#tellimine"><span class="faq-nav__emoji" aria-hidden="true">🛒</span>Tellimine &amp; maksmine<span class="faq-nav__count" data-count-for="tellimine" aria-hidden="true">6</span></a>
+            <a href="#tarne"><span class="faq-nav__emoji" aria-hidden="true">📦</span>Tarne<span class="faq-nav__count" data-count-for="tarne" aria-hidden="true">6</span></a>
+            <a href="#tagastamine"><span class="faq-nav__emoji" aria-hidden="true">🔁</span>Tagastamine<span class="faq-nav__count" data-count-for="tagastamine" aria-hidden="true">3</span></a>
+            <a href="#mangud"><span class="faq-nav__emoji" aria-hidden="true">🃏</span>Mängud<span class="faq-nav__count" data-count-for="mangud" aria-hidden="true">7</span></a>
+            <a href="#soodustused"><span class="faq-nav__emoji" aria-hidden="true">🏷️</span>Soodustused<span class="faq-nav__count" data-count-for="soodustused" aria-hidden="true">4</span></a>
+            <a href="#kontakt"><span class="faq-nav__emoji" aria-hidden="true">💬</span>Kontakt<span class="faq-nav__count" data-count-for="kontakt" aria-hidden="true">3</span></a>
+          </nav>
+          <div class="faq-aside__help surface">
+            <strong>Ei leia vastust?</strong>
+            <span>Kirjuta meile, vastame 1–2 tööpäevaga:</span>
+            <a href="mailto:aarmiselt@gmail.com" data-site-href="email" data-site-text="email">aarmiselt@gmail.com</a>
+          </div>
+        </aside>
+
+        <div class="faq-main" id="faq-results">
+          <p class="faq-status" aria-hidden="true" data-faq-status-copy></p>
+
+          <!-- 01 TELLIMINE & MAKSMINE -->
+          <section class="faq-section" id="tellimine" aria-labelledby="h-tellimine">
+            <div class="faq-section__head">
+              <span class="faq-section__icon" aria-hidden="true">🛒</span>
+              <h2 id="h-tellimine"><span class="faq-section__num">01</span>Tellimine &amp; maksmine</h2>
+            </div>
+            <div class="faq-list">
+              <details class="faq-item" id="kuidas-tellida">
+                <summary><span>Kuidas tellida?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Lihtne nagu üks-kaks-kolm: vali mäng, vajuta <strong>„Lisa ostukorvi“</strong> ja ava ostukorv. Sisesta oma nimi, e-post ja telefoninumber, vali sobiv pakiautomaat ning maksa turvaliselt. Kinnitus jõuab kohe sinu e-postile — kogu asi võtab umbes minuti.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="makseviisid">
+                <summary><span>Milliseid makseviise saab kasutada?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Saad maksta <strong>pangakaardiga</strong> (Visa, Mastercard), <strong>Apple Pay</strong> või <strong>Google Pay</strong> kaudu. Makse toimub rahvusvahelise makseteenuse <strong>Stripe</strong> turvalisel makselehel.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="turvaline-makse">
+                <summary><span>Kas maksmine on turvaline?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Jah. Makseid töötleb Stripe, mida kasutavad miljonid e-poed üle maailma. Ühendus on krüpteeritud ja <strong>meie sinu kaardiandmeid ei näe ega salvesta</strong> — need liiguvad otse Stripe'ile.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="arve">
+                <summary><span>Kas ma saan arve või kviitungi?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Jah — pärast edukat makset saad e-postile tellimuse kinnituse koos kviitungiga. Kui vajad eraldi arvet (nt kuluaruande jaoks), kirjuta meile.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="ettevottele">
+                <summary><span>Kas ettevõttena saab tellida arvega?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Saab küll! Kui soovid mänge firmapeoks, kliendikingitusteks või suurema koguse korraga, kirjuta meile aadressil <a href="mailto:aarmiselt@gmail.com" data-site-href="email" data-site-text="email">aarmiselt@gmail.com</a> ja teeme sulle arve. Suurema koguse puhul küsi julgelt ka eripakkumist.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="tellimuse-muutmine">
+                <summary><span>Kas saan tellimust pärast maksmist muuta?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Kirjuta meile esimesel võimalusel ja lisa oma tellimuse number või e-post. Kui pakk pole veel teele läinud, aitame hea meelega näiteks pakiautomaati muuta.</p>
+                </div></div>
+              </details>
+            </div>
+          </section>
+
+          <!-- 02 TARNE -->
+          <section class="faq-section" id="tarne" aria-labelledby="h-tarne">
+            <div class="faq-section__head">
+              <span class="faq-section__icon" aria-hidden="true">📦</span>
+              <h2 id="h-tarne"><span class="faq-section__num">02</span>Tarne</h2>
+            </div>
+            <div class="faq-list">
+              <details class="faq-item" id="kuhu-saadate">
+                <summary><span>Kuhu te pakke saadate?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Saadame tellimusi <strong>ainult Eesti pakiautomaatidesse</strong>: Omniva, SmartPost ja DPD. Sobiva automaadi valid ise kassas.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="tarne-hind">
+                <summary><span>Kui palju tarne maksab?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Tarne pakiautomaati maksab <strong data-ship-price>2,99&nbsp;€</strong>. Kui tellimuse summa on pärast soodustust vähemalt <strong data-ship-free>30&nbsp;€</strong>, on tarne <strong>tasuta</strong>.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="tarneaeg">
+                <summary><span>Kui kiiresti pakk kohale jõuab?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Paki saad kätte tavaliselt <strong>1–3 tööpäevaga</strong>. Pühade ja suurte kampaaniate ajal võib see võtta veidi kauem.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="sms">
+                <summary><span>Kuidas ma tean, et pakk on kohal?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Kui pakk on automaadis, saadab pakiautomaadi operaator sulle <strong>SMS-i koos avamiskoodiga</strong> (vahel ka e-kirja). Seepärast palume kassas sisestada õige telefoninumbri.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="valismaale">
+                <summary><span>Kas saadate ka välismaale?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Hetkel saadame ainult Eestisse. Kui elad välismaal ja tahad mõnda meie mängu väga saada, kirjuta meile — proovime leida lahenduse.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="pakk-jai-automaati">
+                <summary><span>Mis juhtub, kui ma ei jõua pakile õigel ajal järele?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Pakk ootab automaadis piiratud aja — täpse tähtaja leiad operaatori SMS-ist. Kui pakk jääb välja võtmata, saadab operaator selle meile tagasi. Sel juhul kirjuta meile ja lepime kokku, kuidas mäng sinuni uuesti jõuab.</p>
+                </div></div>
+              </details>
+            </div>
+          </section>
+
+          <!-- 03 TAGASTAMINE -->
+          <section class="faq-section" id="tagastamine" aria-labelledby="h-tagastamine">
+            <div class="faq-section__head">
+              <span class="faq-section__icon" aria-hidden="true">🔁</span>
+              <h2 id="h-tagastamine"><span class="faq-section__num">03</span>Tagastamine</h2>
+            </div>
+            <div class="faq-list">
+              <details class="faq-item" id="kas-saab-tagastada">
+                <summary><span>Kas mängu saab tagastada või vahetada?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Ei. Ostetud mänge me <strong>tagasi ei võta ega vaheta</strong> — kõik müügid on lõplikud. Seega vali julgelt, aga läbimõeldult 😉 Kui sa pole kindel, milline mäng sinu seltskonnale sobib, küsi meilt nõu!</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="katkine-pakk">
+                <summary><span>Pakk saabus katkisena. Mida teha?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Vabandame! Kirjuta meile <strong>14 päeva jooksul</strong> pärast paki kättesaamist, lisa <strong>foto</strong> kahjustusest ja oma tellimuse number või e-post. Saadame sulle uue mängu <strong>tasuta</strong>.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="kaardid-puudu">
+                <summary><span>Mängust on kaarte puudu või need on vigased. Mis nüüd?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Kirjuta meile 14 päeva jooksul ja lisa foto. Saadame puuduvad või vigased kaardid — või vajadusel terve uue mängu — sulle <strong>tasuta</strong>.</p>
+                </div></div>
+              </details>
+            </div>
+          </section>
+
+          <!-- 04 MÄNGUD -->
+          <section class="faq-section" id="mangud" aria-labelledby="h-mangud">
+            <div class="faq-section__head">
+              <span class="faq-section__icon" aria-hidden="true">🃏</span>
+              <h2 id="h-mangud"><span class="faq-section__num">04</span>Mängud</h2>
+            </div>
+            <div class="faq-list">
+              <details class="faq-item" id="mitu-mangijat">
+                <summary><span>Mitmele mängijale mängud sobivad?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p><strong>MIDA V!!!U</strong> sobib 3–12 mängijale, <strong>Oled Semu?</strong> ja <strong>Vigur</strong> vähemalt kolmele. Rusikareegel: mida suurem seltskond, seda hullemaks läheb 🎉</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="mangu-pikkus">
+                <summary><span>Kui kaua üks mäng kestab?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Täpselt nii kaua, kui tahate. Üks ring võtab tavaliselt 30–60 minutit, aga hea seltskonnaga venib mäng sageli terveks õhtuks. Pausi võib teha igal hetkel ja hiljem jätkata.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="ainult-taiskasvanutele">
+                <summary><span>Kas MIDA V!!!U on ainult täiskasvanutele?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Jah. MIDA V!!!U on <strong>18+</strong> pidumäng: see sisaldab täiskasvanutele mõeldud küsimusi ja alkoholiga seotud ülesandeid. Tellides kinnitad, et oled vähemalt 18-aastane.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="alkoholita">
+                <summary><span>Kas MIDA V!!!U-d saab mängida ka alkoholita?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Muidugi! <strong>„Shot“ võib olla ükskõik milline jook</strong> — mahl, limonaad, vesi või alkoholivaba kokteil. Mäng on sama naljakas ka ilma alkoholita. Ja kui keegi joob, siis vastutustundlikult.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="perele">
+                <summary><span>Millised mängud sobivad perele ja noorematele?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p><strong><a href="/oled-semu">Oled Semu?</a></strong> ja <strong><a href="/vigur">Vigur</a></strong> sobivad kõigile alates 12. eluaastast — nii sõprade-, klassi- kui ka pereõhtuks. Oled Semu? paneb proovile, kui hästi te üksteist tunnete, Vigur aga teie bluffimisoskuse.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="mis-karbis-on">
+                <summary><span>Mis on MIDA V!!!U karbis?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>85 kaarti: <strong>25 SH-kaarti</strong> („Oled Semu?“ stiilis küsimused), <strong>25 OT-kaarti</strong> („Kes kõige tõenäolisemalt…“), <strong>25 SHOT-kaarti</strong> (tee või joo), <strong>5 ÄGE boonuskaarti</strong>, millest pääsu pole, 3 reeglikaarti — ja paar peidetud üllatust. Vaata lähemalt <a href="/mida-viiu">MIDA V!!!U lehelt</a>.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="kaardid-vastupidavad">
+                <summary><span>Kas kaardid peavad vastu?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Jah — kaardid on <strong>lamineeritud</strong>, nii et ka ümberläinud jook neid ei hirmuta. Pühi lihtsalt kuivaks ja mäng jätkub.</p>
+                </div></div>
+              </details>
+            </div>
+          </section>
+
+          <!-- 05 SOODUSTUSED -->
+          <section class="faq-section" id="soodustused" aria-labelledby="h-soodustused">
+            <div class="faq-section__head">
+              <span class="faq-section__icon" aria-hidden="true">🏷️</span>
+              <h2 id="h-soodustused"><span class="faq-section__num">05</span>Soodustused</h2>
+            </div>
+            <div class="faq-list">
+              <details class="faq-item" id="soodustus-15">
+                <summary><span>Kuidas saan −15% soodustust?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Liitu ÄGE seltskonnaga: sisesta oma e-post soodushüpikus ja saad kohe <strong>−15% sooduskoodi</strong> esimesele tellimusele. Koodi saad sisestada ostukorvis või lasta selle kohe ostukorvi lisada.</p>
+                  <button class="btn btn--primary btn--sm" type="button" data-open-promo>
+                    Saan −15%
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg>
+                  </button>
+                </div></div>
+              </details>
+              <details class="faq-item" id="komplektid">
+                <summary><span>Kas komplektiga säästan?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Jah! <strong>Oled Semu? + Vigur</strong> maksavad koos <span data-price="komplekt-semu-vigur">20,00&nbsp;€</span> (säästad <span data-bundle-save="komplekt-semu-vigur">5,90&nbsp;€</span>) ja <strong>kõik 3 mängu</strong> <span data-price="komplekt-koik">33,00&nbsp;€</span> (säästad <span data-bundle-save="komplekt-koik">10,40&nbsp;€</span>). Vaata <a href="/#komplekt">komplekte</a>.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="koodide-kombineerimine">
+                <summary><span>Kas sooduskoode saab kombineerida?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Ei — ühe tellimuse kohta saab kasutada <strong>ühte sooduskoodi</strong>. Hea uudis: kood kehtib ka komplektidele, nii et säästad topelt.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="tasuta-tarne-soodusega">
+                <summary><span>Kas tasuta tarne kehtib ka soodushinnaga?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Tasuta tarne kehtib, kui tellimuse summa on <strong>pärast soodustust</strong> vähemalt <span data-ship-free>30&nbsp;€</span>. Ostukorvis näed alati täpselt, kui palju on veel puudu.</p>
+                </div></div>
+              </details>
+            </div>
+          </section>
+
+          <!-- 06 KONTAKT -->
+          <section class="faq-section" id="kontakt" aria-labelledby="h-kontakt">
+            <div class="faq-section__head">
+              <span class="faq-section__icon" aria-hidden="true">💬</span>
+              <h2 id="h-kontakt"><span class="faq-section__num">06</span>Kontakt</h2>
+            </div>
+            <div class="faq-list">
+              <details class="faq-item" id="uhendust">
+                <summary><span>Kuidas teiega ühendust võtta?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Kirjuta e-posti aadressile <a href="mailto:aarmiselt@gmail.com" data-site-href="email" data-site-text="email">aarmiselt@gmail.com</a> või saada sõnum <a href="https://www.instagram.com/ou.age/" target="_blank" rel="noopener" data-site-href="instagram">Instagramis</a> või <a href="https://www.tiktok.com/@ou.age" target="_blank" rel="noopener" data-site-href="tiktok">TikTokis</a> (<span data-site-text="instagramHandle">@ou.age</span>). Vastame <strong>1–2 tööpäeva</strong> jooksul.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="koostoo">
+                <summary><span>Kas saab teha koostööd või tellida mänge üritusele?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>Jah, väga hea meelega! Olgu see firmapidu, kooliüritus, sisuloome või mõni muu äge idee — kirjuta meile ja räägime.</p>
+                </div></div>
+              </details>
+              <details class="faq-item" id="kes-on-age">
+                <summary><span>Kes on ÄGE?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
+                <div class="faq-item__body"><div class="faq-item__inner">
+                  <p>ÄGE ehk <strong>Äärmiselt Geniaalne Ettevõtmine</strong> on Tallinna noorte ettevõte, mis sai alguse õpilasfirmast. 2024/25. õppeaastal müüsime üle 200 mängu ja võitsime JA Eesti „Sotsiaalmeedia täht“ auhinna. Teeme mänge, mis panevad inimesed rääkima, naerma ja üksteist uuest küljest avastama.</p>
+                </div></div>
+              </details>
+            </div>
+          </section>
+
+          <!-- Tühi tulemus -->
+          <div class="faq-empty" data-faq-empty hidden>
+            <div class="faq-empty__emoji" aria-hidden="true">🤔</div>
+            <h2>Hmm, selle peale meil veel vastust pole</h2>
+            <p>Proovi mõnda teist sõna — või küsi otse meilt. Vastame 1–2 tööpäevaga.</p>
+            <a class="btn btn--primary" href="mailto:aarmiselt@gmail.com" data-site-href="email">Kirjuta meile</a>
+          </div>
+
+          <!-- Ei leidnud vastust? -->
+          <section class="help-cta" aria-labelledby="help-title">
+            <div class="bg-blobs" aria-hidden="true">
+              <span style="--x:-20%;--y:-60%;--s:420px;--c:rgba(255,20,160,.55);--d:16s"></span>
+              <span style="--x:70%;--y:20%;--s:360px;--c:rgba(139,44,255,.4);--d:20s;--dx:-40px"></span>
+            </div>
+            <div>
+              <h2 id="help-title">Ei leidnud vastust?</h2>
+              <p>Kirjuta meile — sulle vastab päris inimene (mitte robot 🤖) 1–2 tööpäeva jooksul. Kiire küsimus? Saada sõnum Instagramis või TikTokis.</p>
+            </div>
+            <div class="help-cta__actions">
+              <a class="btn btn--primary" href="mailto:aarmiselt@gmail.com" data-site-href="email">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>
+                Kirjuta meile
+              </a>
+              <a class="btn btn--ghost" href="https://www.instagram.com/ou.age/" target="_blank" rel="noopener" data-site-href="instagram">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+                Instagram
+              </a>
+              <a class="btn btn--ghost" href="https://www.tiktok.com/@ou.age" target="_blank" rel="noopener" data-site-href="tiktok">
+                <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 3c.4 2.2 1.8 3.7 4 3.9v3.2c-1.5.1-2.9-.4-4-1.1v6.3c0 3.4-2.6 5.7-5.8 5.7-3.1 0-5.6-2.4-5.6-5.5 0-3.4 3-6 6.6-5.4v3.3c-1.6-.4-3.2.6-3.2 2.1 0 1.2 1 2.2 2.3 2.2 1.4 0 2.4-1 2.4-2.6V3z"/></svg>
+                TikTok
+              </a>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div data-site-footer></div>
+</body>
+</html>

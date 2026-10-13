@@ -20,12 +20,14 @@ const context = await browser.newContext(
   flags.mobile ? { ...devices['iPhone 13'] } : { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 },
 );
 if (!flags.fresh) {
-  await context.addInitScript(() => {
+  // --promo: näita sooduspilli (muidu peidetakse, et pilt oleks puhas)
+  await context.addInitScript((showPromo) => {
     try {
       localStorage.setItem('age_agegate_ok', '1');
       localStorage.setItem('age_promo_seen', String(Date.now()));
+      if (!showPromo) localStorage.setItem('age_promo_email', 'test@example.ee');
     } catch {}
-  });
+  }, Boolean(flags.promo));
 }
 const page = await context.newPage();
 const errors = [];

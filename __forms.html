@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="et">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Vormid | ÄGE</title>
+</head>
+<body>
+  <!--
+    Netlify Forms'i tuvastusvorm. Netlify loeb seda faili deploy ajal ja registreerib
+    vormi „soodus“, kuhu soodushüpik (assets/js/promo.js) saadab liitujate e-postid
+    AJAX-päringuga (POST /, form-name=soodus). Ära kustuta ega nimeta välju ümber.
+    Liitujad leiad Netlify paneelist: Site → Forms → soodus.
+  -->
+  <form name="soodus" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <input type="hidden" name="form-name" value="soodus">
+    <input name="email" type="email">
+    <input name="page">
+    <input name="bot-field">
+  </form>
+</body>
+</html>

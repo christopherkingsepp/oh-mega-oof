@@ -201,7 +201,7 @@ test('18+ toode (ka komplektis) nõuab ageConfirmed === true', () => {
 });
 
 test('juhtmärgid eemaldatakse tekstiväljadest', () => {
-  const r = validateOrder(validBody({ customer: { name: 'Mari\u0000\n Maasikas​' }, shipping: { lockerName: 'Automaat\r\n<script>' } }));
+  const r = validateOrder(validBody({ customer: { name: 'Mari\u0000\n Maasikas\u200B' }, shipping: { lockerName: 'Automaat\r\n<script>' } }));
   assert.equal(r.ok, true);
   assert.equal(r.order.customer.name, 'Mari Maasikas');
   assert.equal(r.order.shipping.lockerName, 'Automaat <script>');

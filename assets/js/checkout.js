@@ -385,7 +385,8 @@ function renderUpsell() {
             <a href="${esc(p.url)}" tabindex="-1" aria-hidden="true"><img src="${esc(p.image)}" alt="" width="64" height="44" loading="lazy"></a>
             <div>
               <div class="co-mini__name"><a href="${esc(p.url)}">${esc(p.name)}</a></div>
-              <div class="co-mini__price">${formatEur(toCents(p.price))}${unlocks ? ' · <span style="color:var(--ok)">tasuta tarne</span>' : ''}</div>
+              <div class="co-mini__price">${formatEur(toCents(p.price))}</div>
+              ${unlocks ? '<div class="co-mini__unlock">+ tasuta tarne</div>' : ''}
             </div>
             <button class="btn btn--sm" type="button" data-add-to-cart="${esc(id)}" aria-label="Lisa ostukorvi: ${esc(p.name)}">+ Lisa</button>
           </div>`;
@@ -403,7 +404,7 @@ function renderCode(t) {
   el.codeApplied.hidden = !code;
   if (code) {
     el.codeName.textContent = code;
-    el.codeDesc.textContent = t.discountCents ? `−${t.percent}% rakendatud · säästad ${formatEur(t.discountCents)}` : `−${t.percent}% rakendatud`;
+    el.codeDesc.innerHTML = `−${t.percent}% rakendatud${t.discountCents ? `<span class="co-code__save">säästad ${formatEur(t.discountCents)}</span>` : ''}`;
   }
 }
 
@@ -456,9 +457,18 @@ $('[data-remove-code]').addEventListener('click', () => {
 /* =========================================================================
    Kokkuvõte
    ========================================================================= */
+let totalStatusTimer;
 function animateTotal(cents) {
   const from = state.shownTotal;
   state.shownTotal = cents;
+  if (from !== null && from !== cents) {
+    // Ekraanilugejale ainult lõppsumma (mitte iga animatsioonikaader).
+    clearTimeout(totalStatusTimer);
+    totalStatusTimer = setTimeout(() => {
+      const st = $('[data-total-status]');
+      if (st) st.textContent = `Tellimuse summa on nüüd ${formatEur(cents)}`;
+    }, 600);
+  }
   const targets = [el.sumTotal, el.paybarTotal];
   if (from === null || from === cents || REDUCED.matches) {
     targets.forEach((t) => (t.textContent = formatEur(cents)));
@@ -521,11 +531,11 @@ function renderSummary(t) {
    ========================================================================= */
 function prepareLockers(list) {
   const clean = list
-    .filter((l) => l && l.id != null && l.name)
+    .filter((l) => l && l.name)
     .map((l) => {
       const city = String(l.city || '').trim() || 'Muu';
       return {
-        id: String(l.id),
+        id: String(l.id ?? '').trim(),
         name: String(l.name).trim(),
         city,
         address: String(l.address || '').trim(),
@@ -533,7 +543,7 @@ function prepareLockers(list) {
         _c: norm(city),
       };
     });
-  clean.sort((a, b) => a.name.localeCompare(b.name, 'et'));
+  clean.sort((a, b) => a.name.localeCompare(b.name, 'et', { numeric: true }));
   const cityCount = new Map();
   clean.forEach((l) => cityCount.set(l.city, (cityCount.get(l.city) || 0) + 1));
   clean.forEach((l) => (l._cc = cityCount.get(l.city)));
@@ -584,7 +594,7 @@ function applyLockerData(data) {
     state.lockerMode = 'list';
     state.lockers = list;
     if (state.locker) {
-      const found = list.find((l) => l.id === String(state.locker.id));
+      const found = list.find((l) => sameLocker(l, state.locker));
       state.locker = found ? pickLocker(found) : null;
     }
     announce(`${list.length} pakiautomaati laetud. Otsi linna või keskuse järgi.`);
@@ -593,6 +603,8 @@ function applyLockerData(data) {
   afterShippingChange();
 }
 
+// Mõnel vedajal võib id puududa — siis võrdleme nime järgi.
+const sameLocker = (a, b) => (a.id && b.id ? a.id === String(b.id) : norm(a.name) === norm(b.name));
 const pickLocker = (l) => ({ id: l.id, name: l.name, city: l.city === 'Muu' ? '' : l.city, address: l.address });
 
 let announceTimer;
@@ -871,7 +883,19 @@ function bindCombobox() {
     renderOptions();
     if (input.getAttribute('aria-invalid') === 'true') showError(input, '', $('#locker-error'));
   });
-  input.addEventListener('focus', openList);
+  input.addEventListener('focus', () => {
+    openList();
+    // Mobiilis tõsta otsing ekraani ülaossa, et nimekiri jääks klaviatuuri kohale nähtavaks.
+    if (MOBILE.matches) {
+      setTimeout(() => {
+        const box = $('.lk');
+        if (!box || document.activeElement !== input) return;
+        const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
+        const top = box.getBoundingClientRect().top + window.scrollY - header - 12;
+        if (Math.abs(window.scrollY - top) > 24) window.scrollTo({ top, behavior: REDUCED.matches ? 'auto' : 'smooth' });
+      }, 260);
+    }
+  });
   input.addEventListener('click', openList);
   input.addEventListener('blur', () => {
     setTimeout(() => {
@@ -1083,10 +1107,25 @@ el.emailSuggest.addEventListener('click', (e) => {
   el.email.focus();
 });
 
+// Serveri tagastatud väljaviga jääb kehtima, kuni klient välja väärtust muudab.
+const serverErrors = new Map(); // input -> { key, msg }
+const valueKey = (input, v) => {
+  const s = String(v ?? '').trim().replace(/\s+/g, ' ');
+  return input === el.phone ? normalizePhone(s) || s : s.toLowerCase();
+};
+const withServer = (input, check) => (v) => {
+  const se = serverErrors.get(input);
+  if (se) {
+    if (se.key === valueKey(input, v)) return se.msg;
+    serverErrors.delete(input);
+  }
+  return check(v);
+};
+
 const CONTACT = [
-  { input: el.name, check: V.name },
-  { input: el.email, check: V.email },
-  { input: el.phone, check: V.phone },
+  { input: el.name, check: withServer(el.name, V.name) },
+  { input: el.email, check: withServer(el.email, V.email) },
+  { input: el.phone, check: withServer(el.phone, V.phone) },
 ];
 
 CONTACT.forEach(({ input, check }) => {
@@ -1112,6 +1151,20 @@ CONTACT.forEach(({ input, check }) => {
     if (input === el.email && !el.emailSuggest.hidden) renderEmailSuggest();
     persistSoon();
     stepsSoon();
+  });
+});
+
+// Enter kontaktväljadel liigub järgmisele väljale (mitte ei saada kogu vormi teele).
+CONTACT.forEach(({ input }, i) => {
+  input.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.isComposing) return;
+    e.preventDefault();
+    const next = CONTACT[i + 1]?.input;
+    if (next) next.focus();
+    else {
+      input.blur();
+      if (!el.terms.checked) focusField(el.terms);
+    }
   });
 });
 
@@ -1179,7 +1232,7 @@ function restore() {
   if (s.carrier && SHIPPING.carriers[s.carrier]) {
     const radio = $(`.carrier__input[value="${s.carrier}"]`);
     if (radio) radio.checked = true;
-    state.locker = s.locker && s.locker.id ? s.locker : null;
+    state.locker = s.locker && s.locker.name ? s.locker : null;
     state.manual = s.manual || '';
     selectCarrier(s.carrier, { keepLocker: true });
   } else {
@@ -1215,6 +1268,8 @@ function updateSteps() {
   });
   $$('[data-section]').forEach((sec, i) => sec.classList.toggle('is-done', done[i]));
   el.stepsFill.style.setProperty('--p', String(done.filter(Boolean).length / 4));
+  const ready = done.every(Boolean);
+  $$('[data-pay]').forEach((b) => b.classList.toggle('is-ready', ready));
   if (state.attempted && !el.payError.hidden && el.payError.dataset.kind === 'validation') {
     const errs = collectErrors();
     if (!errs.length) hidePayError();
@@ -1332,7 +1387,10 @@ function setSubmitting(on) {
     b.classList.toggle('is-loading', on);
     b.setAttribute('aria-busy', String(on));
   });
-  $$('[data-pay-label]').forEach((s) => (s.textContent = on ? 'Suuname makselehele…' : payLabel(t)));
+  $$('[data-pay-label]').forEach((s) => {
+    const short = Boolean(s.closest('.co-paybar'));
+    s.textContent = on ? (short ? 'Suuname…' : 'Suuname makselehele…') : payLabel(t);
+  });
 }
 
 const SERVER_FIELD = {
@@ -1355,6 +1413,7 @@ const SERVER_FIELD = {
   age: 'age',
   ageConfirmed: 'age',
   code: 'code',
+  items: 'cart',
 };
 
 function markServerField(field, msg) {
@@ -1363,6 +1422,11 @@ function markServerField(field, msg) {
   if (key === 'code') {
     setCodeError(msg);
     return focusField(Cart.code() ? $('[data-remove-code]') : el.codeInput);
+  }
+  if (key === 'cart') return focusField($('#h-ostukorv'));
+  if (key === 'name' || key === 'email' || key === 'phone') {
+    serverErrors.set(el[key], { key: valueKey(el[key], el[key].value), msg });
+    updateSteps();
   }
   if (key === 'age') {
     state.forceAge = true;
@@ -1566,8 +1630,8 @@ function render() {
   el.titleCount.hidden = !has;
   el.titleCount.textContent = String(Cart.count());
   el.titleCount.setAttribute('aria-label', plural(Cart.count(), 'toode', 'toodet'));
-  el.heroSub.textContent = has
-    ? 'Paar klikki ja pidu on teel. Saadame 1–3 tööpäevaga sinu lähimasse pakiautomaati.'
+  el.heroSub.innerHTML = has
+    ? 'Paar klikki ja pidu on teel. Saadame <span class="nowrap">1–3 tööpäevaga</span> sinu lähimasse pakiautomaati.'
     : 'Siin on hetkel vaikne — aga see on kergesti parandatav.';
   if (!has) {
     renderRecs();
@@ -1587,6 +1651,13 @@ function render() {
 }
 
 window.addEventListener('cart:change', () => render());
+
+// Päise ostukorvi nupp: kassalehel sahtlit ei avata (layout.js) — keri hoopis korvi juurde.
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('[data-open-cart]')) return;
+  const target = Cart.count() ? $('#samm-ostukorv') : el.empty;
+  target?.scrollIntoView({ behavior: REDUCED.matches ? 'auto' : 'smooth', block: 'start' });
+});
 
 /* =========================================================================
    Käivitus

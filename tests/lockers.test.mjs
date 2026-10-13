@@ -129,7 +129,7 @@ test('fetchJson: ajalimiit katkestab päringu', async () => {
 test('fetchJson: HTTP viga ja vigane JSON visatakse; BOM eemaldatakse', async () => {
   await assert.rejects(() => fetchJson('https://x.test', { fetchImpl: async () => jsonResponse({}, 503) }), /HTTP 503/);
   await assert.rejects(() => fetchJson('https://x.test', { fetchImpl: async () => new Response('<html>') }));
-  const data = await fetchJson('https://x.test', { fetchImpl: async () => new Response('﻿[1]') });
+  const data = await fetchJson('https://x.test', { fetchImpl: async () => new Response('\uFEFF[1]') });
   assert.deepEqual(data, [1]);
 });
 

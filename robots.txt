@@ -1,0 +1,9 @@
+# ÄGE veebipood
+User-agent: *
+Allow: /
+Disallow: /__forms
+Disallow: /aitah
+Disallow: /ostukorv
+
+# TODO: asenda domeen päris aadressiga, kui see on teada (nt https://www.age.ee).
+Sitemap: https://www.age.ee/sitemap.xml

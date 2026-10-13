@@ -1,0 +1,22 @@
+{
+  "name": "age-veebipood",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ÄGE kaardimängude veebipood (MIDA V!!!U, Oled Semu?, Vigur)",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev-server.mjs",
+    "dev:mock": "MOCK_API=1 node scripts/dev-server.mjs",
+    "test": "node --test tests/",
+    "screenshot": "node scripts/screenshot.mjs"
+  },
+  "dependencies": {
+    "stripe": "^17.7.0"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

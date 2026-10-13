@@ -1,0 +1,235 @@
+/* =========================================================================
+   3D mängukarp (CSS 3D + JS). Kasutus: vt assets/js/box3d.js
+   ========================================================================= */
+.box3d {
+  --w: 340px;
+  --ratio: 1.448;
+  --h: calc(var(--w) / var(--ratio));
+  --d: calc(var(--w) * 0.28);
+  --side: linear-gradient(180deg, #ff2fa8 0%, #9a005f 55%, #2a0019 100%);
+  --edge-glow: rgba(255, 47, 168, 0.65);
+  position: relative;
+  width: var(--w);
+  height: calc(var(--h) + var(--d));
+  perspective: 1400px;
+  perspective-origin: 50% 40%;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+.box3d.is-dragging {
+  cursor: grabbing;
+}
+.box3d--semu {
+  --side: linear-gradient(180deg, #6f7bff 0%, #2747b5 55%, #0c1640 100%);
+  --edge-glow: rgba(111, 123, 255, 0.6);
+}
+.box3d--vigur {
+  --side: linear-gradient(180deg, #ff2f7a 0%, #c00a3a 55%, #3a0011 100%);
+  --edge-glow: rgba(255, 31, 107, 0.6);
+}
+.box3d__float {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.box3d__obj {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.box3d__face {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 6px;
+  background: #0b0108;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.box3d__face::after {
+  /* varjutus vastavalt valgusele (JS seab --shade 0..1) */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: var(--shade, 0);
+  pointer-events: none;
+}
+.box3d__face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+.box3d__face--front,
+.box3d__face--back {
+  width: var(--w);
+  height: var(--h);
+  margin: calc(var(--h) / -2) 0 0 calc(var(--w) / -2);
+}
+.box3d__face--front {
+  transform: translateZ(calc(var(--d) / 2));
+}
+.box3d__face--back {
+  transform: rotateY(180deg) translateZ(calc(var(--d) / 2));
+}
+.box3d__face--left,
+.box3d__face--right {
+  width: var(--d);
+  height: var(--h);
+  margin: calc(var(--h) / -2) 0 0 calc(var(--d) / -2);
+  background: var(--side);
+}
+.box3d__face--right {
+  transform: rotateY(90deg) translateZ(calc(var(--w) / 2));
+}
+.box3d__face--left {
+  transform: rotateY(-90deg) translateZ(calc(var(--w) / 2));
+}
+.box3d__face--top,
+.box3d__face--bottom {
+  width: var(--w);
+  height: var(--d);
+  margin: calc(var(--d) / -2) 0 0 calc(var(--w) / -2);
+  background: var(--side);
+}
+.box3d__face--top {
+  transform: rotateX(90deg) translateZ(calc(var(--h) / 2));
+}
+.box3d__face--bottom {
+  transform: rotateX(-90deg) translateZ(calc(var(--h) / 2));
+}
+
+/* läige, mis libiseb üle esikülje */
+.box3d__sheen {
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.22) 48%, rgba(255, 255, 255, 0.05) 52%, transparent 62%);
+  transform: translateX(var(--sheen, -60%));
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* külgede tekst */
+.box3d__spine {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 12px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+}
+.box3d__face--left .box3d__spine span,
+.box3d__face--right .box3d__spine span {
+  transform: rotate(-90deg);
+  font-size: calc(var(--d) * 0.32);
+}
+.box3d__face--top .box3d__spine,
+.box3d__face--bottom .box3d__spine {
+  font-family: var(--font-condensed);
+  font-weight: 400;
+  font-size: calc(var(--d) * 0.26);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  overflow: hidden;
+}
+
+/* tagakülg (genereeritud) */
+.box3d__back {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: calc(var(--w) * 0.03);
+  padding: 8%;
+  text-align: center;
+  background: radial-gradient(70% 90% at 15% 20%, rgba(255, 47, 168, 0.55), transparent 60%),
+    radial-gradient(60% 80% at 90% 90%, rgba(255, 47, 168, 0.45), transparent 60%), #070006;
+}
+.box3d--semu .box3d__back {
+  background: var(--grad-semu);
+}
+.box3d--vigur .box3d__back {
+  background: var(--grad-vigur);
+}
+.box3d__back img {
+  width: 34%;
+  height: auto;
+  object-fit: contain;
+}
+.box3d__back-title {
+  font-family: var(--font-condensed);
+  font-size: calc(var(--w) * 0.06);
+  color: #fff;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.box3d__back-facts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: calc(var(--w) * 0.014);
+}
+.box3d__back-facts span {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: calc(var(--w) * 0.026);
+  padding: 0.45em 0.8em;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+/* vari põrandal */
+.box3d__shadow {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--d) * -0.1);
+  width: calc(var(--w) * 0.9);
+  height: calc(var(--w) * 0.12);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--edge-glow), transparent);
+  filter: blur(14px);
+  opacity: 0.75;
+  transform: translateX(-50%) scale(var(--shadow-scale, 1));
+  pointer-events: none;
+}
+
+.box3d__hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--d) * -0.55);
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+  white-space: nowrap;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.box3d.has-interacted .box3d__hint {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box3d__sheen {
+    display: none;
+  }
+}

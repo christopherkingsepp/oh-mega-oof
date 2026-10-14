@@ -10,7 +10,7 @@
 import Stripe from 'stripe';
 import { json, readTextLimited } from './_lib/http.mjs';
 import { validateOrder } from './_lib/order.mjs';
-import { buildSessionParams, ensureCoupon, resolveOrigin, createOrderId } from './_lib/stripe-session.mjs';
+import { buildSessionParams, ensureCoupon, forgetCoupon, resolveOrigin, createOrderId } from './_lib/stripe-session.mjs';
 
 export const MAX_BODY_BYTES = 20 * 1024;
 
@@ -18,6 +18,7 @@ const MSG_NOT_CONFIGURED = 'Makse pole veel seadistatud. Võta meiega ühendust.
 const MSG_STRIPE_FAILED = 'Makset ei õnnestunud alustada. Proovi uuesti.';
 const MSG_BAD_JSON = 'Vigane päring. Värskenda lehte ja proovi uuesti.';
 const MSG_TOO_LARGE = 'Päring on liiga suur. Värskenda lehte ja proovi uuesti.';
+const MSG_BAD_TYPE = 'Vigane päring (oodati JSON-i). Värskenda lehte ja proovi uuesti.';
 
 // Stripe klient luuakse üks kord soojas funktsioonis ja taaskasutatakse.
 const clients = new Map();
@@ -54,6 +55,10 @@ export function createHandler({ stripeFactory = defaultStripeFactory, env = proc
   return async function checkoutHandler(req, context = {}) {
     if (req.method !== 'POST') {
       return json(405, { error: 'Lubatud on ainult POST-päring.' }, { Allow: 'POST' });
+    }
+
+    if (!/application\/json/i.test(req.headers.get('content-type') || '')) {
+      return json(415, { error: MSG_BAD_TYPE });
     }
 
     // 1) Loe ja parsi keha (max ~20 KB; suuremat ei loeta isegi mällu).
@@ -104,8 +109,24 @@ export function createHandler({ stripeFactory = defaultStripeFactory, env = proc
         );
       }
       stage = 'session';
-      const params = buildSessionParams(order, { origin, couponId, orderId });
-      const session = await stripe.checkout.sessions.create(params);
+      let session;
+      try {
+        session = await stripe.checkout.sessions.create(buildSessionParams(order, { origin, couponId, orderId }));
+      } catch (err) {
+        // Kupong kustutati vahepeal Stripe'i töölaual, aga soe funktsioon mäletab seda:
+        // unusta, loo uuesti ja proovi ühe korra veel.
+        const couponGone = couponId && (err?.code === 'resource_missing' || err?.raw?.code === 'resource_missing') && /coupon|discount/i.test(`${err?.param || ''} ${err?.message || ''}`);
+        if (!couponGone) throw err;
+        forgetCoupon(couponId, couponCache);
+        stage = 'coupon-retry';
+        couponId = await ensureCoupon(
+          stripe,
+          { code: order.totals.code, percent: order.totals.percent, amountOffCents: order.totals.discountCents },
+          couponCache,
+        );
+        stage = 'session-retry';
+        session = await stripe.checkout.sessions.create(buildSessionParams(order, { origin, couponId, orderId }));
+      }
       if (!session?.url) throw new Error('Stripe ei tagastanud makselehe URL-i');
       logger.log?.(`[checkout] ${orderId}: makseleht loodud (${order.totals.totalCents} senti, ${order.items.length} rida)`);
       return json(200, { url: session.url, orderId, ...(order.warnings.length ? { warnings: order.warnings } : {}) });
@@ -118,4 +139,8 @@ export function createHandler({ stripeFactory = defaultStripeFactory, env = proc
 
 export default createHandler();
 
-export const config = { path: '/api/checkout' };
+// Netlify kiiruspiirang: ühelt IP-lt kuni 10 makselehe loomist minutis (kaitseb Stripe'i konto rämpsu eest).
+export const config = {
+  path: '/api/checkout',
+  rateLimit: { windowLimit: 10, windowSize: 60, aggregateBy: ['ip', 'domain'] },
+};

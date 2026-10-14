@@ -79,6 +79,11 @@ const isAlreadyExists = (err) =>
 // Soojas funktsioonis meelde jäetud kupongid (säästab ühe API päringu).
 const knownCoupons = new Set();
 
+/** Unustab kupongi soojas mälus (nt kui see Stripe'i töölaual kustutati). */
+export function forgetCoupon(id, cache = knownCoupons) {
+  cache.delete(id);
+}
+
 /**
  * Tagastab Stripe'i kupongi id, mis annab täpselt `amountOffCents` soodustust.
  * Olemasolev kupong → kasutame; puudub → loome; paralleelne päring jõudis
@@ -206,8 +211,9 @@ export function buildSessionParams(order, { origin, couponId = null, orderId = c
           fixed_amount: { amount: totals.shippingCents, currency: CURRENCY },
           display_name: truncate(`${shipping.carrierName} — ${shipping.lockerName}`, 100),
           delivery_estimate: {
-            minimum: { unit: 'business_day', value: 1 },
-            maximum: { unit: 'business_day', value: 3 },
+            // väljastus 1–3 tööpäeva + tavaliselt 1–2 tööpäeva automaati jõudmiseks
+            minimum: { unit: 'business_day', value: 2 },
+            maximum: { unit: 'business_day', value: 5 },
           },
         },
       },
@@ -231,7 +237,7 @@ export function buildSessionParams(order, { origin, couponId = null, orderId = c
       submit: {
         message: truncate(
           `Pakk saadetakse pakiautomaati: ${shipping.carrierName} — ${shipping.lockerName}. ` +
-            'Väljastame 1–3 tööpäeva jooksul ja automaadi koodi saad SMS-iga.',
+            'Saadame paki teele 1–3 tööpäeva jooksul ja automaadi avamiskoodi saad SMS-iga.',
           1200,
         ),
       },

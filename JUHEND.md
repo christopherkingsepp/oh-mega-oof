@@ -50,7 +50,7 @@ Juhendi lõpuks:
 
 | Aadress | Mis seal on |
 |---|---|
-| `/` (avaleht) | Pöörlev 3D-karp, MIDA V!!!U tutvustus ja kaarditüübid, minimäng „Tõmba kaart“, kõik kolm mängu, komplektid, reeglid nelja sammuna, ÄGE lugu (õpilasfirmast päris firmaks), KKK eelvaade ja sotsiaalmeedia lingid |
+| `/` (avaleht) | Pöörlev 3D-karp, MIDA V!!!U tutvustus ja kaarditüübid, minimäng „Tõmba kaart“, kõik kolm mängu, komplektid, reeglid nelja sammuna, ÄGE lugu (õpilasfirmast sinu peole), KKK eelvaade ja sotsiaalmeedia lingid |
 | `/mida-viiu` | MIDA V!!!U tootelehekülg: 3D-karp ja galerii, kaardipakk, mida saab lohistada ja ümber pöörata, kogusevalik, mobiilis ekraani alla kinnituv osturiba, nupp **„Vaata 3D-mudelit“** (Pacdora), KKK ja soovitused teistele mängudele |
 | `/oled-semu`, `/vigur` | Samasugused tootelehed Oled Semu? ja Viguri jaoks |
 | `/ostukorv` | Ostukorv ja kassa ühel lehel: **Sinu ostukorv → Tarne pakiautomaati → Kontaktandmed → Kinnita ja maksa**. Seal on ka sooduskoodi väli, pakiautomaadi otsing ja kokkuvõte. Nupp **„Maksa …“** viib Stripe'i makselehele |
@@ -357,7 +357,7 @@ Lisaks on makse kirjelduses (*Description*) näiteks „ÄGE tellimus AGE-7KQ2PX
 3. Tee uus deploy: **Deploys → Trigger deploy → Deploy project**. Netlify otsib vorme ainult deploy ajal, seega ilma uue deploy'ta vormi ei leita.
 4. Ava uuesti **Forms**. Nimekirjas peab olema vorm **`soodus`**.
 
-> ⚠️ **Tähtis:** Netlify leiab vormid ainult HTML-failidest deploy hetkel. Hüpik luuakse lehel JavaScriptiga, mistõttu peab mõnes HTML-failis olema ka vormi **peidetud koopia**. Kui pärast samme 1–3 vormi `soodus` nimekirjas **ei ole**, vaata peatüki 13 rida „Uudiskirja e-postid ei ilmu Netlifysse“. Seal on täpne koodijupp, mille saad ise lisada. Klient näeb koodi AGE15 igal juhul, aga e-post jääb siis salvestamata.
+> ⚠️ **Tähtis:** Netlify leiab vormid ainult HTML-failidest deploy hetkel. Hüpik luuakse lehel JavaScriptiga, seepärast on vormi **peidetud koopia** failis `__forms.html` — **ära seda faili kustuta ega ümber nimeta**. Kui pärast samme 1–3 vormi `soodus` nimekirjas ikkagi **ei ole**, vaata peatüki 13 rida „Uudiskirja e-postid ei ilmu Netlifysse“. Klient näeb koodi AGE15 igal juhul, aga e-post jääb siis salvestamata.
 
 ### 6.2 Testi
 
@@ -502,7 +502,7 @@ Kui DNS töötab, hangib Netlify tasuta **Let's Encrypt** sertifikaadi automaats
 
 ## 9. Igapäevane töö: tellimuse täitmine
 
-Veebilehel on lubatud, et **pakk väljastatakse 1–3 tööpäeva jooksul**. Hea rütm on vaadata tellimused üle iga tööpäeva hommikul ja õhtul.
+Veebilehel on lubatud, et **pakk saadetakse teele 1–3 tööpäeva jooksul** (pakiautomaati jõuab see tavaliselt 1–2 tööpäevaga pärast seda). Hea rütm on vaadata tellimused üle iga tööpäeva hommikul ja õhtul.
 
 ### 9.1 Tellimuse info leidmine
 
@@ -666,7 +666,7 @@ export const DISCOUNT_CODES = {
   - korraga saab kasutada ainult ühte koodi;
   - kood **ei ole ühekordne**. Iga kood töötab seni, kuni see nimekirjas on.
 - **Link, mis lisab koodi ise:** `https://sinu-pood/ostukorv?kood=AGE15`. Sobib hästi sotsiaalmeedia postitusse või uudiskirja.
-- **Stripe'i kupongid:** iga erineva soodussumma jaoks loob pood Stripe'is automaatselt kupongi (nt `AGE15-263` tähendab 2,63 € soodustust). Neid ei pea ise looma ja **ära neid muuda ega kustuta**. Kui kustutad, luuakse vajadusel uus.
+- **Stripe'i kupongid:** iga erineva soodussumma jaoks loob pood Stripe'is automaatselt kupongi (nt `AGE15-263` tähendab 2,63 € soodustust). Neid ei pea ise looma ja **ära neid muuda ega kustuta**. Kui kogemata kustutad, märkab pood seda järgmisel sooduskoodiga tellimusel ja loob kupongi automaatselt uuesti.
 
 ### 10.5 Ettevõtte ja kontaktandmed
 
@@ -706,7 +706,7 @@ Iga lehe tekst on oma HTML-failis:
 **HTML-is muuda ainult teksti märkide `>` ja `<` vahel.** Näide:
 
 ```html
-<p>Pakk jõuab tavaliselt <strong>1–3 tööpäevaga</strong>.</p>
+<p>Saadame paki teele <strong>1–3 tööpäeva</strong> jooksul.</p>
 ```
 
 Siin võid muuta sõnu, aga jäta alles `<p>`, `<strong>`, `</strong>` ja `</p>`. `&nbsp;` tähendab tühikut, mille kohalt rida ei murdu (nt `17,50&nbsp;€`).
@@ -756,6 +756,7 @@ Uus mäng puudutab mitut faili ja osa neist on kood. **Seda on mõistlik teha ar
 - MIDA V!!!U lehel (`/mida-viiu`) on toote pildi juures nupp **„Vaata 3D-mudelit“**.
 - Nupp avab akna, kuhu laetakse Pacdora jagamislink. Link laetakse alles nupu vajutamisel, nii et see ei aeglusta lehte.
 - Kui Pacdora ei luba oma lehte teise lehe sisse panna või brauser blokeerib selle, jääb aken tühjaks. Akna all on alati nupp **„Ava 3D-vaade uues aknas“**, mis töötab igal juhul.
+- Kui näed aknas valget tühja kasti (Pacdora ei luba end teise lehe sisse panna), ava fail `assets/js/product.js`, otsi rida `const EMBED_3D = true;` ja muuda see `const EMBED_3D = false;`. Siis avab nupp 3D-vaate kohe uues aknas.
 - **Kontrolli pärast avaldamist:** ava `/mida-viiu` → „Vaata 3D-mudelit“. Kui mudel avaneb aknas, on kõik korras. Kui ei avane, töötab ikkagi uues aknas avamise nupp.
 
 **Lingi vahetamine:**
@@ -823,7 +824,7 @@ Uus mäng puudutab mitut faili ja osa neist on kood. **Seda on mõistlik teha ar
 | Pakiautomaatide nimekiri ei lae ja kassas on käsitsi sisestamise väli | Vedaja avalik nimekiri ei vasta või on oma aadressi muutnud | **Müük ei peatu**: klient saab automaadi kirjutada käsitsi. Vaata Netlify → **Logs → Functions** → `parcel-lockers` (rida `[pakiautomaadid] …`). Kui viga kestab üle päeva, palu arendajal kontrollida allikaid failis `netlify/functions/_lib/lockers.mjs` |
 | DPD-l on alati käsitsi sisestamine | See on nii mõeldud: DPD-l pole avalikku nimekirja | Kui saad DPD-lt automaatide JSON-nimekirja aadressi, lisa Netlifysse keskkonnamuutuja `DPD_LOCKERS_URL` ja tee uus deploy |
 | Uus pakiautomaat pole veel nimekirjas | Nimekiri salvestatakse kiiruse huvides kuni ööpäevaks | Oota päev. Seni saab klient kasutada käsitsi sisestamist |
-| **Uudiskirja e-postid ei ilmu Netlifysse** | Form detection pole sees, pärast sisselülitamist pole deploy'd tehtud või HTML-is puudub vormi peidetud koopia | 1) **Forms → Enable form detection**. 2) **Trigger deploy**. 3) Kui vormi `soodus` ikka pole, lisa faili `index.html` lõppu, rea `</body>` ette, allolev koodijupp ja tee commit |
+| **Uudiskirja e-postid ei ilmu Netlifysse** | Form detection pole sees, pärast sisselülitamist pole deploy'd tehtud või HTML-is puudub vormi peidetud koopia | 1) **Forms → Enable form detection**. 2) **Trigger deploy**. 3) Kontrolli, et fail `__forms.html` on repos alles (selles on vormi peidetud koopia). 4) Kui vormi `soodus` ikka pole, lisa faili `index.html` lõppu, rea `</body>` ette, allolev koodijupp ja tee commit |
 | Muudatus ei ilmu lehele | Deploy ebaõnnestus või ei ole veel valmis, või brauser näitab vana versiooni | Vaata Netlify → **Deploys**: kas viimane on *Published* või *Failed*? Kui *Failed*, ava see ja vaata logi. Värskenda lehte **Ctrl + Shift + R** (Mac: **Cmd + Shift + R**). Piltide puhul vaata peatükki 10.7 (uus failinimi) |
 | Pärast muudatust on leht katki või tühi | Tõenäoliselt on süntaksiviga (nt kustutatud koma, jutumärk või sulg `.js` failis) | **Deploys** → viimane töötav versioon → **Publish deploy**. Seejärel vaata GitHubis faili ajalugu (*History*) ja paranda viga |
 | Pärast makset ei avane tänuleht või suunatakse vale aadressi peale | Põhidomeen on muutunud, aga uut deploy'd pole tehtud | Tee **Trigger deploy** ja testi uuesti (peatükk 7.4) |

@@ -89,10 +89,18 @@ test('checkout: liiga suur keha → 413 (ka ilma Content-Length päiseta)', asyn
       controller.enqueue(new TextEncoder().encode('x'.repeat(4096)));
     },
   });
-  const req = new Request('https://age.example/api/checkout', { method: 'POST', body: stream, duplex: 'half' });
+  const req = new Request('https://age.example/api/checkout', { method: 'POST', body: stream, duplex: 'half', headers: { 'Content-Type': 'application/json' } });
   const chunked = await call(handler, req);
   assert.equal(chunked.res.status, 413);
   assert.ok(pulled < 20, `lugemine pidi katkema varakult (loeti ${pulled} tükki)`);
+});
+
+test('checkout: vale Content-Type → 415 ja Stripe\'i ei kutsuta', async () => {
+  const { handler, stripe } = checkoutSetup();
+  const req = new Request('https://age.example/api/checkout', { method: 'POST', body: JSON.stringify(validBody()), headers: { 'Content-Type': 'text/plain' } });
+  const { res } = await call(handler, req);
+  assert.equal(res.status, 415);
+  assert.equal(stripe.calls.sessions.length, 0);
 });
 
 test('checkout: valideerimisviga → 400 { error, field } ja Stripe\'i ei kutsuta', async () => {
@@ -360,4 +368,27 @@ test('pakiautomaadid: DPD koos DPD_LOCKERS_URL-iga', async () => {
   assert.equal(res.status, 200);
   assert.deepEqual(urls, ['https://dpd.example/lockers.json']);
   assert.equal(data.lockers.length, 2);
+});
+
+test('checkout: töölaual kustutatud kupong → unustatakse, luuakse uuesti ja makse õnnestub', async () => {
+  const store = {};
+  const stripe = mockStripe({ coupons: store });
+  let failOnce = true;
+  const origCreate = stripe.checkout.sessions.create;
+  stripe.checkout.sessions.create = async (params) => {
+    if (failOnce && params.discounts) {
+      failOnce = false;
+      stripe.calls.sessions.push(params);
+      delete store[params.discounts[0].coupon]; // keegi kustutas kupongi töölaual
+      const err = stripeError('resource_missing', 400, `No such coupon: '${params.discounts[0].coupon}'`);
+      err.param = 'discounts[0][coupon]';
+      throw err;
+    }
+    return origCreate(params);
+  };
+  const { handler } = checkoutSetup({ stripe });
+  const { res, data } = await call(handler, postJson(JSON.stringify(validBody({ code: 'AGE15' }))));
+  assert.equal(res.status, 200, JSON.stringify(data));
+  assert.equal(stripe.calls.sessions.length, 2);
+  assert.ok(stripe.calls.createCoupon.length >= 2, 'kupong loodi uuesti');
 });

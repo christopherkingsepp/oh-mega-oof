@@ -1,6 +1,6 @@
 // Ühine päis, mobiilimenüü, jalus, ostukorvi sahtel, teavitused ja
 // kerimisel ilmumise animatsioon. Iga leht laeb selle main.js kaudu.
-import { PRODUCTS, formatEur, SHIPPING, toCents } from './catalog.js';
+import { PRODUCTS, formatEur, SHIPPING, toCents, MAX_QTY_PER_ITEM } from './catalog.js';
 import { Cart } from './cart.js';
 import { SITE } from './site.js';
 
@@ -58,8 +58,8 @@ function renderHeader() {
     </div>
   </header>
   <nav class="mobile-nav" id="mobile-nav" aria-label="Mobiilimenüü">
-    ${NAV.map((n) => `<a href="${n.href}">${esc(n.label)}</a>`).join('')}
-    <a href="/ostukorv">Ostukorv</a>
+    ${NAV.map((n) => `<a href="${n.href}" ${path === n.href ? 'aria-current="page"' : ''}>${esc(n.label)}</a>`).join('')}
+    <a href="/ostukorv" ${path === '/ostukorv' ? 'aria-current="page"' : ''}>Ostukorv</a>
   </nav>`;
 
   const header = document.getElementById('site-header');
@@ -70,19 +70,55 @@ function renderHeader() {
   const toggle = document.querySelector('[data-menu-toggle]');
   const mobile = document.getElementById('mobile-nav');
   const setMenu = (open) => {
+    if (mobile.classList.contains('is-open') === open) return;
+    if (open) mobile.inert = false;
     mobile.classList.toggle('is-open', open);
     toggle.setAttribute('aria-expanded', String(open));
     toggle.setAttribute('aria-label', open ? 'Sulge menüü' : 'Ava menüü');
     toggle.innerHTML = open ? ICONS.close : ICONS.menu;
     document.body.classList.toggle('is-locked', open);
+    // Avatud menüü ajal on ülejäänud leht (v.a päis ja menüü) inert: Tab ei pääse menüü taha.
+    for (const el of document.body.children) {
+      if (el === header || el === mobile || el.matches('script, .skip-link, .toast-region')) continue;
+      if (open) {
+        if (!el.inert) {
+          el.inert = true;
+          el.dataset.menuInert = '';
+        }
+      } else if ('menuInert' in el.dataset) {
+        el.inert = false;
+        delete el.dataset.menuInert;
+      }
+    }
+    // Päises jääb menüü avatud olekus kätte ainult menüünupp.
+    header.querySelectorAll('a, button').forEach((el) => {
+      if (el !== toggle) el.tabIndex = open ? -1 : 0;
+    });
+    if (open) mobile.querySelector('a')?.focus();
+    else if (mobile.contains(document.activeElement) || document.activeElement === document.body) toggle.focus();
   };
+  mobile.inert = true;
+  mobile.addEventListener('transitionend', () => {
+    mobile.inert = !mobile.classList.contains('is-open');
+  });
   toggle.addEventListener('click', () => setMenu(!mobile.classList.contains('is-open')));
   mobile.addEventListener('click', (e) => {
     if (e.target.closest('a')) setMenu(false);
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && mobile.classList.contains('is-open')) setMenu(false);
+    if (!mobile.classList.contains('is-open')) return;
+    if (e.key === 'Escape') setMenu(false);
+    // Tab tsükkel: menüü lingid + menüünupp
+    if (e.key === 'Tab') {
+      const items = [toggle, ...mobile.querySelectorAll('a')];
+      const i = items.indexOf(document.activeElement);
+      e.preventDefault();
+      const next = e.shiftKey ? (i <= 0 ? items.length - 1 : i - 1) : (i + 1) % items.length;
+      items[next].focus();
+    }
   });
+  // Kui ekraan läheb laiaks (nt telefoni pööramine), sulge mobiilimenüü.
+  window.matchMedia('(min-width: 821px)').addEventListener('change', (m) => m.matches && setMenu(false));
 }
 
 /* ---------- Jalus ---------- */
@@ -140,7 +176,7 @@ function renderFooter() {
 }
 
 /* ---------- Ostukorvi sahtel ---------- */
-let drawer, backdrop, lastFocus;
+let drawer, backdrop, lastFocus, pendingFocus;
 
 function renderDrawer() {
   document.body.insertAdjacentHTML(
@@ -158,9 +194,11 @@ function renderDrawer() {
   );
   drawer = document.querySelector('.cart-drawer');
   backdrop = document.querySelector('[data-cart-backdrop]');
+  drawer.inert = true; // suletud sahtel pole Tab-järjestuses ega ekraanilugejale nähtav
   backdrop.addEventListener('click', closeCart);
   drawer.querySelector('[data-close-cart]').addEventListener('click', closeCart);
-  drawer.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', (e) => {
+    if (!drawer.classList.contains('is-open')) return;
     if (e.key === 'Escape') closeCart();
     if (e.key === 'Tab') trapFocus(e, drawer);
   });
@@ -169,10 +207,16 @@ function renderDrawer() {
     if (btn) {
       const { id, delta } = btn.dataset;
       const item = Cart.items().find((i) => i.id === id);
-      if (item) Cart.set(id, item.qty + Number(delta));
+      if (item) {
+        pendingFocus = { sel: `[data-qty][data-id="${id}"][data-delta="${delta}"]`, id };
+        Cart.set(id, item.qty + Number(delta));
+      }
     }
     const rm = e.target.closest('[data-remove]');
-    if (rm) Cart.remove(rm.dataset.remove);
+    if (rm) {
+      pendingFocus = { sel: '[data-remove]', id: rm.dataset.remove, removed: true };
+      Cart.remove(rm.dataset.remove);
+    }
   });
   document.addEventListener('click', (e) => {
     if (e.target.closest('[data-open-cart]')) {
@@ -186,6 +230,7 @@ export function openCart() {
   if (location.pathname.replace(/\.html$/, '') === '/ostukorv') return;
   lastFocus = document.activeElement;
   renderDrawerContents();
+  drawer.inert = false;
   drawer.classList.add('is-open');
   drawer.setAttribute('aria-hidden', 'false');
   backdrop.classList.add('is-open');
@@ -194,6 +239,8 @@ export function openCart() {
 }
 
 export function closeCart() {
+  if (!drawer.classList.contains('is-open')) return;
+  drawer.inert = true;
   drawer.classList.remove('is-open');
   drawer.setAttribute('aria-hidden', 'true');
   backdrop.classList.remove('is-open');
@@ -228,6 +275,14 @@ export function freeShippingHTML(t) {
   return `<div class="free-ship"><span>${msg}</span><div class="free-ship__bar"><span style="--p:${pct}%"></span></div></div>`;
 }
 
+/** Pisipilt; komplektidel kuvatakse kuhjatud karbid. */
+export function thumbHTML(p, w = 76, h = 56) {
+  if (!p.includes?.length) return `<img src="${p.image}" alt="" width="${w}" height="${h}" loading="lazy">`;
+  return `<span class="thumb-stack" style="--n:${p.includes.length}" aria-hidden="true">${p.includes
+    .map((id, i) => `<img src="${PRODUCTS[id].image}" alt="" width="${w}" height="${h}" loading="lazy" style="--i:${i}">`)
+    .join('')}</span>`;
+}
+
 function renderDrawerContents() {
   if (!drawer) return;
   const body = drawer.querySelector('[data-cart-body]');
@@ -236,13 +291,14 @@ function renderDrawerContents() {
   if (!t.lines.length) {
     body.innerHTML = `<div class="empty-state"><div class="big" aria-hidden="true"><svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"><rect x="10" y="14" width="30" height="42" rx="5" transform="rotate(-12 25 35)" opacity=".45"/><rect x="24" y="8" width="30" height="42" rx="5" transform="rotate(8 39 29)" stroke="#ff2fa8"/></svg></div><p>Ostukorv on veel tühi.<br>Pidu ootab!</p><a class="btn btn--primary" href="/mida-viiu">Vaata MIDA V!!!U ${ICONS.arrow}</a></div>`;
     foot.innerHTML = '';
+    restoreDrawerFocus();
     return;
   }
   body.innerHTML = t.lines
     .map(
       ({ product: p, qty, totalCents }) => `
       <div class="cart-line">
-        <img src="${p.image}" alt="" width="76" height="56" loading="lazy">
+        ${thumbHTML(p)}
         <div>
           <div class="cart-line__name">${esc(p.name)}</div>
           <div class="cart-line__price">${formatEur(totalCents)}</div>
@@ -251,7 +307,7 @@ function renderDrawerContents() {
         <div class="qty" role="group" aria-label="Kogus: ${esc(p.name)}">
           <button type="button" data-qty data-id="${p.id}" data-delta="-1" aria-label="Vähenda">−</button>
           <output aria-live="polite">${qty}</output>
-          <button type="button" data-qty data-id="${p.id}" data-delta="1" aria-label="Suurenda">+</button>
+          <button type="button" data-qty data-id="${p.id}" data-delta="1" aria-label="Suurenda" ${qty >= MAX_QTY_PER_ITEM ? 'disabled title="Ühte mängu saab tellida kuni 20 tk"' : ''}>+</button>
         </div>
       </div>`,
     )
@@ -263,6 +319,17 @@ function renderDrawerContents() {
     <div class="sum-row"><span>Tarne pakiautomaati</span><span>${t.shippingCents ? formatEur(t.shippingCents) : 'Tasuta'}</span></div>
     <div class="sum-row sum-row--total"><span>Kokku</span><span>${formatEur(t.totalCents)}</span></div>
     <a class="btn btn--primary btn--lg btn--block" href="/ostukorv">Vormista tellimus ${ICONS.arrow}</a>`;
+  restoreDrawerFocus();
+}
+
+function restoreDrawerFocus() {
+  const pf = pendingFocus;
+  pendingFocus = null;
+  if (!pf || !drawer.classList.contains('is-open')) return;
+  let target = drawer.querySelector(pf.sel.includes('data-id') ? pf.sel : `[data-remove="${pf.id}"]`);
+  if (target?.disabled) target = target.parentElement.querySelector('[data-delta="-1"]');
+  if (!target) target = drawer.querySelector('[data-remove]') || drawer.querySelector('.empty-state a') || drawer.querySelector('[data-close-cart]');
+  target?.focus();
 }
 
 function updateCount(bump) {
@@ -276,7 +343,7 @@ function updateCount(bump) {
       el.classList.add('bump');
     }
   });
-  document.querySelectorAll('[data-open-cart]').forEach((b) => b.setAttribute('aria-label', n ? `Ava ostukorv (${n} toodet)` : 'Ava ostukorv'));
+  document.querySelectorAll('[data-open-cart]').forEach((b) => b.setAttribute('aria-label', n ? `Ava ostukorv (${n} ${n === 1 ? 'toode' : 'toodet'})` : 'Ava ostukorv'));
 }
 
 /* ---------- Teavitused ---------- */
@@ -308,11 +375,16 @@ function bindAddToCart() {
       const src = document.querySelector(btn.dataset.qtySource);
       qty = Math.max(1, parseInt(src?.value ?? src?.textContent ?? '1', 10) || 1);
     }
-    Cart.add(id, qty);
+    const added = Cart.add(id, qty);
+    if (!added) {
+      toast(`Ühte mängu saab korraga tellida kuni ${MAX_QTY_PER_ITEM} tk. Suurema koguse jaoks kirjuta meile.`, { image: p.image, link: { href: '/ostukorv', label: 'Ostukorv', cart: true } });
+      return;
+    }
     btn.classList.add('is-added');
     setTimeout(() => btn.classList.remove('is-added'), 1200);
-    toast(`<strong>${esc(p.name)}</strong> lisatud ostukorvi`, { image: p.image, link: { href: '/ostukorv', label: 'Vaata', cart: true } });
-    window.dispatchEvent(new CustomEvent('cart:added', { detail: { id, qty, button: btn } }));
+    const label = added === qty ? `<strong>${esc(p.name)}</strong> lisatud ostukorvi` : `Lisasin ${added} tk — ühte mängu saab tellida kuni ${MAX_QTY_PER_ITEM} tk`;
+    toast(label, { image: p.image, link: { href: '/ostukorv', label: 'Vaata', cart: true } });
+    window.dispatchEvent(new CustomEvent('cart:added', { detail: { id, qty: added, button: btn } }));
   });
 }
 

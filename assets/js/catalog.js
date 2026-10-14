@@ -20,7 +20,7 @@ export const PRODUCTS = {
     accent: '#ff2fa8',
     gradient: 'radial-gradient(120% 120% at 50% 0%, #ff2fa8 0%, #6d0047 45%, #0b0108 100%)',
     short: '85 kaarti, 50+ shotti ja ainult üks reegel: väljapääsu pole. 18+ seltskonnamäng, mis teeb igast õhtust loo, mida järgmisel päeval veel räägitakse.',
-    facts: ['85 kaarti', '50+ shotti', '18+', '3–12 mängijat', 'Lamineeritud kaardid'],
+    facts: ['85 kaarti', '50+ shotti', '18+', 'Lamineeritud kaardid'],
   },
   'oled-semu': {
     id: 'oled-semu',
@@ -35,7 +35,7 @@ export const PRODUCTS = {
     accent: '#6f7bff',
     gradient: 'linear-gradient(100deg, #0a4bb5 0%, #c56be0 100%)',
     short: '75 küsimust viies raskusastmes, 7 boonuskaarti ja punktivargus. Mäng, mis näitab, kes on päriselt semu.',
-    facts: ['85 kaarti', '75 küsimust', '7 boonuskaarti', '3+ mängijat', '12+'],
+    facts: ['85 kaarti', '75 küsimust', '7 boonuskaarti', '12+'],
   },
   vigur: {
     id: 'vigur',
@@ -49,8 +49,8 @@ export const PRODUCTS = {
     cover: '/assets/img/games/vigur-cover.webp',
     accent: '#ff1f6b',
     gradient: 'linear-gradient(100deg, #ff00b4 0%, #e8123f 100%)',
-    short: '50 olukorrakaarti ja 32 „Shh“ tegevuskaarti. Bluffi, naera ja arva ära, kes valetab.',
-    facts: ['82 kaarti', '50 olukorda', '32 tegevuskaarti', '3+ mängijat', '12+'],
+    short: '50 olukorrakaarti ja 32 „Shh“-tegevuskaarti. Bluffi, naera ja arva ära, kes valetab.',
+    facts: ['82 kaarti', '50 olukorda', '32 tegevuskaarti', '12+'],
   },
   'komplekt-semu-vigur': {
     id: 'komplekt-semu-vigur',
@@ -115,7 +115,7 @@ export const toCents = (eur) => Math.round(eur * 100);
 export function computeTotals(items, code) {
   const lines = [];
   for (const { id, qty } of items) {
-    const p = PRODUCTS[id];
+    const p = Object.prototype.hasOwnProperty.call(PRODUCTS, id) ? PRODUCTS[id] : null;
     const q = Math.max(0, Math.min(MAX_QTY_PER_ITEM, Math.floor(Number(qty) || 0)));
     if (!p || q === 0) continue;
     lines.push({ product: p, qty: q, unitCents: toCents(p.price), totalCents: toCents(p.price) * q });

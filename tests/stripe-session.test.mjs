@@ -94,8 +94,8 @@ test('tasuta tarne (≥ 30 €): tarne summa 0', () => {
   assert.equal(rate.fixed_amount.amount, 0);
   assert.equal(rate.fixed_amount.currency, 'eur');
   assert.deepEqual(rate.delivery_estimate, {
-    minimum: { unit: 'business_day', value: 1 },
-    maximum: { unit: 'business_day', value: 3 },
+    minimum: { unit: 'business_day', value: 2 },
+    maximum: { unit: 'business_day', value: 5 },
   });
 });
 

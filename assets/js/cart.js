@@ -22,7 +22,24 @@ function write(key, value) {
   }
 }
 
-let memoryItems = read(CART_KEY, []).filter((i) => PRODUCTS[i.id]);
+const has = (id) => typeof id === 'string' && Object.prototype.hasOwnProperty.call(PRODUCTS, id);
+
+/** Puhastab localStorage'ist loetud korvi: ainult tuntud tooted, täisarvulised kogused 1..MAX, ilma duplikaatideta. */
+function sanitize(raw) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const i of raw) {
+    if (!i || typeof i !== 'object' || !has(i.id)) continue;
+    const qty = Math.min(MAX_QTY_PER_ITEM, Math.floor(Number(i.qty)) || 0);
+    if (qty < 1) continue;
+    const dup = out.find((o) => o.id === i.id);
+    if (dup) dup.qty = Math.min(MAX_QTY_PER_ITEM, dup.qty + qty);
+    else out.push({ id: i.id, qty });
+  }
+  return out;
+}
+
+let memoryItems = sanitize(read(CART_KEY, []));
 let memoryCode = normalizeCode(read(CODE_KEY, null));
 
 function emit(detail = {}) {
@@ -41,19 +58,25 @@ export const Cart = {
   count() {
     return memoryItems.reduce((s, i) => s + i.qty, 0);
   },
+  /** Lisab toote; tagastab tegelikult lisatud koguse (0, kui piir MAX_QTY_PER_ITEM on täis). */
   add(id, qty = 1) {
-    if (!PRODUCTS[id]) return;
+    if (!has(id)) return 0;
+    const want = Math.max(1, Math.floor(Number(qty)) || 1);
     const existing = memoryItems.find((i) => i.id === id);
-    if (existing) existing.qty = Math.min(MAX_QTY_PER_ITEM, existing.qty + qty);
-    else memoryItems.push({ id, qty: Math.min(MAX_QTY_PER_ITEM, qty) });
-    persist({ action: 'add', id, qty });
+    const before = existing ? existing.qty : 0;
+    const after = Math.min(MAX_QTY_PER_ITEM, before + want);
+    if (after === before) return 0;
+    if (existing) existing.qty = after;
+    else memoryItems.push({ id, qty: after });
+    persist({ action: 'add', id, qty: after - before });
+    return after - before;
   },
   set(id, qty) {
-    const q = Math.max(0, Math.min(MAX_QTY_PER_ITEM, Math.floor(qty)));
+    const q = Math.max(0, Math.min(MAX_QTY_PER_ITEM, Math.floor(Number(qty)) || 0));
     if (q === 0) return Cart.remove(id);
     const existing = memoryItems.find((i) => i.id === id);
     if (existing) existing.qty = q;
-    else if (PRODUCTS[id]) memoryItems.push({ id, qty: q });
+    else if (has(id)) memoryItems.push({ id, qty: q });
     persist({ action: 'set', id, qty: q });
   },
   remove(id) {
@@ -92,7 +115,7 @@ export const Cart = {
 // Sünkroniseeri teiste vahelehtedega.
 window.addEventListener('storage', (e) => {
   if (e.key === CART_KEY) {
-    memoryItems = read(CART_KEY, []).filter((i) => PRODUCTS[i.id]);
+    memoryItems = sanitize(read(CART_KEY, []));
     emit({ action: 'sync' });
   }
   if (e.key === CODE_KEY) {

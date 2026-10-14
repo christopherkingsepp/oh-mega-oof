@@ -25,7 +25,7 @@ const EE_MOBILE_RE = /^(?:5\d{6,7}|8\d{7})$/;
 export function normalizePhone(input) {
   const raw = typeof input === 'number' ? String(input) : typeof input === 'string' ? input.trim() : '';
   const generic = 'Kontrolli telefoninumbrit (nt +372 5123 4567).';
-  if (!raw) return { error: 'Sisesta telefoninumber — kuller saadab pakiautomaadi koodi SMS-iga.' };
+  if (!raw) return { error: 'Sisesta telefoninumber — pakiautomaat saadab avamiskoodi SMS-iga.' };
   if (raw.length > 32 || !/^[+\d\s().\-/]+$/.test(raw)) return { error: generic };
 
   let plus = raw.startsWith('+');
@@ -97,7 +97,7 @@ export function validateOrder(body) {
     return fail('Sisesta oma ees- ja perekonnanimi — see läheb pakile.', 'customer.name');
   }
   const email = cleanText(customer.email); // tühikud keskel → vigane (regex ei luba)
-  if (!isValidEmail(email)) return fail('Kontrolli e-posti aadressi — sinna saadame tellimuse kinnituse.', 'customer.email');
+  if (!isValidEmail(email)) return fail('Kontrolli e-posti aadressi — sinna saadetakse makse kviitung.', 'customer.email');
 
   const phoneResult = normalizePhone(customer.phone);
   if (phoneResult.error) return fail(phoneResult.error, 'customer.phone');

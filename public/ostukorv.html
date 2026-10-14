@@ -13,6 +13,7 @@
   <meta property="og:site_name" content="ÄGE">
   <meta property="og:title" content="Ostukorv | ÄGE">
   <meta property="og:description" content="Eesti seltskonnamängud, mis panevad inimesed rääkima, naerma ja teineteist uuest küljest avastama.">
+  <!-- TODO: kui domeen on teada, tee og:image absoluutseks ja lisa og:url -->
   <meta property="og:image" content="/assets/img/brand/og-image.jpg">
   <meta property="og:locale" content="et_EE">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,7 +60,7 @@
 
       <!-- Makse katkestati -->
       <div class="co-banner" data-cancel-banner role="status" hidden>
-        <span class="co-banner__icon" aria-hidden="true">↩</span>
+        <span class="co-banner__icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span>
         <p><strong>Makse katkestati</strong> — sinu ostukorv on alles, proovi uuesti.</p>
         <button class="icon-btn co-banner__close" type="button" data-close-banner aria-label="Sulge teade"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
@@ -106,7 +107,7 @@
               <div class="co-code__form" data-code-form>
                 <label class="label" for="code-input">Sooduskood</label>
                 <div class="co-code__row">
-                  <input class="input co-code__input" id="code-input" name="code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Sisesta kood" aria-describedby="code-error" maxlength="32">
+                  <input class="input co-code__input" id="code-input" name="code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Sisesta sooduskood" aria-describedby="code-error" maxlength="32">
                   <button class="btn co-code__btn" type="button" data-apply-code>Rakenda</button>
                 </div>
                 <p class="field-error" id="code-error" aria-live="polite"></p>
@@ -179,7 +180,7 @@
               </div>
               <div class="field">
                 <label for="f-email">E-post</label>
-                <input class="input" id="f-email" name="email" type="email" enterkeyhint="next" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="mari@näide.ee" required aria-describedby="f-email-hint f-email-error" maxlength="120" data-validate="email">
+                <input class="input" id="f-email" name="email" type="email" enterkeyhint="next" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="mari@näide.ee" required aria-describedby="f-email-hint f-email-error" maxlength="254" data-validate="email">
                 <p class="co-hint" id="f-email-hint" data-email-suggest hidden></p>
                 <p class="field-error" id="f-email-error" aria-live="polite"></p>
               </div>
@@ -205,13 +206,13 @@
             </header>
             <div class="co-return-note" role="note">
               <span class="co-return-note__icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg></span>
-              <p><strong>Mänge tagasi ei võeta.</strong> Kui pakk jõuab kohale vigasena või millestki on puudu, vahetame mängu kiirelt ja tasuta välja. <a href="/tingimused#tagastamine" target="_blank" rel="noopener">Loe lähemalt</a></p>
+              <p><strong>Ostetud mänge tagasi ei võeta ega vahetata.</strong> Erand: kui pakk saabub kahjustatuna, kaarte on puudu või need on vigased, kirjuta meile (soovitatavalt 14 päeva jooksul, lisa foto) ja saadame asenduse tasuta. <a href="/tingimused#tagastamine" target="_blank" rel="noopener">Loe lähemalt</a></p>
             </div>
             <div class="co-checks">
               <div class="co-check-wrap">
                 <label class="check co-check">
                   <input type="checkbox" id="f-terms" name="terms" required aria-describedby="f-terms-error">
-                  <span>Nõustun <a href="/tingimused" target="_blank" rel="noopener">müügitingimustega</a> ja olen teadlik, et mänge ei saa tagastada.</span>
+                  <span>Nõustun <a href="/tingimused" target="_blank" rel="noopener">müügitingimustega</a> ja olen teadlik, et ostetud mänge tagasi ei võeta ega vahetata.</span>
                 </label>
                 <p class="field-error" id="f-terms-error" aria-live="polite"></p>
               </div>

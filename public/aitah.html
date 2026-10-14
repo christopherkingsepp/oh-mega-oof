@@ -13,6 +13,7 @@
   <meta property="og:site_name" content="ÄGE">
   <meta property="og:title" content="Aitäh! | ÄGE">
   <meta property="og:description" content="Eesti seltskonnamängud, mis panevad inimesed rääkima, naerma ja teineteist uuest küljest avastama.">
+  <!-- TODO: kui domeen on teada, tee og:image absoluutseks ja lisa og:url -->
   <meta property="og:image" content="/assets/img/brand/og-image.jpg">
   <meta property="og:locale" content="et_EE">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,22 +38,23 @@
         <span style="--x:20%;--y:50%;--s:44vw;--c:rgba(255,47,168,.4);--o:.55;--d:18s;--dy:-5vh"></span>
       </div>
       <div class="container ty-hero__inner">
-        <div class="ty-burst" aria-hidden="true" data-burst>
+        <div class="ty-burst" aria-hidden="true" data-burst hidden>
           <span class="ty-burst__ring"></span>
           <span class="ty-burst__ring"></span>
           <span class="ty-burst__ring"></span>
           <span class="ty-burst__rays"></span>
           <span class="ty-burst__core"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
         </div>
-        <p class="eyebrow" data-ty-eyebrow>Tellimus kinnitatud</p>
-        <h1 id="ty-title" class="ty-title"><span class="neon">Aitäh!</span> Tellimus on makstud <span class="ty-party" data-party title="Veel konfetit!" aria-hidden="true">🎉</span></h1>
-        <p class="ty-lead" data-ty-lead>Paneme su mängud kohe pakki. Valmistu õhtuks, millest räägitakse veel järgmisel päeval.</p>
+        <p class="eyebrow" data-ty-eyebrow>ÄGE pood</p>
+        <!-- Makstud oleku tekstid on vaikimisi peidus: aitah.js näitab neid ainult siis, kui Stripe suunas siia session_id-ga. -->
+        <h1 id="ty-title" class="ty-title"><span class="neon">Aitäh!</span><span data-ty-paid hidden> Tellimus on makstud <span class="ty-party" data-party title="Veel konfetit!" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 20.5 9 8.5l7.5 7.5z"/><path d="M7.4 12.8 11.2 16.6M6 16.6l1.9 1.9"/><path d="M13 3.5c.9.9.9 2.4 0 3.3M17.5 9.2c1-.6 2.4-.4 3.1.5M15 6.5l1.2-1.2"/><path d="M19.5 3.5v.01M21 13.5v.01M10.5 2.5v.01"/></svg></span></span></h1>
+        <p class="ty-lead" data-ty-lead hidden>Hea valik! Saadame paki teele 1–3 tööpäeva jooksul. Valmistu õhtuks, millest räägitakse veel järgmisel päeval.</p>
         <div class="ty-order" data-ty-order hidden></div>
       </div>
     </section>
 
     <!-- ================= Mis edasi ================= -->
-    <section class="section--tight ty-next" aria-labelledby="ty-next-title" data-ty-next>
+    <section class="section--tight ty-next" aria-labelledby="ty-next-title" data-ty-next hidden>
       <div class="container">
         <div class="ty-next__head">
           <p class="eyebrow">Mis nüüd saab?</p>
@@ -73,9 +75,9 @@
           </li>
           <li class="ty-step" data-n="3" data-reveal style="--delay:.2s">
             <span class="ty-step__icon" style="--g:var(--grad-age)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/><path d="M9.5 9.5l2 2 3.5-3.5"/></svg></span>
-            <span class="ty-step__when">Kui pakk on kohal</span>
+            <span class="ty-step__when">Tavaliselt 1–2 tööpäeva hiljem</span>
             <h3>Pakiautomaat saadab SMS-i</h3>
-            <p>Saad SMS-i koodiga, millega automaadi ukse avad. Siis jääb üle vaid sõbrad kokku kutsuda ja kaardid lauale lüüa.</p>
+            <p>Kui pakk on automaadis, saad SMS-i koodiga, millega automaadi ukse avad. Siis jääb üle vaid sõbrad kokku kutsuda ja kaardid lauale lüüa.</p>
           </li>
         </ol>
       </div>

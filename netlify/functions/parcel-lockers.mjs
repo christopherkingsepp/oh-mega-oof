@@ -5,7 +5,7 @@
 // teiste domeenidega suhtlema ja CSP jääb rangeks). Kui allikas ei vasta, tuleb
 // ikkagi 200 vastus `manual:true`-ga — siis lubab kassa automaadi nime käsitsi
 // sisestada. Õnnestunud vastus puhverdatakse Netlify CDN-is ööpäevaks.
-import { SHIPPING } from '../../assets/js/catalog.js';
+import { SHIPPING } from '../../public/assets/js/catalog.js';
 import { json } from './_lib/http.mjs';
 import { loadLockers } from './_lib/lockers.mjs';
 

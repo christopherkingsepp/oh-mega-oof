@@ -217,8 +217,10 @@
   border-radius: 12px;
   background: rgba(255, 138, 28, 0.2);
   color: var(--orange);
-  font-size: 1.3rem;
-  font-weight: 800;
+}
+.co-banner__icon .icon {
+  width: 22px;
+  height: 22px;
 }
 .co-banner--warn {
   border-color: var(--danger);
@@ -667,11 +669,19 @@
 }
 .co-upsell__title {
   margin-bottom: 12px;
-  font-size: 0.86rem;
+  font-size: 0.9rem;
   color: var(--muted);
 }
 .co-upsell__title strong {
   color: var(--text);
+}
+.co-upsell__truck {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-left: 2px;
+  vertical-align: -4px;
+  color: var(--ok, #2bff9a);
 }
 .co-upsell__list {
   display: grid;
@@ -704,6 +714,12 @@
   font-weight: 800;
   line-height: 1.2;
   font-size: 0.92rem;
+}
+/* Puuteala ≥ 44px ilma paigutust muutmata */
+.co-mini__name a {
+  display: inline-block;
+  padding-block: 13px;
+  margin-block: -13px;
 }
 .co-mini__price {
   color: var(--muted);
@@ -823,7 +839,7 @@
 }
 .carrier__meta {
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   white-space: nowrap;
 }
 .carrier__price {
@@ -1238,6 +1254,8 @@
   color: var(--muted);
 }
 .co-hint button {
+  min-height: 44px;
+  margin-block: -11px;
   color: var(--pink-soft);
   font-weight: 800;
   text-decoration: underline;
@@ -1607,7 +1625,7 @@
   align-items: flex-start;
   margin-top: 16px;
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: 0.875rem;
   line-height: 1.45;
 }
 .co-secure .icon {
@@ -1621,7 +1639,7 @@
   margin: 18px 0 0;
   padding-top: 16px;
   border-top: 1px solid var(--line);
-  font-size: 0.86rem;
+  font-size: 0.875rem;
   color: var(--muted);
 }
 .co-perks li {
@@ -2068,8 +2086,20 @@
   .co-bundle .btn {
     width: 100%;
   }
+  /* „Sisesta sooduskood“ peab tervena mahtuma; väga kitsal ekraanil läheb nupp järgmisele reale */
+  .co-code__row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .co-code__input {
+    flex: 1 1 166px;
+    padding-inline: 13px;
+  }
   .co-code__btn {
-    padding-inline: 18px;
+    padding-inline: 12px;
+  }
+  .co-code__input::placeholder {
+    font-size: 0.9rem;
   }
   .co-code__applied {
     gap: 12px;
@@ -2250,6 +2280,14 @@
   vertical-align: -0.04em;
   transition: transform 0.4s var(--ease-spring);
   -webkit-tap-highlight-color: transparent;
+}
+.ty-party svg {
+  display: block;
+  width: 0.92em;
+  height: 0.92em;
+  color: var(--pink-hot);
+  filter: drop-shadow(0 0 10px rgba(255, 47, 168, 0.75));
+  cursor: pointer;
 }
 .ty-party:hover {
   transform: rotate(-14deg) scale(1.15);
@@ -2573,4 +2611,19 @@
   .ty-burst__core svg {
     stroke-dashoffset: 0;
   }
+}
+
+/* Väga kitsas telefon (≤ 350px): sooduskoodi nupp täislaiuses, automaadiotsingu vihje mahub ära */
+@media (max-width: 350px) {
+  .co-code__btn {
+    flex: 1 1 100%;
+  }
+  .lk__input::placeholder {
+    font-size: 0.875rem;
+  }
+}
+
+/* Kassa väikesed nupud (Vaheta komplektiks, Eemalda, Muuda, + Lisa): puuteala ≥ 44px ka desktopis */
+.co .btn--sm {
+  min-height: 44px;
 }

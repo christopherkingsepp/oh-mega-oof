@@ -5,7 +5,7 @@
 // Vastus: 200 { url } | 4xx/5xx { error, field? }
 //
 // Turvalisus: hinnad, soodustus ja tarne arvutatakse AINULT siin serveris
-// ühisest kataloogist (assets/js/catalog.js). Kliendi saadetud summasid ei loeta.
+// ühisest kataloogist (public/assets/js/catalog.js). Kliendi saadetud summasid ei loeta.
 // Vajalik keskkonnamuutuja: STRIPE_SECRET_KEY (vt .env.example).
 import Stripe from 'stripe';
 import { json, readTextLimited } from './_lib/http.mjs';

@@ -66,6 +66,11 @@
   color: var(--faint);
 }
 .crumbs a {
+  /* Puuteala ≥ 44px ilma, et rida kõrgemaks läheks */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-block: -12px;
   color: var(--muted);
   transition: color 0.2s;
 }
@@ -398,6 +403,10 @@
   color: var(--text);
 }
 .faq-aside__help a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-block: -10px;
   color: var(--pink-soft);
   font-weight: 700;
   text-decoration: underline;
@@ -553,6 +562,7 @@
   color: var(--text);
 }
 .faq-item__inner .btn {
+  min-height: 44px;
   margin-top: 14px;
 }
 .faq-item mark {
@@ -1318,11 +1328,20 @@
   border-radius: var(--radius-pill);
   background: #fff;
   color: #12020d;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 800;
   transform: rotate(5deg);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+}
+.nf__shrug {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--pink);
 }
 .nf__card .nf__back {
   position: absolute;

@@ -180,7 +180,7 @@ Kui repo oli tühi, võib GitHub näidata vaikeharuna hoopis `claude/age-kaardim
 1. Ava repo, vajuta vasakul üleval haru nimega nuppu, kirjuta väljale `main` ja vali **Create branch main from claude/age-kaardimang-jt4br4**.
 2. Mine **Settings → General → Default branch**, vaheta vaikeharuks `main` (nooltega ikoon) ja kinnita.
 
-✅ **Kontroll:** repo avalehel on valitud haru `main` ja failide seas on näha `index.html`, `netlify.toml` ja `JUHEND.md`.
+✅ **Kontroll:** repo avalehel on valitud haru `main` ja failide seas on näha `public/index.html`, `netlify.toml` ja `JUHEND.md`.
 
 ---
 
@@ -198,7 +198,7 @@ Kui repo oli tühi, võib GitHub näidata vaikeharuna hoopis `claude/age-kaardim
    | Branch to deploy | `main` |
    | Base directory | *(tühi)* |
    | Build command | *(tühi, ehitusetappi pole vaja)* |
-   | Publish directory | `.` (punkt ehk repo juurkaust) |
+   | Publish directory | `public` |
    | Functions directory | `netlify/functions` |
    | Project name | `age-pood` (kui see on vaba) |
 
@@ -265,7 +265,7 @@ Keskkonnamuutuja hakkab tööle **alles pärast uut deploy'd**.
 
 ### 4.6 Stripe'i seaded, mis tasub kohe ära teha
 
-- [ ] **Bränding** (**Settings → Branding**): lae üles logo (nt repost `assets/img/brand/icon-512.png`), vali brändivärviks `#ff2fa8`. Need ilmuvad Stripe'i makselehel ja kviitungitel.
+- [ ] **Bränding** (**Settings → Branding**): lae üles logo (nt repost `public/assets/img/brand/icon-512.png`), vali brändivärviks `#ff2fa8`. Need ilmuvad Stripe'i makselehel ja kviitungitel.
 - [ ] **Avalikud andmed** (**Settings → Business → Public details**): nimi „ÄGE“, klienditoe e-post, veebilehe aadress ja *statement descriptor*, ehk tekst, mida klient näeb oma pangaväljavõttel (nt `AGE KAARDIMANG`).
 - [ ] **Makseviisid** (**Settings → Payment methods**): kontrolli, et **Cards**, **Apple Pay** ja **Google Pay** on sees. Need on tavaliselt vaikimisi sisse lülitatud. Pood pakub automaatselt kõiki makseviise, mille siin sisse lülitad ja mis kliendi seadmele sobivad. Apple Pay näiteks ilmub ainult Apple'i seadmes, kus Walletis on kaart. Vaata ka, mida veel saab lisada (nt Revolut Pay või Klarna).
 - [ ] **Kviitungid kliendile** (**Settings → Customer emails**): lülita sisse **Successful payments**. LIVE-režiimis saadab pood kliendi e-posti Stripe'ile niikuinii, nii et kviitung läheb välja, aga hoia see seade igaks juhuks sees.
@@ -357,7 +357,7 @@ Lisaks on makse kirjelduses (*Description*) näiteks „ÄGE tellimus AGE-7KQ2PX
 3. Tee uus deploy: **Deploys → Trigger deploy → Deploy project**. Netlify otsib vorme ainult deploy ajal, seega ilma uue deploy'ta vormi ei leita.
 4. Ava uuesti **Forms**. Nimekirjas peab olema vorm **`soodus`**.
 
-> ⚠️ **Tähtis:** Netlify leiab vormid ainult HTML-failidest deploy hetkel. Hüpik luuakse lehel JavaScriptiga, seepärast on vormi **peidetud koopia** failis `__forms.html` — **ära seda faili kustuta ega ümber nimeta**. Kui pärast samme 1–3 vormi `soodus` nimekirjas ikkagi **ei ole**, vaata peatüki 13 rida „Uudiskirja e-postid ei ilmu Netlifysse“. Klient näeb koodi AGE15 igal juhul, aga e-post jääb siis salvestamata.
+> ⚠️ **Tähtis:** Netlify leiab vormid ainult HTML-failidest deploy hetkel. Hüpik luuakse lehel JavaScriptiga, seepärast on vormi **peidetud koopia** failis `public/__forms.html` — **ära seda faili kustuta ega ümber nimeta**. Kui pärast samme 1–3 vormi `soodus` nimekirjas ikkagi **ei ole**, vaata peatüki 13 rida „Uudiskirja e-postid ei ilmu Netlifysse“. Klient näeb koodi AGE15 igal juhul, aga e-post jääb siis salvestamata.
 
 ### 6.2 Testi
 
@@ -436,8 +436,8 @@ Kui DNS töötab, hangib Netlify tasuta **Let's Encrypt** sertifikaadi automaats
 
 ### 7.4 Pärast domeeni käivitumist
 
-- [ ] Ava `assets/js/site.js` ja täida `url: 'https://www.age.ee'` (oma päris aadressiga, vt peatükk 10).
-- [ ] Kui projektis on failid `sitemap.xml` ja `robots.txt`, asenda neis vana aadress uuega.
+- [ ] Ava `public/assets/js/site.js` ja täida `url: 'https://www.age.ee'` (oma päris aadressiga, vt peatükk 10).
+- [ ] Kui projektis on failid `public/sitemap.xml` ja `public/robots.txt`, asenda neis vana aadress uuega.
 - [ ] Stripe'is: **Settings → Business → Public details → Website** on uus aadress.
 - [ ] Tee Netlifys uus deploy. Stripe suunab pärast makset kliendi tagasi Netlify **põhidomeenile**, seega pärast põhidomeeni määramist tasub teha üks testost (peatükk 5) ja veenduda, et tänuleht avaneb uuel aadressil.
 - [ ] Uuenda TikToki ja Instagrami profiilis link.
@@ -450,7 +450,7 @@ Kui DNS töötab, hangib Netlify tasuta **Let's Encrypt** sertifikaadi automaats
 ### 8.1 Enne aktiveerimist
 
 - [ ] Peatükk 5 on läbi tehtud ja kõik töötab.
-- [ ] Ettevõtte andmed on `assets/js/site.js` failis täidetud (nimi koos „OÜ“-ga, registrikood, e-post).
+- [ ] Ettevõtte andmed on `public/assets/js/site.js` failis täidetud (nimi koos „OÜ“-ga, registrikood, e-post).
 - [ ] `/tingimused` ja `/privaatsus` on läbi loetud ja täiendatud. **Peatükk 12 on läbi mõeldud**, eriti tagastamise osa.
 
 > 💡 Stripe vaatab aktiveerimisel ka sinu veebilehte. Seal peavad olema nähtavad tooted koos hindadega, kontaktandmed, müügitingimused (sh tagastamine) ja privaatsuspoliitika. Kõik need lehed on poes olemas. Hoolitse, et nende sisu oleks täidetud.
@@ -603,7 +603,7 @@ Kui tellimusi tuleb palju, saab käsitöö automatiseerida:
 
 ### 10.2 Hinnad
 
-Hinnad on failis **`assets/js/catalog.js`** toodete nimekirjas `PRODUCTS`:
+Hinnad on failis **`public/assets/js/catalog.js`** toodete nimekirjas `PRODUCTS`:
 
 ```js
 'mida-viiu': {
@@ -623,13 +623,13 @@ Sellest failist võtavad hinna nii veebileht kui ka makse. Stripe küsib alati s
 
 **Pärast hinna muutmist otsi samad numbrid ka teistest failidest** (github.dev otsinguga, nt `17,50` **ja** `17.50`). Mõnes kohas on hind kirjas tavalise tekstina:
 
-- `index.html`, `mida-viiu.html`, `oled-semu.html`, `vigur.html`: lehe kirjeldus otsingumootoritele (`<meta name="description" …>`), jagamise eelvaade, toote andmed Google'i jaoks (`"price": "17.50"`, `product:price:amount`) ja mõned tekstid. Enamik nähtavaid hindu uuendab leht ise, aga need kohad tuleb muuta käsitsi.
-- `assets/js/catalog.js` komplektide juures: `short` ja `facts` tekstid (*„Säästad 5,90 €“*, *„Säästad 10,40 €“*). Arvuta sääst uuesti.
+- `public/index.html`, `public/mida-viiu.html`, `public/oled-semu.html`, `public/vigur.html`: lehe kirjeldus otsingumootoritele (`<meta name="description" …>`), jagamise eelvaade, toote andmed Google'i jaoks (`"price": "17.50"`, `product:price:amount`) ja mõned tekstid. Enamik nähtavaid hindu uuendab leht ise, aga need kohad tuleb muuta käsitsi.
+- `public/assets/js/catalog.js` komplektide juures: `short` ja `facts` tekstid (*„Säästad 5,90 €“*, *„Säästad 10,40 €“*). Arvuta sääst uuesti.
 - KKK ja müügitingimuste lehed, kui hind on seal mainitud.
 
 ### 10.3 Tarnehind ja tasuta tarne piir
 
-Samas failis `assets/js/catalog.js`:
+Samas failis `public/assets/js/catalog.js`:
 
 ```js
 export const SHIPPING = {
@@ -641,7 +641,7 @@ Pärast muutmist otsi kõigist failidest ka `2,99` ja `30 €`. Need on kirjas t
 
 ### 10.4 Sooduskoodid
 
-Samas failis `assets/js/catalog.js`:
+Samas failis `public/assets/js/catalog.js`:
 
 ```js
 export const WELCOME_CODE = 'AGE15';   // kood, mida −15% hüpik jagab
@@ -670,7 +670,7 @@ export const DISCOUNT_CODES = {
 
 ### 10.5 Ettevõtte ja kontaktandmed
 
-Fail **`assets/js/site.js`**:
+Fail **`public/assets/js/site.js`**:
 
 | Väli | Mis see on | Praegu |
 |---|---|---|
@@ -692,16 +692,16 @@ Iga lehe tekst on oma HTML-failis:
 
 | Leht | Fail |
 |---|---|
-| Avaleht | `index.html` |
-| MIDA V!!!U | `mida-viiu.html` |
-| Oled Semu? | `oled-semu.html` |
-| Vigur | `vigur.html` |
-| Ostukorv ja kassa | `ostukorv.html` |
-| Tänuleht | `aitah.html` |
-| KKK / müügitingimused / privaatsus | `kkk.html` / `tingimused.html` / `privaatsus.html` |
-| Menüü ja jalus (kõigil lehtedel) | `assets/js/layout.js` |
-| −15% hüpiku tekstid | `assets/js/promo.js` |
-| Toodete lühikirjeldused ja faktid (kaardid, ostukorv) | `assets/js/catalog.js` (`tagline`, `short`, `facts`) |
+| Avaleht | `public/index.html` |
+| MIDA V!!!U | `public/mida-viiu.html` |
+| Oled Semu? | `public/oled-semu.html` |
+| Vigur | `public/vigur.html` |
+| Ostukorv ja kassa | `public/ostukorv.html` |
+| Tänuleht | `public/aitah.html` |
+| KKK / müügitingimused / privaatsus | `public/kkk.html` / `public/tingimused.html` / `public/privaatsus.html` |
+| Menüü ja jalus (kõigil lehtedel) | `public/assets/js/layout.js` |
+| −15% hüpiku tekstid | `public/assets/js/promo.js` |
+| Toodete lühikirjeldused ja faktid (kaardid, ostukorv) | `public/assets/js/catalog.js` (`tagline`, `short`, `facts`) |
 
 **HTML-is muuda ainult teksti märkide `>` ja `<` vahel.** Näide:
 
@@ -715,7 +715,7 @@ Siin võid muuta sõnu, aga jäta alles `<p>`, `<strong>`, `</strong>` ja `</p>`
 
 ### 10.7 Pildid
 
-Pildid on kaustas `assets/img/`:
+Pildid on kaustas `public/assets/img/`:
 
 | Kaust | Mis seal on | Mõõdud |
 |---|---|---|
@@ -729,18 +729,18 @@ Pildid on kaustas `assets/img/`:
 2. Muuda see **WebP-vormingusse** ja paki kokku: [squoosh.app](https://squoosh.app) → vali *WebP*, kvaliteet umbes 75–80. Hoia fail alla ~200 KB.
 3. ⚠️ **Anna failile uus nimi**, näiteks `mida-viiu-box-front-v2.webp`. Brauserid hoiavad pilte kuni nädal meeles. Sama nimega uut pilti ei pruugi kliendid kohe näha.
 4. Lae fail GitHubis õigesse kausta: ava kaust → **Add file → Upload files** → **Commit changes**.
-5. Asenda vana failinimi uuega kõikjal, kus seda kasutatakse. Otsi vana nime github.dev otsinguga. Tavaliselt on see `assets/js/catalog.js` (`image`, `cover`) ja HTML-failides.
+5. Asenda vana failinimi uuega kõikjal, kus seda kasutatakse. Otsi vana nime github.dev otsinguga. Tavaliselt on see `public/assets/js/catalog.js` (`image`, `cover`) ja HTML-failides.
 
 ### 10.8 Uue mängu lisamine
 
 Uus mäng puudutab mitut faili ja osa neist on kood. **Seda on mõistlik teha arendaja (või Claude'i) abiga** ja testida enne arvutis (Lisa A). Mida on vaja:
 
-- [ ] Pildid: karbi esikülg (1000 × 691) ja kaanepilt (1600 × 900) kausta `assets/img/games/`.
-- [ ] `assets/js/catalog.js`: uus toode `PRODUCTS` alla (id, nimi, hind, pildid, värvid, kirjeldus, faktid).
-- [ ] Uus leht, näiteks `uus-mang.html` (`oled-semu.html` koopia, millele on muudetud `data-product`, tekstid, pealkiri, kirjeldus ja Google'i tooteandmed).
-- [ ] `assets/js/product.js` (tootelehe 3D-karp ja galerii) ja `assets/js/home.js` + `index.html` (avalehe mängude nimekiri).
-- [ ] `assets/js/layout.js`: menüü ja jaluse lingid.
-- [ ] Vajadusel uued komplektid `catalog.js` failis ja `sitemap.xml` (kui see on olemas).
+- [ ] Pildid: karbi esikülg (1000 × 691) ja kaanepilt (1600 × 900) kausta `public/assets/img/games/`.
+- [ ] `public/assets/js/catalog.js`: uus toode `PRODUCTS` alla (id, nimi, hind, pildid, värvid, kirjeldus, faktid).
+- [ ] Uus leht, näiteks `public/uus-mang.html` (`public/oled-semu.html` koopia, millele on muudetud `data-product`, tekstid, pealkiri, kirjeldus ja Google'i tooteandmed).
+- [ ] `public/assets/js/product.js` (tootelehe 3D-karp ja galerii) ja `public/assets/js/home.js` + `public/index.html` (avalehe mängude nimekiri).
+- [ ] `public/assets/js/layout.js`: menüü ja jaluse lingid.
+- [ ] Vajadusel uued komplektid `catalog.js` failis ja `public/sitemap.xml` (kui see on olemas).
 
 ### 10.9 Mida ilma arendajata parem mitte muuta
 
@@ -756,14 +756,14 @@ Uus mäng puudutab mitut faili ja osa neist on kood. **Seda on mõistlik teha ar
 - MIDA V!!!U lehel (`/mida-viiu`) on toote pildi juures nupp **„Vaata 3D-mudelit“**.
 - Nupp avab akna, kuhu laetakse Pacdora jagamislink. Link laetakse alles nupu vajutamisel, nii et see ei aeglusta lehte.
 - Kui Pacdora ei luba oma lehte teise lehe sisse panna või brauser blokeerib selle, jääb aken tühjaks. Akna all on alati nupp **„Ava 3D-vaade uues aknas“**, mis töötab igal juhul.
-- Kui näed aknas valget tühja kasti (Pacdora ei luba end teise lehe sisse panna), ava fail `assets/js/product.js`, otsi rida `const EMBED_3D = true;` ja muuda see `const EMBED_3D = false;`. Siis avab nupp 3D-vaate kohe uues aknas.
+- Kui näed aknas valget tühja kasti (Pacdora ei luba end teise lehe sisse panna), ava fail `public/assets/js/product.js`, otsi rida `const EMBED_3D = true;` ja muuda see `const EMBED_3D = false;`. Siis avab nupp 3D-vaate kohe uues aknas.
 - **Kontrolli pärast avaldamist:** ava `/mida-viiu` → „Vaata 3D-mudelit“. Kui mudel avaneb aknas, on kõik korras. Kui ei avane, töötab ikkagi uues aknas avamise nupp.
 
 **Lingi vahetamine:**
 
 1. Pacdoras ava oma projekt ja kopeeri jagamislink (*Share*).
-2. Pane see faili `assets/js/site.js` reale `pacdora3d: '…'`.
-3. Sama link on varulingina kirjas ka failis `mida-viiu.html` (otsi `pacdora.com`). Muuda see ka seal, et lingid oleksid ühesugused.
+2. Pane see faili `public/assets/js/site.js` reale `pacdora3d: '…'`.
+3. Sama link on varulingina kirjas ka failis `public/mida-viiu.html` (otsi `pacdora.com`). Muuda see ka seal, et lingid oleksid ühesugused.
 
 > 💡 Turvaseaded (`netlify.toml`) lubavad lehe sisse panna ainult `pacdora.com` aadressil olevat sisu. Kui tahad kasutada mõnda teist 3D-teenust, on vaja arendaja abi.
 
@@ -777,7 +777,7 @@ Uus mäng puudutab mitut faili ja osa neist on kood. **Seda on mõistlik teha ar
 
 - [ ] **Müügitingimused (`/tingimused`)** on läbi loetud ja kõik puuduvad andmed (ettevõtte nimi, registrikood, aadress, e-post) on täidetud.
 - [ ] **Privaatsuspoliitika (`/privaatsus`)** on läbi loetud. Kirjas on, keda andmete töötlemiseks kasutad: Netlify (majutus ja vormid), Stripe (maksed), Omniva/SmartPost/DPD (tarne) ja hiljem uudiskirjateenus. Samuti kui kaua andmeid hoiad ja kuidas inimene saab oma andmed kustutada lasta.
-- [ ] **Ettevõtte andmed on poes nähtaval.** E-poes peavad olema ettevõtte nimi, registrikood, aadress ja kontakt-e-post. Täida need failis `assets/js/site.js` (peatükk 10.5).
+- [ ] **Ettevõtte andmed on poes nähtaval.** E-poes peavad olema ettevõtte nimi, registrikood, aadress ja kontakt-e-post. Täida need failis `public/assets/js/site.js` (peatükk 10.5).
 
 ### Tagastamine
 
@@ -789,7 +789,7 @@ Uus mäng puudutab mitut faili ja osa neist on kood. **Seda on mõistlik teha ar
 > **Soovitus:**
 > 1. Loe TTJA e-kaubanduse ja taganemisõiguse juhiseid ([ttja.ee](https://www.ttja.ee)) ja/või küsi juristilt.
 > 2. Tõenäoline lahendus: luba 14-päevane taganemine. Klient võib kanda tagasisaatmise kulu, kui oled sellest ette teavitanud.
-> 3. Muuda siis tekstid kõikjal: `tingimused.html`, `kkk.html`, KKK avalehel (`index.html`), kassa märkeruut ja märkus (`ostukorv.html`), tootelehtede KKK ja Google'i andmed (`mida-viiu.html`, `oled-semu.html`, `vigur.html`). See on hea töö arendajale.
+> 3. Muuda siis tekstid kõikjal: `public/tingimused.html`, `public/kkk.html`, KKK avalehel (`public/index.html`), kassa märkeruut ja märkus (`public/ostukorv.html`), tootelehtede KKK ja Google'i andmed (`public/mida-viiu.html`, `public/oled-semu.html`, `public/vigur.html`). See on hea töö arendajale.
 
 ### Maksud ja raamatupidamine
 
@@ -824,14 +824,14 @@ Uus mäng puudutab mitut faili ja osa neist on kood. **Seda on mõistlik teha ar
 | Pakiautomaatide nimekiri ei lae ja kassas on käsitsi sisestamise väli | Vedaja avalik nimekiri ei vasta või on oma aadressi muutnud | **Müük ei peatu**: klient saab automaadi kirjutada käsitsi. Vaata Netlify → **Logs → Functions** → `parcel-lockers` (rida `[pakiautomaadid] …`). Kui viga kestab üle päeva, palu arendajal kontrollida allikaid failis `netlify/functions/_lib/lockers.mjs` |
 | DPD-l on alati käsitsi sisestamine | See on nii mõeldud: DPD-l pole avalikku nimekirja | Kui saad DPD-lt automaatide JSON-nimekirja aadressi, lisa Netlifysse keskkonnamuutuja `DPD_LOCKERS_URL` ja tee uus deploy |
 | Uus pakiautomaat pole veel nimekirjas | Nimekiri salvestatakse kiiruse huvides kuni ööpäevaks | Oota päev. Seni saab klient kasutada käsitsi sisestamist |
-| **Uudiskirja e-postid ei ilmu Netlifysse** | Form detection pole sees, pärast sisselülitamist pole deploy'd tehtud või HTML-is puudub vormi peidetud koopia | 1) **Forms → Enable form detection**. 2) **Trigger deploy**. 3) Kontrolli, et fail `__forms.html` on repos alles (selles on vormi peidetud koopia). 4) Kui vormi `soodus` ikka pole, lisa faili `index.html` lõppu, rea `</body>` ette, allolev koodijupp ja tee commit |
+| **Uudiskirja e-postid ei ilmu Netlifysse** | Form detection pole sees, pärast sisselülitamist pole deploy'd tehtud või HTML-is puudub vormi peidetud koopia | 1) **Forms → Enable form detection**. 2) **Trigger deploy**. 3) Kontrolli, et fail `public/__forms.html` on repos alles (selles on vormi peidetud koopia). 4) Kui vormi `soodus` ikka pole, lisa faili `public/index.html` lõppu, rea `</body>` ette, allolev koodijupp ja tee commit |
 | Muudatus ei ilmu lehele | Deploy ebaõnnestus või ei ole veel valmis, või brauser näitab vana versiooni | Vaata Netlify → **Deploys**: kas viimane on *Published* või *Failed*? Kui *Failed*, ava see ja vaata logi. Värskenda lehte **Ctrl + Shift + R** (Mac: **Cmd + Shift + R**). Piltide puhul vaata peatükki 10.7 (uus failinimi) |
 | Pärast muudatust on leht katki või tühi | Tõenäoliselt on süntaksiviga (nt kustutatud koma, jutumärk või sulg `.js` failis) | **Deploys** → viimane töötav versioon → **Publish deploy**. Seejärel vaata GitHubis faili ajalugu (*History*) ja paranda viga |
 | Pärast makset ei avane tänuleht või suunatakse vale aadressi peale | Põhidomeen on muutunud, aga uut deploy'd pole tehtud | Tee **Trigger deploy** ja testi uuesti (peatükk 7.4) |
 | Klient ütleb, et kviitung ei tulnud | Kiri on rämpspostis või klient tegi e-posti aadressis vea | Kontrolli Stripe'is kliendi e-posti. Makse lehelt saad kviitungi uuesti saata |
 | Apple Pay või Google Pay ei ilmu makselehele | Seade või brauser ei toeta seda, Walletis pole kaarti või makseviis on välja lülitatud | Stripe → **Settings → Payment methods**. Apple Pay ilmub ainult Apple'i seadmetes, kus Walletis on kaart |
 
-**Vormi peidetud koopia** (lisa faili `index.html` lõppu, vahetult rea `</body>` ette):
+**Vormi peidetud koopia** (lisa faili `public/index.html` lõppu, vahetult rea `</body>` ette):
 
 ```html
 <!-- Netlify Forms: −15% hüpiku vormi koopia. Netlify leiab vormid ainult HTML-ist. -->
@@ -897,18 +897,22 @@ Teine port: `PORT=8090 npm run dev:mock` (PowerShellis `$env:PORT = "8090"`).
 
 ```
 oh-mega-oof/
-├── index.html, mida-viiu.html, oled-semu.html, vigur.html   ← lehed (tekstid)
-├── ostukorv.html, aitah.html                                  ← kassa ja tänuleht
-├── kkk.html, tingimused.html, privaatsus.html                 ← KKK ja õiguslikud lehed
-├── assets/
-│   ├── css/            ← kujundus (värvid, fondid, paigutus)
-│   ├── img/            ← pildid: brand/, games/, cards/
-│   └── js/
-│       ├── catalog.js  ← ★ HINNAD, tarne, sooduskoodid
-│       ├── site.js     ← ★ ettevõtte andmed, e-post, sotsiaalmeedia, Pacdora link
-│       ├── layout.js   ← menüü, jalus, ostukorvi sahtel
-│       ├── promo.js    ← −15% hüpik
-│       └── …           ← muu lehtede loogika
+├── public/             ← ★ KÕIK, mis läheb internetti (Netlify avaldab ainult selle kausta)
+│   ├── index.html, mida-viiu.html, oled-semu.html, vigur.html   ← lehed (tekstid)
+│   ├── ostukorv.html, aitah.html                                  ← kassa ja tänuleht
+│   ├── kkk.html, tingimused.html, privaatsus.html, 404.html       ← KKK, õiguslikud lehed, „lehte ei leitud“
+│   ├── __forms.html    ← soodusvormi peidetud koopia Netlify Formsi jaoks (ära kustuta)
+│   ├── robots.txt, sitemap.xml
+│   └── assets/
+│       ├── css/            ← kujundus (värvid, fondid, paigutus)
+│       ├── img/            ← pildid: brand/, games/, cards/
+│       └── js/
+│           ├── catalog.js  ← ★ HINNAD, tarne, sooduskoodid
+│           ├── site.js     ← ★ ettevõtte andmed, e-post, sotsiaalmeedia, Pacdora link
+│           ├── layout.js   ← menüü, jalus, ostukorvi sahtel
+│           ├── promo.js    ← −15% hüpik
+│           ├── validate.js ← e-posti kontroll (sama reegel kassas ja serveris)
+│           └── …           ← muu lehtede loogika
 ├── netlify/functions/  ← serveri pool: makse (/api/checkout) ja pakiautomaadid (/api/pakiautomaadid)
 ├── netlify.toml        ← Netlify seadistus ja turvapäised
 ├── .env.example        ← keskkonnamuutujate näidis (päris võtmeid siia EI kirjutata)

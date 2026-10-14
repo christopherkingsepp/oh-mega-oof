@@ -1,9 +1,11 @@
 # ÄGE veebipoe Netlify seadistus.
 # Sait on puhas HTML/CSS/JS — ehitus-käsku pole vaja. Netlify paigaldab siiski
 # package.json sõltuvused (nt "stripe"), mida serverifunktsioonid kasutavad.
+# Avalikud failid on kaustas public/ — ainult see läheb internetti. Juhend, testid,
+# skriptid, node_modules ja seadistused jäävad avalikkuse eest peitu.
 
 [build]
-  publish = "."
+  publish = "public"
   functions = "netlify/functions"
 
 [build.environment]
@@ -17,7 +19,7 @@
 
 # Funktsioonide aadressid (/api/checkout, /api/pakiautomaadid) on määratud
 # funktsioonifailides endis: `export const config = { path: '/api/…' }`.
-# Lehekülje puudumisel näitab Netlify automaatselt juurkausta faili 404.html.
+# Lehekülje puudumisel näitab Netlify automaatselt faili public/404.html.
 # "Ilusad" aadressid töötavad vaikimisi: /mida-viiu → mida-viiu.html.
 
 # --- Turvapäised kõigile vastustele ------------------------------------------
@@ -55,47 +57,3 @@
   for = "/assets/js/*"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
-
-# --- Arendusfailid pole avalikud ---------------------------------------------
-# Kuna avaldatakse kogu repo juurkaust, peidame lähtekoodi ja tööriistad.
-[[redirects]]
-  from = "/netlify/*"
-  to = "/404.html"
-  status = 404
-  force = true
-
-[[redirects]]
-  from = "/tests/*"
-  to = "/404.html"
-  status = 404
-  force = true
-
-[[redirects]]
-  from = "/scripts/*"
-  to = "/404.html"
-  status = 404
-  force = true
-
-[[redirects]]
-  from = "/node_modules/*"
-  to = "/404.html"
-  status = 404
-  force = true
-
-[[redirects]]
-  from = "/package.json"
-  to = "/404.html"
-  status = 404
-  force = true
-
-[[redirects]]
-  from = "/package-lock.json"
-  to = "/404.html"
-  status = 404
-  force = true
-
-[[redirects]]
-  from = "/netlify.toml"
-  to = "/404.html"
-  status = 404
-  force = true

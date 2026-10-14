@@ -1,17 +1,13 @@
 // Tellimuse valideerimine serveris. Brauserist tulevat infot EI usaldata:
-// hinnad arvutatakse alati uuesti ühisest kataloogist (assets/js/catalog.js).
-import { PRODUCTS, SHIPPING, MAX_QTY_PER_ITEM, computeTotals, normalizeCode } from '../../../assets/js/catalog.js';
+// hinnad arvutatakse alati uuesti ühisest kataloogist (public/assets/js/catalog.js).
+import { PRODUCTS, SHIPPING, MAX_QTY_PER_ITEM, computeTotals, normalizeCode } from '../../../public/assets/js/catalog.js';
 import { cleanText } from './http.mjs';
 
 export const MAX_LINES = 20;
 
-// Lihtne, aga range e-posti kontroll (Stripe valideerib lõpuks ise ka).
-const EMAIL_RE =
-  /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?\.)+\p{L}{2,}$/u;
-
-export function isValidEmail(email) {
-  return typeof email === 'string' && email.length <= 254 && EMAIL_RE.test(email);
-}
+// E-posti kontroll on ühine brauseriga (public/assets/js/validate.js), et vorm ja server ei läheks lahku.
+import { isValidEmail } from '../../../public/assets/js/validate.js';
+export { isValidEmail };
 
 /** Eesti mobiil: 5xx xxxx, 5xxx xxxx või 8xxx xxxx (pakiautomaadi kood saabub SMS-iga). */
 const EE_MOBILE_RE = /^(?:5\d{6,7}|8\d{7})$/;

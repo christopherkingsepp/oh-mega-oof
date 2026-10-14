@@ -11,41 +11,45 @@ See on Tallinna kaardimängufirma **ÄGE** (Äärmiselt Geniaalne Ettevõtmine) 
   - `POST /api/checkout` arvutab summa serveris uuesti ja loob Stripe Checkout Session'i,
   - `GET /api/pakiautomaadid?carrier=omniva|smartpost|dpd` tagastab pakiautomaatide nimekirja.
 - **Netlify Forms:** vorm `soodus` kogub −15% hüpiku e-poste.
-- Hinnad, tarne ja sooduskoodid on ühes kohas, failis `assets/js/catalog.js`. Seda kasutavad nii brauser kui ka server.
+- Hinnad, tarne ja sooduskoodid on ühes kohas, failis `public/assets/js/catalog.js`. Seda kasutavad nii brauser kui ka server.
 
 ## Struktuur
 
 ```
 .
-├── index.html                 avaleht
-├── mida-viiu.html             tootelehed (/mida-viiu, /oled-semu, /vigur)
-├── oled-semu.html
-├── vigur.html
-├── ostukorv.html              ostukorv + kassa (/ostukorv)
-├── aitah.html                 tänuleht pärast makset (/aitah)
-├── kkk.html, tingimused.html, privaatsus.html
-├── assets/
-│   ├── css/                   base.css (disainisüsteem) + lehtede stiilid
-│   ├── img/                   brand/, games/, cards/
-│   └── js/
-│       ├── catalog.js         tooted, hinnad, tarne, sooduskoodid, computeTotals()
-│       ├── site.js            ettevõtte andmed, kontaktid, Pacdora link
-│       ├── cart.js            ostukorv (localStorage)
-│       ├── layout.js          päis, jalus, ostukorvi sahtel, toastid
-│       ├── main.js            iga lehe sisendpunkt (layout + vanusekontroll + hüpik)
-│       ├── box3d.js           3D-karp
-│       └── home.js, product.js, checkout.js, aitah.js, promo.js, agegate.js
+├── public/                    kõik, mis läheb internetti (Netlify publish)
+│   ├── index.html                 avaleht
+│   ├── mida-viiu.html             tootelehed (/mida-viiu, /oled-semu, /vigur)
+│   ├── oled-semu.html
+│   ├── vigur.html
+│   ├── ostukorv.html              ostukorv + kassa (/ostukorv)
+│   ├── aitah.html                 tänuleht pärast makset (/aitah)
+│   ├── kkk.html, tingimused.html, privaatsus.html, 404.html
+│   ├── __forms.html               soodusvormi peidetud koopia (Netlify Forms)
+│   ├── robots.txt, sitemap.xml
+│   └── assets/
+│       ├── css/                   base.css (disainisüsteem) + lehtede stiilid
+│       ├── img/                   brand/, games/, cards/
+│       └── js/
+│           ├── catalog.js         tooted, hinnad, tarne, sooduskoodid, computeTotals()
+│           ├── site.js            ettevõtte andmed, kontaktid, Pacdora link
+│           ├── cart.js            ostukorv (localStorage)
+│           ├── layout.js          päis, jalus, ostukorvi sahtel, toastid
+│           ├── main.js            iga lehe sisendpunkt (layout + vanusekontroll + hüpik)
+│           ├── box3d.js           3D-karp
+│           ├── validate.js        e-posti kontroll (sama reegel brauseris ja serveris)
+│           └── home.js, product.js, checkout.js, aitah.js, promo.js, agegate.js, kkk.js
 ├── netlify/functions/
 │   ├── create-checkout.mjs    → /api/checkout
 │   ├── parcel-lockers.mjs     → /api/pakiautomaadid
 │   └── _lib/                  valideerimine, Stripe'i parameetrid, pakiautomaatide allikad
-├── netlify.toml               publish ".", functions, turvapäised (CSP), puhverdus
+├── netlify.toml               publish "public", functions, turvapäised (CSP), puhverdus
 ├── .env.example               keskkonnamuutujate näidis
 ├── scripts/                   dev-server.mjs, screenshot.mjs
 └── tests/                     node:test testid + näidisandmed
 ```
 
-URL-id on ilma `.html` lõputa (Netlify Pretty URLs): `/mida-viiu` → `mida-viiu.html`.
+URL-id on ilma `.html` lõputa (Netlify Pretty URLs): `/mida-viiu` → `public/mida-viiu.html`.
 
 ## Kiirstart
 
@@ -70,4 +74,4 @@ Teise pordi saad nii: `PORT=8090 npm run dev:mock`.
 
 ## Avaldamine
 
-Netlify on ühendatud GitHubi repoga `christopherkingsepp/oh-mega-oof`, haruga `main`. Build command on tühi, publish directory on `.` ja seadistus on failis `netlify.toml`. Iga push `main` harusse avaldatakse automaatselt. Täpsed sammud on failis [JUHEND.md](JUHEND.md) (peatükid 2–8).
+Netlify on ühendatud GitHubi repoga `christopherkingsepp/oh-mega-oof`, haruga `main`. Build command on tühi, publish directory on `public` ja seadistus on failis `netlify.toml`. Iga push `main` harusse avaldatakse automaatselt. Täpsed sammud on failis [JUHEND.md](JUHEND.md) (peatükid 2–8).

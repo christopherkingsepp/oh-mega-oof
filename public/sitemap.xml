@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- TODO: asenda https://www.age.ee päris domeeniga (vt ka robots.txt ja assets/js/site.js → SITE.url). -->
+<!-- TODO: www.age.ee on ainult kohatäide — domeen pole veel teada. Asenda see päris domeeniga ja
+     lisa siis Sitemap-rida ka robots.txt-i (vt sealne TODO) ning SITE.url failis assets/js/site.js. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.age.ee/</loc>

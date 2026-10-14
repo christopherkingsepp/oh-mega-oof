@@ -12,6 +12,7 @@
   <meta property="og:site_name" content="ÄGE">
   <meta property="og:title" content="KKK — korduma kippuvad küsimused | ÄGE">
   <meta property="og:description" content="Kõik, mida tahad teada tellimise, tarne, mängude ja soodustuste kohta — ühes kohas.">
+  <!-- TODO: kui domeen on teada, tee og:image absoluutseks ja lisa og:url -->
   <meta property="og:image" content="/assets/img/brand/og-image.jpg">
   <meta property="og:locale" content="et_EE">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -130,7 +131,7 @@
         "name": "Kas mängu saab tagastada või vahetada?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Ei. Ostetud mänge me tagasi ei võta ega teise mängu vastu ei vaheta — vali julgelt, aga läbimõeldult 😉 Kui pakk saabub katkisena või millestki on puudu, vahetame selle muidugi tasuta (vt allpool). Kui sa pole kindel, milline mäng sinu seltskonnale sobib, küsi meilt nõu!"
+          "text": "Ei. Ostetud mänge tagasi ei võeta ega vahetata, nii et vali julgelt, aga läbimõeldult. Erand: kui pakk saabub kahjustatuna, kaarte on puudu või need on vigased, kirjuta meile (soovitatavalt 14 päeva jooksul, lisa foto) ja saadame asenduse tasuta. Kui sa pole kindel, milline mäng sinu seltskonnale sobib, küsi meilt enne ostu nõu!"
         }
       },
       {
@@ -138,7 +139,7 @@
         "name": "Pakk saabus katkisena. Mida teha?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Vabandame! Kirjuta meile esimesel võimalusel (soovitatavalt 14 päeva jooksul pärast paki kättesaamist), lisa foto kahjustusest ja oma tellimuse number või e-post. Saadame sulle uue mängu tasuta."
+          "text": "Vabandame! Kirjuta meile (soovitatavalt 14 päeva jooksul pärast paki kättesaamist), lisa foto kahjustusest ning oma tellimuse number või e-post. Saadame asenduse tasuta."
         }
       },
       {
@@ -146,7 +147,7 @@
         "name": "Mängust on kaarte puudu või need on vigased. Mis nüüd?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Kirjuta meile esimesel võimalusel (soovitatavalt 14 päeva jooksul) ja lisa foto. Saadame puuduvad või vigased kaardid — või vajadusel terve uue mängu — sulle tasuta."
+          "text": "Kirjuta meile (soovitatavalt 14 päeva jooksul pärast paki kättesaamist) ja lisa foto. Saadame asenduse tasuta: puuduvad või vigased kaardid või vajadusel terve uue mängu."
         }
       },
       {
@@ -154,7 +155,7 @@
         "name": "Mitmele mängijale mängud sobivad?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "MIDA V!!!U sobib 3–12 mängijale, Oled Semu? ja Vigur vähemalt kolmele. Rusikareegel: mida suurem seltskond, seda hullemaks läheb 🎉"
+          "text": "MIDA V!!!U sobib 3–12 mängijale, Oled Semu? ja Vigur vähemalt kolmele. Rusikareegel: mida suurem seltskond, seda hullemaks läheb."
         }
       },
       {
@@ -194,7 +195,7 @@
         "name": "Mis on MIDA V!!!U karbis?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "85 kaarti: 25 SH-kaarti („Oled Semu?“ stiilis küsimused), 25 OT-kaarti („Kes kõige tõenäolisemalt…“), 25 SHOT-kaarti (tee või joo), 5 ÄGE boonuskaarti, millest pääsu pole, 3 reeglikaarti — ja paar peidetud üllatust. Vaata lähemalt MIDA V!!!U lehelt."
+          "text": "85 kaarti: 25 SH-kaarti („Oled Semu?“ stiilis küsimused), 25 OT-kaarti („Kes kõige tõenäolisemalt…“), 25 SHOT-kaarti (tee või joo), 5 ÄGE-boonuskaarti (wildcardi), millest pääsu pole, 3 peidetud „Üllatus!“-kaarti ja 2 reeglikaarti. Vaata lähemalt MIDA V!!!U lehelt."
         }
       },
       {
@@ -290,7 +291,7 @@
         <span class="eyebrow">Abi &amp; KKK</span>
         <h1 id="kkk-title">Küsimus?<br><span class="neon">Vastus.</span></h1>
         <p class="lead">Kõik, mida tahad teada tellimise, tarne, mängude ja soodustuste kohta. Ei leia? Kirjuta meile — vastame 1–2 tööpäevaga.</p>
-        <form class="faq-search" role="search" action="/kkk" data-faq-form>
+        <form class="faq-search" role="search" action="/kkk" data-faq-form data-promo-avoid>
           <label class="sr-only" for="faq-q">Otsi korduma kippuvate küsimuste hulgast</label>
           <svg class="faq-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <input class="faq-search__input" id="faq-q" type="search" name="q" placeholder="Otsi, nt „tarne“ või „shot“" autocomplete="off" spellcheck="false" enterkeyhint="search" aria-controls="faq-results" aria-describedby="faq-status" data-faq-search>
@@ -301,7 +302,7 @@
           </button>
         </form>
         <p class="faq-search__status" id="faq-status" role="status" aria-live="polite"></p>
-        <div class="faq-quick" aria-label="Populaarsed otsingud">
+        <div class="faq-quick" aria-label="Populaarsed otsingud" data-promo-avoid>
           <span>Populaarsed:</span>
           <button type="button" data-faq-suggest="tarne">tarne</button>
           <button type="button" data-faq-suggest="makse">makseviisid</button>
@@ -318,7 +319,7 @@
     <div class="faq-wrap">
       <div class="container faq-layout">
         <aside class="faq-aside">
-          <nav class="faq-nav" aria-label="KKK teemad" data-spy>
+          <nav class="faq-nav" aria-label="KKK teemad" data-spy data-promo-avoid>
             <p class="faq-nav__title">Teemad</p>
             <a href="#tellimine"><span class="faq-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h15l-1.5 9h-12z"/><path d="M6 7 5 3H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg></span>Tellimine &amp; maksmine<span class="faq-nav__count" data-count-for="tellimine" aria-hidden="true">6</span></a>
             <a href="#tarne"><span class="faq-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg></span>Tarne<span class="faq-nav__count" data-count-for="tarne" aria-hidden="true">6</span></a>
@@ -439,19 +440,19 @@
               <details class="faq-item" id="kas-saab-tagastada">
                 <summary><span>Kas mängu saab tagastada või vahetada?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
                 <div class="faq-item__body"><div class="faq-item__inner">
-                  <p>Ei. Ostetud mänge me <strong>tagasi ei võta ega teise mängu vastu ei vaheta</strong> — vali julgelt, aga läbimõeldult 😉 Kui pakk saabub katkisena või millestki on puudu, vahetame selle muidugi <a href="#katkine-pakk">tasuta</a>. Kui sa pole kindel, milline mäng sinu seltskonnale sobib, küsi meilt nõu!</p>
+                  <p>Ei. Ostetud mänge <strong>tagasi ei võeta ega vahetata</strong>, nii et vali julgelt, aga läbimõeldult. Erand: kui pakk saabub kahjustatuna, kaarte on puudu või need on vigased, kirjuta meile (soovitatavalt 14 päeva jooksul, lisa foto) ja saadame <a href="#katkine-pakk">asenduse tasuta</a>. Kui sa pole kindel, milline mäng sinu seltskonnale sobib, küsi meilt enne ostu nõu!</p>
                 </div></div>
               </details>
               <details class="faq-item" id="katkine-pakk">
                 <summary><span>Pakk saabus katkisena. Mida teha?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
                 <div class="faq-item__body"><div class="faq-item__inner">
-                  <p>Vabandame! Kirjuta meile <strong>esimesel võimalusel</strong> (soovitatavalt 14 päeva jooksul pärast paki kättesaamist), lisa <strong>foto</strong> kahjustusest ja oma tellimuse number või e-post. Saadame sulle uue mängu <strong>tasuta</strong>.</p>
+                  <p>Vabandame! Kirjuta meile (<strong>soovitatavalt 14 päeva jooksul</strong> pärast paki kättesaamist), lisa <strong>foto</strong> kahjustusest ning oma tellimuse number või e-post. Saadame asenduse <strong>tasuta</strong>.</p>
                 </div></div>
               </details>
               <details class="faq-item" id="kaardid-puudu">
                 <summary><span>Mängust on kaarte puudu või need on vigased. Mis nüüd?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
                 <div class="faq-item__body"><div class="faq-item__inner">
-                  <p>Kirjuta meile esimesel võimalusel (soovitatavalt 14 päeva jooksul) ja lisa foto. Saadame puuduvad või vigased kaardid — või vajadusel terve uue mängu — sulle <strong>tasuta</strong>.</p>
+                  <p>Kirjuta meile (soovitatavalt 14 päeva jooksul pärast paki kättesaamist) ja lisa foto. Saadame asenduse <strong>tasuta</strong>: puuduvad või vigased kaardid või vajadusel terve uue mängu.</p>
                 </div></div>
               </details>
             </div>
@@ -467,7 +468,7 @@
               <details class="faq-item" id="mitu-mangijat">
                 <summary><span>Mitmele mängijale mängud sobivad?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
                 <div class="faq-item__body"><div class="faq-item__inner">
-                  <p><strong>MIDA V!!!U</strong> sobib 3–12 mängijale, <strong>Oled Semu?</strong> ja <strong>Vigur</strong> vähemalt kolmele. Rusikareegel: mida suurem seltskond, seda hullemaks läheb 🎉</p>
+                  <p><strong>MIDA V!!!U</strong> sobib 3–12 mängijale, <strong>Oled Semu?</strong> ja <strong>Vigur</strong> vähemalt kolmele. Rusikareegel: mida suurem seltskond, seda hullemaks läheb.</p>
                 </div></div>
               </details>
               <details class="faq-item" id="mangu-pikkus">
@@ -497,7 +498,7 @@
               <details class="faq-item" id="mis-karbis-on">
                 <summary><span>Mis on MIDA V!!!U karbis?</span><span class="faq-item__icon" aria-hidden="true"></span></summary>
                 <div class="faq-item__body"><div class="faq-item__inner">
-                  <p>85 kaarti: <strong>25 SH-kaarti</strong> („Oled Semu?“ stiilis küsimused), <strong>25 OT-kaarti</strong> („Kes kõige tõenäolisemalt…“), <strong>25 SHOT-kaarti</strong> (tee või joo), <strong>5 ÄGE boonuskaarti</strong>, millest pääsu pole, 3 reeglikaarti — ja paar peidetud üllatust. Vaata lähemalt <a href="/mida-viiu">MIDA V!!!U lehelt</a>.</p>
+                  <p>85 kaarti: <strong>25 SH-kaarti</strong> („Oled Semu?“ stiilis küsimused), <strong>25 OT-kaarti</strong> („Kes kõige tõenäolisemalt…“), <strong>25 SHOT-kaarti</strong> (tee või joo), <strong>5 ÄGE-boonuskaarti</strong> (wildcardi), millest pääsu pole, <strong>3 peidetud „Üllatus!“-kaarti</strong> ja 2 reeglikaarti. Vaata lähemalt <a href="/mida-viiu">MIDA V!!!U lehelt</a>.</p>
                 </div></div>
               </details>
               <details class="faq-item" id="kaardid-vastupidavad">
@@ -591,7 +592,7 @@
             </div>
             <div>
               <h2 id="help-title">Ei leidnud vastust?</h2>
-              <p>Kirjuta meile — sulle vastab päris inimene (mitte robot 🤖) 1–2 tööpäeva jooksul. Kiire küsimus? Saada sõnum Instagramis või TikTokis.</p>
+              <p>Kirjuta meile — sulle vastab päris inimene, mitte robot, 1–2 tööpäeva jooksul. Kiire küsimus? Saada sõnum Instagramis või TikTokis.</p>
             </div>
             <div class="help-cta__actions">
               <a class="btn btn--primary" href="mailto:aarmiselt@gmail.com" data-site-href="email">

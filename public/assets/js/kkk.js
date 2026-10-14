@@ -3,16 +3,26 @@
 // - KKK: sujuvalt avanevad küsimused, reaalajas otsing (täpitähtede-tundetu) ja esiletõstmine
 // - kerimisel aktiivse teema/peatüki märkimine (KKK teemad, tingimuste sisukord)
 import { SITE } from './site.js';
-import { PRODUCTS, SHIPPING, toCents } from './catalog.js';
+import { PRODUCTS, SHIPPING, toCents, formatEur } from './catalog.js';
 import { esc } from './layout.js';
 
 const reduce = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const mobileQuery = window.matchMedia('(max-width: 900px)');
 
 /* ---------- Ettevõtte andmed ja hinnad ---------- */
-function eur(value) {
-  const opts = { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(value) ? 0 : 2 };
-  return new Intl.NumberFormat('et-EE', opts).format(value);
+// Hinnad alati kahe komakohaga nagu kassas ja Stripe'is („33,00 €“); lävend („tasuta alates 30 €“)
+// ilma senditeta, nagu avalehel.
+const eur = (value) => formatEur(toCents(value));
+const eurThreshold = (value) =>
+  new Intl.NumberFormat('et-EE', { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(value) ? 0 : 2 }).format(value);
+
+/** decodeURIComponent, mis vigase protsendikodeeringu korral (nt #%E0%A4%A) ei viska viga. */
+function safeDecode(str) {
+  try {
+    return decodeURIComponent(str);
+  } catch {
+    return null;
+  }
 }
 
 function fillSite() {
@@ -37,12 +47,12 @@ function fillPrices() {
     if (p) el.textContent = eur(p.price);
   });
   document.querySelectorAll('[data-ship-price]').forEach((el) => (el.textContent = eur(SHIPPING.price)));
-  document.querySelectorAll('[data-ship-free]').forEach((el) => (el.textContent = eur(SHIPPING.freeFrom)));
+  document.querySelectorAll('[data-ship-free]').forEach((el) => (el.textContent = eurThreshold(SHIPPING.freeFrom)));
   document.querySelectorAll('[data-bundle-save]').forEach((el) => {
     const b = PRODUCTS[el.dataset.bundleSave];
     if (!b?.includes) return;
     const sum = b.includes.reduce((s, id) => s + toCents(PRODUCTS[id]?.price || 0), 0);
-    el.textContent = eur((sum - toCents(b.price)) / 100);
+    el.textContent = formatEur(sum - toCents(b.price));
   });
 }
 
@@ -290,7 +300,8 @@ function initSpy() {
     const links = [...nav.querySelectorAll('a[href^="#"]')];
     const map = new Map();
     links.forEach((a) => {
-      const target = document.getElementById(decodeURIComponent(a.hash.slice(1)));
+      const id = safeDecode(a.hash.slice(1));
+      const target = id ? document.getElementById(id) : null;
       if (target) map.set(target, a);
     });
     if (!map.size) return;
@@ -333,7 +344,7 @@ function initToc() {
 
 /* ---------- Otselink küsimusele (#id) ---------- */
 function openFromHash() {
-  const id = decodeURIComponent(location.hash.slice(1));
+  const id = safeDecode(location.hash.slice(1));
   if (!id) return;
   const el = document.getElementById(id);
   if (el?.matches('details.faq-item')) {

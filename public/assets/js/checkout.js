@@ -3,6 +3,7 @@
 import { Cart } from './cart.js';
 import { PRODUCTS, SHIPPING, MAX_QTY_PER_ITEM, computeTotals, formatEur, toCents } from './catalog.js';
 import { ICONS, toast, esc, freeShippingHTML } from './layout.js';
+import { isValidEmail } from './validate.js'; // sama reegel mis serveris
 
 /* =========================================================================
    Abifunktsioonid
@@ -38,8 +39,8 @@ const store = {
 };
 
 const CARRIER_LABEL = { omniva: 'Omniva', smartpost: 'SmartPost', dpd: 'DPD Pickup' };
-// Omastav kääne lausete jaoks („Vali SmartPosti pakiautomaat“, „Laen SmartPosti automaate…“).
-const CARRIER_GEN = { omniva: 'Omniva', smartpost: 'SmartPosti', dpd: 'DPD Pickup' };
+// Omastav kääne lausete jaoks („Vali SmartPosti pakiautomaat“, „Laadin SmartPosti automaate…“).
+const CARRIER_GEN = { omniva: 'Omniva', smartpost: 'SmartPosti', dpd: 'DPD' };
 const MANUAL_PLACEHOLDER = {
   omniva: 'nt Tartu Lõunakeskuse pakiautomaat, Ringtee 75, Tartu',
   smartpost: 'nt Tallinn Mustika Prisma, Tammsaare tee 116, Tallinn',
@@ -55,6 +56,7 @@ const SVG = {
   pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
   box: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>',
   go: '<svg class="lk__opt-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>',
+  truck: '<svg class="co-upsell__truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.5h11v10h-11z"/><path d="M13.5 10h4.2l3.3 3.4v3.1h-7.5"/><circle cx="6.5" cy="17.5" r="1.9"/><circle cx="17" cy="17.5" r="1.9"/></svg>',
   spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21.5h4"/><path d="M12 2.5a6.5 6.5 0 0 0-4 11.6c.8.6 1.2 1.5 1.2 2.4V17h5.6v-.5c0-.9.4-1.8 1.2-2.4A6.5 6.5 0 0 0 12 2.5z"/></svg>',
 };
 
@@ -357,7 +359,7 @@ el.bundle.addEventListener('click', (e) => {
   });
   const cur = Cart.items().find((i) => i.id === offer.id)?.qty || 0;
   Cart.set(offer.id, cur + 1);
-  toast(`Vahetatud! Säästad <strong>${formatEur(offer.save)}</strong> 🎉`, { image: PRODUCTS[offer.id].image });
+  toast(`Vahetatud! Säästad <strong>${formatEur(offer.save)}</strong>.`, { image: PRODUCTS[offer.id].image });
   $('#h-ostukorv').tabIndex = -1;
   $('#h-ostukorv').focus({ preventScroll: true });
 });
@@ -384,7 +386,7 @@ function renderUpsell() {
   }
   const anyUnlock = info.some((i) => i.unlocks);
   el.upsell.innerHTML = `
-    <p class="co-upsell__title">${anyUnlock ? '<strong>Sobib juurde</strong> — ja tarne muutub tasuta 🚚' : '<strong>Sobib juurde</strong> — sõbrad tänavad hiljem'}</p>
+    <p class="co-upsell__title">${anyUnlock ? `<strong>Sobib juurde</strong> — ja tarne muutub tasuta ${SVG.truck}` : '<strong>Sobib juurde</strong> — sõbrad tänavad hiljem'}</p>
     <div class="co-upsell__list">
       ${info
         .map(({ id, unlocks }) => {
@@ -439,7 +441,7 @@ function applyCode() {
     el.codeInput.value = '';
     setCodeError('');
     const t = Cart.totals();
-    toast(`Sooduskood <strong>${esc(t.code)}</strong> rakendatud: −${t.percent}%! 🎉`);
+    toast(`Sooduskood <strong>${esc(t.code)}</strong> rakendatud: −${t.percent}%!`);
     $('[data-remove-code]').focus();
   } else {
     setCodeError('Sellist sooduskoodi ei leitud või see ei kehti enam. Kontrolli kirjapilti.');
@@ -567,7 +569,7 @@ async function loadLockers(carrier) {
   }
   state.lockerMode = 'loading';
   renderLocker();
-  announce('Laen pakiautomaatide nimekirja…');
+  announce('Laadin pakiautomaatide nimekirja…');
   const started = performance.now();
   try {
     const ctrl = new AbortController();
@@ -605,7 +607,7 @@ function applyLockerData(data) {
       const found = list.find((l) => sameLocker(l, state.locker));
       state.locker = found ? pickLocker(found) : null;
     }
-    announce(`${list.length} pakiautomaati laetud. Otsi linna või keskuse järgi.`);
+    announce(`${plural(list.length, 'pakiautomaat', 'pakiautomaati')} laaditud. Otsi linna või keskuse järgi.`);
   }
   renderLocker();
   afterShippingChange();
@@ -626,13 +628,13 @@ function announce(msg) {
 function renderLocker() {
   const host = el.locker;
   if (!state.carrier) {
-    host.innerHTML = `<div class="lk-idle">${SVG.pin}<span>Vali esmalt vedaja — siis saad otsida oma lähima pakiautomaadi.</span></div>`;
+    host.innerHTML = `<div class="lk-idle">${SVG.pin}<span>Vali esmalt vedaja — siis saad otsida endale sobiva pakiautomaadi.</span></div>`;
     return;
   }
   const label = CARRIER_LABEL[state.carrier];
   const gen = CARRIER_GEN[state.carrier] || label;
   if (state.lockerMode === 'loading') {
-    host.innerHTML = `<div class="lk-skel" aria-hidden="true"><span class="s-label"></span><span class="s-input"></span><span class="s-row"></span><span class="s-row"></span><span class="s-row"></span></div><p class="sr-only">Laen ${esc(gen)} automaate…</p>`;
+    host.innerHTML = `<div class="lk-skel" aria-hidden="true"><span class="s-label"></span><span class="s-input"></span><span class="s-row"></span><span class="s-row"></span><span class="s-row"></span></div><p class="sr-only">Laadin ${esc(gen)} automaate…</p>`;
     return;
   }
   if (state.lockerMode === 'manual' || state.lockerMode === 'error') {
@@ -815,7 +817,7 @@ function renderOptions() {
       : '';
   $('[data-lk-hint]').textContent = tokens.length
     ? `${plural(matched.length, 'automaat', 'automaati')} vastab otsingule`
-    : `${state.lockers.length} automaati üle Eesti · nt „Tartu“, „Ülemiste“, „Prisma“`;
+    : `${plural(state.lockers.length, 'automaat', 'automaati')} üle Eesti · nt „Tartu“, „Ülemiste“, „Prisma“`;
   announce(matched.length ? `${plural(matched.length, 'tulemus', 'tulemust')}. Kasuta nooleklahve ja Enterit.` : 'Tulemusi pole.');
   // Kui on täpselt üks vaste, märgi see kohe aktiivseks — Enter valib.
   if (tokens.length && state.results.length === 1) setActive(0);
@@ -1014,20 +1016,15 @@ function afterShippingChange() {
 /* =========================================================================
    Kontaktandmed ja valideerimine
    ========================================================================= */
-// Sama reegel mis serveris (netlify/functions/_lib/order.mjs → isValidEmail): mida vorm
-// rohelisega lubab, seda ei lükka ka kassa server tagasi.
-const EMAIL_RE =
-  /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?\.)+\p{L}{2,}$/u;
-const isValidEmail = (s) => s.length <= 254 && EMAIL_RE.test(s);
 
 /** Konkreetne vihje, miks aadress ei sobi. */
 function emailProblem(s) {
-  const at = s.lastIndexOf('@');
-  const local = at > 0 ? s.slice(0, at) : '';
+  if (s.length > 254) return 'E-posti aadress on liiga pikk. Kontrolli üle.';
+  if (/\s/.test(s)) return 'E-posti aadressis ei saa olla tühikuid.';
+  const at = s.indexOf('@');
   if (at < 1 || at === s.length - 1) return 'E-posti aadress tundub poolik — see peaks olema kujul nimi@domeen.ee.';
-  if (/[^\x00-\x7F]/.test(local)) return 'E-posti aadressi algusosas (enne @-märki) ei saa olla täpitähti (õ, ä, ö, ü).';
-  if (/\.\.|^\.|\.$/.test(local) || /\.\./.test(s)) return 'Kontrolli punkte: aadressis ei saa olla kahte punkti järjest ega punkti @-märgi kõrval.';
-  return 'See e-posti aadress ei tundu päris õige. Kontrolli üle.';
+  if (s.indexOf('@', at + 1) !== -1) return 'E-posti aadressis saab olla ainult üks @-märk.';
+  return 'Kontrolli aadressi lõppu — see peaks olema kujul nimi@domeen.ee.';
 }
 
 export function normalizePhone(raw) {
@@ -1700,7 +1697,7 @@ document.addEventListener('click', (e) => {
   if (kood) {
     if (Cart.applyCode(kood)) {
       const t = Cart.totals();
-      setTimeout(() => toast(`Sooduskood <strong>${esc(t.code)}</strong> on rakendatud: −${t.percent}%! 🎉`), 400);
+      setTimeout(() => toast(`Sooduskood <strong>${esc(t.code)}</strong> on rakendatud: −${t.percent}%!`), 400);
     } else {
       setTimeout(() => toast(`Sooduskood „${esc(kood)}“ ei kehti.`), 400);
     }

@@ -143,7 +143,7 @@ function buildGate() {
       </section>
 
       <section class="agegate__step agegate__step--no" data-ag-step="no" hidden>
-        <div class="agegate__wave" aria-hidden="true">✌️</div>
+        <div class="agegate__wave" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 12.6 7.6 4.7a1.5 1.5 0 0 1 2.95-.55L12.1 11.6"/><path d="m12.1 11.6 1.5-7.4a1.5 1.5 0 0 1 2.94.6L15.2 12.4"/><path d="M15.2 12.4a1.45 1.45 0 0 1 2.4 1.1v2A5.5 5.5 0 0 1 12.1 21h-.6A5.5 5.5 0 0 1 6 15.5v-1.2a1.6 1.6 0 0 1 2.5-1.3l1.9 1.3"/><path d="M10.4 14.3c1.1-.7 2.6-.9 3.9-.3"/></svg></div>
         <h2 class="agegate__q agegate__q--sm" id="ag-no-title" tabindex="-1">Pole hullu&nbsp;— <span class="neon">sinu pidu on siin!</span></h2>
         <p class="agegate__sub">MIDA V!!!U on mõeldud ainult täiskasvanutele. Aga ära kurvasta: need kaks ÄGE mängu sobivad kõigile alates 12. eluaastast ja naeru jagub kuhjaga.</p>
         <div class="agegate__games">

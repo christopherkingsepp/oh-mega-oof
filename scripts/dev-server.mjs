@@ -11,6 +11,7 @@ import { extname, join, normalize, resolve } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const PUBLIC = join(ROOT, 'public'); // veebilehe failid (sama mis netlify.toml publish)
 const PORT = Number(process.env.PORT || 8080);
 const MOCK = process.env.MOCK_API === '1' || process.argv.includes('--mock');
 
@@ -111,14 +112,14 @@ async function tryFile(p) {
 
 async function handleStatic(req, res, url) {
   let pathname = decodeURIComponent(url.pathname);
-  const safe = normalize(join(ROOT, pathname));
-  if (!safe.startsWith(ROOT)) return send(res, 403, 'Forbidden');
+  const safe = normalize(join(PUBLIC, pathname));
+  if (!safe.startsWith(PUBLIC)) return send(res, 403, 'Forbidden');
   // "Ilusad" URL-id nagu Netlifys: /mida-viiu -> mida-viiu.html, / -> index.html
   const candidates = pathname.endsWith('/') ? [join(safe, 'index.html')] : [safe, `${safe}.html`, join(safe, 'index.html')];
   let file = null;
   for (const c of candidates) if ((file = await tryFile(c))) break;
   if (!file) {
-    const nf = await tryFile(join(ROOT, '404.html'));
+    const nf = await tryFile(join(PUBLIC, '404.html'));
     return send(res, 404, nf ? await readFile(nf) : 'Not found', { 'Content-Type': 'text/html; charset=utf-8' });
   }
   const type = TYPES[extname(file).toLowerCase()] || 'application/octet-stream';

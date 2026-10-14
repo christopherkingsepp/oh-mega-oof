@@ -29,11 +29,8 @@ const params = new URLSearchParams(location.search);
 const sessionId = params.get('session_id');
 let order = null;
 
-// Ilma session_id-ta (järjehoidja, jagatud link, ajalugu) pole see maksekinnitus.
-// Kui ostukorvis on midagi, on klient ilmselt pooleli — vii ta tagasi kassasse.
-const leaving = !sessionId && Cart.count() > 0;
-if (leaving) location.replace('/ostukorv');
-
+// Ilma session_id-ta (järjehoidja, jagatud link, ajalugu) pole see maksekinnitus: näitame
+// neutraalset vaadet ega puutu ostukorvi (see võib olla pooleli tellimus).
 if (sessionId) {
   order = readLastOrder();
   // Kui kassa kokkuvõtet pole (nt teine seade), võta vähemalt ostukorvi sisu.
@@ -48,31 +45,44 @@ if (sessionId) {
   Cart.removeCode();
 }
 
+const ARROW =
+  '<svg class="icon arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+
+/** Ilma session_id-ta: ei väida, et midagi on makstud, ega korralda pidu. */
+function renderNoSession() {
+  const lead = $('[data-ty-lead]');
+  const hasCart = Cart.count() > 0;
+  document.title = 'Tellimuse infot ei leitud | ÄGE';
+  document.body.classList.add('is-nosession');
+  $('#ty-title').innerHTML = 'Tellimuse infot <span class="neon">ei leitud</span>';
+  lead.textContent = hasCart
+    ? 'Sellelt lingilt me tellimust ei leidnud. Sinu ostukorv on alles — tellimuse saad lõpule viia kassas. Kui maksid just praegu, saadab Stripe makse kviitungi sinu e-postile.'
+    : 'Sellelt lingilt me tellimust ei leidnud. Kui maksid just praegu, saadab Stripe makse kviitungi sinu e-postile.';
+  lead.hidden = false;
+  // Põhitegevus kohe nähtavale (alumised nupud muutuksid üleliigseks).
+  const cta = $('.ty-cta');
+  if (cta) {
+    cta.classList.add('ty-cta--hero');
+    cta.innerHTML = hasCart
+      ? `<a class="btn btn--primary btn--lg" href="/ostukorv">Tagasi ostukorvi ${ARROW}</a><a class="btn btn--ghost btn--lg" href="/">Avalehele</a>`
+      : `<a class="btn btn--primary btn--lg" href="/">Avalehele ${ARROW}</a><a class="btn btn--ghost btn--lg" href="/#mangud">Vaata mänge</a>`;
+    lead.after(cta);
+  }
+}
+
 function renderOrder() {
   const box = $('[data-ty-order]');
   const lead = $('[data-ty-lead]');
-  if (!sessionId) {
-    // Neutraalne vaade: ei väida, et midagi on makstud, ega korralda pidu.
-    document.title = 'Tellimus | ÄGE';
-    document.body.classList.add('is-nosession');
-    $('[data-ty-eyebrow]').textContent = 'ÄGE pood';
-    $('#ty-title').innerHTML = '<span class="neon">Hei!</span> Siin pole veel tellimust';
-    lead.textContent = 'Kui maksid just praegu, leiad makse kviitungi oma e-postist. Kui veel mitte — vali mäng ja pidu võib alata.';
-    $('[data-burst]')?.setAttribute('hidden', '');
-    $('[data-ty-next]')?.setAttribute('hidden', '');
-    // Põhitegevus kohe nähtavale (alumised nupud muutuvad üleliigseks).
-    const cta = $('.ty-cta');
-    if (cta) {
-      cta.classList.add('ty-cta--hero');
-      cta.innerHTML = `<a class="btn btn--primary btn--lg" href="/mida-viiu">Vaata MIDA V!!!U <svg class="icon arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="btn btn--ghost btn--lg" href="/#mangud">Kõik mängud</a>`;
-      lead.after(cta);
-    }
-    return;
-  }
+  if (!sessionId) return renderNoSession();
+  $('[data-ty-eyebrow]').textContent = 'Makse õnnestus';
+  $('[data-ty-paid]').hidden = false;
+  $('[data-burst]').hidden = false;
+  $('[data-ty-next]').hidden = false;
+  lead.hidden = false;
   if (!order) return;
   const first = order.firstName ? esc(order.firstName) : '';
   if (first) {
-    lead.innerHTML = `${first}, sinu tellimus on kinnitatud ja paneme selle kohe pakki. Valmistu õhtuks, millest räägitakse veel järgmisel päeval.`;
+    lead.innerHTML = `${first}, hea valik! Saadame paki teele 1–3 tööpäeva jooksul. Valmistu õhtuks, millest räägitakse veel järgmisel päeval.`;
   }
   const items = (order.items || [])
     .map((i) => ({ p: Object.prototype.hasOwnProperty.call(PRODUCTS, i?.id) ? PRODUCTS[i.id] : null, qty: Math.max(1, Math.min(99, Math.floor(Number(i?.qty)) || 1)) }))
@@ -306,11 +316,9 @@ if (tt && SITE.tiktok) tt.href = SITE.tiktok;
 const ig = $('[data-instagram]');
 if (ig && SITE.instagram) ig.href = SITE.instagram;
 
-if (!leaving) {
-  renderOrder();
-  // Konfetti ainult päris tellimuse järel.
-  if (sessionId) {
-    if (document.readyState === 'complete') celebrate();
-    else window.addEventListener('load', celebrate, { once: true });
-  }
+renderOrder();
+// Konfetti ainult päris tellimuse järel.
+if (sessionId) {
+  if (document.readyState === 'complete') celebrate();
+  else window.addEventListener('load', celebrate, { once: true });
 }

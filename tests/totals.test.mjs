@@ -1,7 +1,7 @@
 // computeTotals() — sama funktsioon arvutab summad brauseris JA makse-funktsioonis.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { computeTotals, toCents, normalizeCode, PRODUCTS, SHIPPING, MAX_QTY_PER_ITEM } from '../assets/js/catalog.js';
+import { computeTotals, toCents, normalizeCode, PRODUCTS, SHIPPING, MAX_QTY_PER_ITEM } from '../public/assets/js/catalog.js';
 
 test('tühi ostukorv: kõik nullid, tarne 0', () => {
   const t = computeTotals([], null);

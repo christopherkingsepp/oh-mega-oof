@@ -15,6 +15,7 @@ import { trapFocus, toast, ICONS } from './layout.js';
 import { Cart } from './cart.js';
 import { WELCOME_CODE, DISCOUNT_CODES } from './catalog.js';
 import { ensureOverlaysCss, lockPage, isAgeGateOpen, prefersReducedMotion, storageGet, storageSet } from './agegate.js';
+import { isValidEmail } from './validate.js'; // sama reegel mis serveris
 
 const SEEN_KEY = 'age_promo_seen';
 const EMAIL_KEY = 'age_promo_email';
@@ -25,16 +26,24 @@ const PCT_TXT = `−${PCT}%`;
 const TEASER_DELAY = 4000; // ms
 const SCROLL_TRIGGER = 0.3; // 30% lehest
 const REMIND_AFTER = 3 * 24 * 60 * 60 * 1000; // pärast 3 päeva näita teaserit uuesti
-const AUTO_TUCK_SCREENS = 1.5; // telefonis muutub teaser pill'iks pärast ~1,5 ekraani kerimist
-// Sama reegel mis serveris (netlify/functions/_lib/order.mjs), et vorm ei lubaks aadressi,
-// mille kassa hiljem tagasi lükkab.
-const EMAIL_RE =
-  /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?\.)+\p{L}{2,}$/u;
-/**
+const AUTO_TUCK_SCREENS = 1.5; /**
  * Lehe võtmeelemendid, mida nurgakaart ei tohi katta: avalehe hind ja tellimisnupud,
- * tootelehe ostuplokk ja galerii pisipildid. Teised lehed saavad lisada [data-promo-avoid].
+ * tootelehe nimi, hind, ostuplokk, galerii noolenupud ja pisipildid.
+ * Teised lehed saavad lisada [data-promo-avoid].
  */
-const AVOID = ['[data-hero-cta]', '.hero__price', '.hero__ctas', '[data-main-cta]', '[data-buy-now]', '.pdp-qty', '.pdp-thumbs', '[data-promo-avoid]'].join(',');
+const AVOID = [
+  '[data-hero-cta]',
+  '.hero__price',
+  '.hero__ctas',
+  '.pdp-title',
+  '.pdp-price',
+  '[data-main-cta]',
+  '[data-buy-now]',
+  '.pdp-qty',
+  '.pdp-thumbs',
+  '.pdp-stage__nav',
+  '[data-promo-avoid]',
+].join(',');
 
 const path = location.pathname.replace(/\.html$/, '').replace(/\/+$/, '') || '/';
 const NO_TEASER = /^\/(ostukorv|aitah|__forms)$/.test(path);
@@ -52,6 +61,9 @@ const GIFT_ICON =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg>';
 const COPY_ICON =
   '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="3"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>';
+// „Vajuta mind“ — puudutav sõrm (brändi joonikoon, mitte emoji)
+const TAP_ICON =
+  '<svg class="promo-tap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11.5V5a1.5 1.5 0 0 1 3 0v5.5"/><path d="M12 10V8.5a1.5 1.5 0 0 1 3 0V11"/><path d="M15 10.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.6-2.2L4.3 15.6a1.6 1.6 0 0 1 2.4-2.1L9 15.5"/><path d="M5.5 4.5 4 3M14.5 3.5 16 2"/></svg>';
 const SPARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 0c.8 6.4 5.6 11.2 12 12-6.4.8-11.2 5.6-12 12-.8-6.4-5.6-11.2-12-12C6.4 11.2 11.2 6.4 12 0z"/></svg>';
 
 /* =========================================================================
@@ -190,7 +202,7 @@ function buildDock() {
         </span>
         <span class="promo-teaser__txt">
           <strong>Tahad <em>${PCT_TXT}</em>?</strong>
-          <span>Vajuta mind <span aria-hidden="true">👀</span></span>
+          <span>Vajuta mind ${TAP_ICON}</span>
         </span>
         <span class="sr-only"> Ava soodustuse pakkumine.</span>
       </button>
@@ -485,7 +497,7 @@ function buildModal() {
 
           <!-- 2. samm: kraapekaart / kood -->
           <section class="promo-step promo-step--code" data-step="${STEP_SCRATCH}" hidden>
-            <p class="promo-kicker" data-stagger data-code-kicker><span class="promo-kicker__dot" aria-hidden="true"></span>Oled sees! 🎉</p>
+            <p class="promo-kicker" data-stagger data-code-kicker><span class="promo-kicker__dot" aria-hidden="true"></span>Oled sees!</p>
             <h2 class="promo-title" id="promo-title-code" tabindex="-1" data-stagger data-code-title>Kraabi ja võta oma kood</h2>
             <p class="promo-lead" id="promo-desc-code" data-stagger data-code-lead>Hõõru kaarti sõrme või hiirega — selle all on peidus sinu ${PCT_TXT}.</p>
             <div class="scratch" data-stagger>
@@ -544,7 +556,7 @@ function buildModal() {
   const form = modal.querySelector('.promo-form');
   const input = form.querySelector('#promo-email');
   input.addEventListener('input', () => {
-    if (input.getAttribute('aria-invalid') === 'true' && EMAIL_RE.test(input.value.trim())) setError('');
+    if (input.getAttribute('aria-invalid') === 'true' && isValidEmail(input.value.trim())) setError('');
   });
   form.addEventListener('submit', onSubmit);
 
@@ -583,14 +595,14 @@ function setStep(name) {
   const lead = code.querySelector('[data-code-lead]');
   const dot = '<span class="promo-kicker__dot" aria-hidden="true"></span>';
   if (name === STEP_SCRATCH) {
-    kicker.innerHTML = `${dot}Oled sees! 🎉`;
+    kicker.innerHTML = `${dot}Oled sees!`;
     title.textContent = 'Kraabi ja võta oma kood';
     lead.textContent = `Hõõru kaarti sõrme või hiirega — selle all on peidus sinu ${PCT_TXT}.`;
     code.classList.remove('is-revealed');
     code.querySelector('[data-actions]').hidden = true;
     code.querySelector('[data-reveal-code]').hidden = false;
   } else {
-    kicker.innerHTML = `${dot}Tere tagasi! 😎`;
+    kicker.innerHTML = `${dot}Tere tagasi!`;
     title.textContent = `Sinu ${PCT_TXT} kood on alles`;
     lead.textContent = 'Kasuta seda kassas või lase meil soodustus kohe ostukorvi lisada.';
     code.classList.add('is-revealed');
@@ -860,12 +872,12 @@ function closeModal() {
 /* ---------- Vorm ---------- */
 /** Konkreetne vihje, miks aadress ei sobi (sama loogika mis kassas). */
 function emailProblem(email) {
-  const at = email.lastIndexOf('@');
-  const local = at > 0 ? email.slice(0, at) : '';
+  if (email.length > 254) return 'E-posti aadress on liiga pikk. Kontrolli üle.';
+  if (/\s/.test(email)) return 'E-posti aadressis ei saa olla tühikuid.';
+  const at = email.indexOf('@');
   if (at < 1 || at === email.length - 1) return 'Aadress tundub poolik — see peaks olema kujul nimi@domeen.ee.';
-  if (/[^\x00-\x7F]/.test(local)) return 'E-posti aadressi algusosas (enne @-märki) ei saa olla täpitähti (õ, ä, ö, ü).';
-  if (/\.\.|^\.|\.$/.test(local) || /\.\./.test(email)) return 'Kontrolli punkte: aadressis ei saa olla kahte punkti järjest ega punkti @-märgi kõrval.';
-  return 'See e-posti aadress ei tundu päris õige. Kontrolli üle?';
+  if (email.indexOf('@', at + 1) !== -1) return 'E-posti aadressis saab olla ainult üks @-märk.';
+  return 'Kontrolli aadressi lõppu — see peaks olema kujul nimi@domeen.ee.';
 }
 
 function setError(msg) {
@@ -894,7 +906,7 @@ async function onSubmit(e) {
     input.focus();
     return;
   }
-  if (!EMAIL_RE.test(email) || email.length > 254) {
+  if (!isValidEmail(email)) {
     setError(emailProblem(email));
     shake(form);
     input.focus();
@@ -1228,7 +1240,7 @@ function onUse() {
   const empty = Cart.count() === 0;
   const onProduct = document.body.hasAttribute('data-product');
   if (empty && !onProduct) {
-    toast(`<strong>${PCT_TXT}</strong> on ostukorvis! Vali nüüd oma mäng 👇`, { duration: 2200 });
+    toast(`<strong>${PCT_TXT}</strong> on ostukorvis! Vali nüüd oma mäng.`, { duration: 2200 });
     closeModal();
     setTimeout(() => {
       location.href = '/mida-viiu';

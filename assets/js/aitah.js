@@ -6,6 +6,10 @@ import { esc } from './layout.js';
 import { SITE } from './site.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
+const ICON_PIN =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+const ICON_MAIL =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>';
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
 const LAST_ORDER_KEY = 'age_last_order_v1';
 
@@ -25,6 +29,11 @@ const params = new URLSearchParams(location.search);
 const sessionId = params.get('session_id');
 let order = null;
 
+// Ilma session_id-ta (järjehoidja, jagatud link, ajalugu) pole see maksekinnitus.
+// Kui ostukorvis on midagi, on klient ilmselt pooleli — vii ta tagasi kassasse.
+const leaving = !sessionId && Cart.count() > 0;
+if (leaving) location.replace('/ostukorv');
+
 if (sessionId) {
   order = readLastOrder();
   // Kui kassa kokkuvõtet pole (nt teine seade), võta vähemalt ostukorvi sisu.
@@ -43,7 +52,21 @@ function renderOrder() {
   const box = $('[data-ty-order]');
   const lead = $('[data-ty-lead]');
   if (!sessionId) {
+    // Neutraalne vaade: ei väida, et midagi on makstud, ega korralda pidu.
+    document.title = 'Tellimus | ÄGE';
+    document.body.classList.add('is-nosession');
     $('[data-ty-eyebrow]').textContent = 'ÄGE pood';
+    $('#ty-title').innerHTML = '<span class="neon">Hei!</span> Siin pole veel tellimust';
+    lead.textContent = 'Kui maksid just praegu, leiad makse kviitungi oma e-postist. Kui veel mitte — vali mäng ja pidu võib alata.';
+    $('[data-burst]')?.setAttribute('hidden', '');
+    $('[data-ty-next]')?.setAttribute('hidden', '');
+    // Põhitegevus kohe nähtavale (alumised nupud muutuvad üleliigseks).
+    const cta = $('.ty-cta');
+    if (cta) {
+      cta.classList.add('ty-cta--hero');
+      cta.innerHTML = `<a class="btn btn--primary btn--lg" href="/mida-viiu">Vaata MIDA V!!!U <svg class="icon arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="btn btn--ghost btn--lg" href="/#mangud">Kõik mängud</a>`;
+      lead.after(cta);
+    }
     return;
   }
   if (!order) return;
@@ -52,21 +75,29 @@ function renderOrder() {
     lead.innerHTML = `${first}, sinu tellimus on kinnitatud ja paneme selle kohe pakki. Valmistu õhtuks, millest räägitakse veel järgmisel päeval.`;
   }
   const items = (order.items || [])
-    .map((i) => ({ p: PRODUCTS[i.id], qty: i.qty }))
+    .map((i) => ({ p: Object.prototype.hasOwnProperty.call(PRODUCTS, i?.id) ? PRODUCTS[i.id] : null, qty: Math.max(1, Math.min(99, Math.floor(Number(i?.qty)) || 1)) }))
     .filter((i) => i.p);
   if (!items.length) return;
   const locker = order.locker?.name
-    ? `<div><dt aria-label="Pakiautomaat">📍</dt><dd><strong>${esc(order.carrierLabel || 'Pakiautomaat')}</strong> · ${esc(order.locker.name)}${order.locker.address ? `, ${esc(order.locker.address)}` : ''}</dd></div>`
+    ? `<div><dt aria-label="Pakiautomaat">${ICON_PIN}</dt><dd><strong>${esc(order.carrierLabel || 'Pakiautomaat')}</strong> · ${esc(order.locker.name)}${order.locker.address ? `, ${esc(order.locker.address)}` : ''}</dd></div>`
     : '';
-  const mail = order.email ? `<div><dt aria-label="E-post">✉️</dt><dd>Kviitung läheb aadressile <strong>${esc(order.email)}</strong></dd></div>` : '';
+  const mail = order.email ? `<div><dt aria-label="E-post">${ICON_MAIL}</dt><dd>Kviitung läheb aadressile <strong>${esc(order.email)}</strong></dd></div>` : '';
   box.innerHTML = `
     <ul class="ty-order__items" role="list" aria-label="Tellitud tooted">
       ${items
         .map(
           ({ p, qty }) => `<li class="ty-order__item">
-            <img src="${esc(p.image)}" alt="" width="54" height="37" loading="lazy">
+            ${
+              p.includes?.length
+                ? `<span class="co-sum-stack ty-order__stack" aria-hidden="true">${p.includes
+                    .map((id) => PRODUCTS[id])
+                    .filter(Boolean)
+                    .map((x) => `<img src="${esc(x.image)}" alt="" width="54" height="37" loading="lazy">`)
+                    .join('')}</span>`
+                : `<img src="${esc(p.image)}" alt="" width="54" height="37" loading="lazy">`
+            }
             <strong>${esc(p.name)}</strong>
-            <span>${qty} tk</span>
+            <span>${esc(String(qty))} tk</span>
           </li>`,
         )
         .join('')}
@@ -275,6 +306,11 @@ if (tt && SITE.tiktok) tt.href = SITE.tiktok;
 const ig = $('[data-instagram]');
 if (ig && SITE.instagram) ig.href = SITE.instagram;
 
-renderOrder();
-if (document.readyState === 'complete') celebrate();
-else window.addEventListener('load', celebrate, { once: true });
+if (!leaving) {
+  renderOrder();
+  // Konfetti ainult päris tellimuse järel.
+  if (sessionId) {
+    if (document.readyState === 'complete') celebrate();
+    else window.addEventListener('load', celebrate, { once: true });
+  }
+}

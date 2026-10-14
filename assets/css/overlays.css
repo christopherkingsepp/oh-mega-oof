@@ -432,7 +432,7 @@ body.ov-locked {
 .promo-modal {
   --promo-ar: 16 / 9;
 }
-@media (max-width: 600px) {
+@media (max-width: 600px), (max-height: 500px) {
   .promo-dock,
   .promo-modal {
     --promo-ar: 2 / 1;
@@ -442,7 +442,7 @@ body.ov-locked {
 .promo-dock {
   --dock-bottom: 24px;
   position: fixed;
-  left: 24px;
+  left: max(24px, env(safe-area-inset-left, 0px));
   bottom: calc(var(--dock-bottom) + env(safe-area-inset-bottom, 0px));
   z-index: 80;
   pointer-events: none;
@@ -456,9 +456,20 @@ body.is-locked .promo-dock {
   opacity: 0;
   visibility: hidden;
 }
+/* Peidetud: allakerimisel (mobiil) või kui kaart kataks lehe põhinuppe (promo.js → syncDock) */
 .promo-dock.is-tucked {
   translate: 0 calc(100% + 40px);
   opacity: 0;
+  visibility: hidden;
+}
+.promo-dock.is-tucked > *,
+.promo-dock.is-waiting > * {
+  pointer-events: none;
+}
+/* Teaser ootab, kuni nurgas on vaba ruum (nt hero hind ja tellimisnupp on vaatest väljas) */
+.promo-dock.is-waiting {
+  visibility: hidden;
+  transition: none;
 }
 .promo-dock {
   transition: transform 0.45s var(--ease-out), translate 0.45s var(--ease-out), bottom 0.45s var(--ease-out), opacity 0.3s, visibility 0.3s;
@@ -469,10 +480,10 @@ body.is-locked .promo-dock {
     --dock-bottom: 104px;
   }
 }
-@media (max-width: 900px) {
+@media (max-width: 900px), (max-height: 500px) {
   .promo-dock {
     --dock-bottom: 14px;
-    left: 12px;
+    left: max(12px, env(safe-area-inset-left, 0px));
   }
   /* Mobiili kleepuv osturiba (~76px + turvaala) */
   body.has-buybar .promo-dock {
@@ -698,7 +709,8 @@ body.is-locked .promo-dock {
   pointer-events: none;
 }
 
-@media (max-width: 600px) {
+/* Telefon (ka rõhtpaigutuses): väiksem nurgakaart */
+@media (max-width: 600px), (max-height: 500px) {
   .promo-teaser {
     width: 184px;
   }
@@ -1527,6 +1539,12 @@ body.is-locked .promo-dock {
   .scratch:not(.is-scratching):not(.is-cleared)::after {
     display: none;
   }
+  /* base.css annab igale elemendile 0.01ms ülemineku — ka päritud visibility'le. Siis oleks
+     e-posti väli avamise hetkel veel „hidden“ ja fookust ei saaks dialoogi viia. */
+  .promo-modal,
+  .promo-modal * {
+    transition: none !important;
+  }
 }
 
 @media (max-width: 380px) {
@@ -1538,5 +1556,166 @@ body.is-locked .promo-dock {
   .ag-game__img img {
     width: 72px;
     height: 52px;
+  }
+}
+
+/* =========================================================================
+   Rõhtpaigutusega telefon (nt 844×390): kõik oluline peab mahtuma esimesse vaatesse
+   ========================================================================= */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Vanusekontroll: logo vasakul, küsimus ja nupud paremal */
+  .agegate {
+    padding: max(14px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  }
+  .agegate__inner {
+    width: min(820px, 100%);
+  }
+  .agegate__brand {
+    display: none;
+  }
+  .agegate__step--ask {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    grid-template-areas:
+      'logo q'
+      'logo sub'
+      'logo actions'
+      'logo fine';
+    column-gap: clamp(20px, 4vw, 40px);
+    align-items: center;
+    justify-items: start;
+    text-align: left;
+  }
+  .agegate__step--ask .agegate__logo-wrap {
+    grid-area: logo;
+    width: min(260px, 100%);
+    margin: 0;
+    justify-self: center;
+  }
+  .agegate__step--ask .agegate__q {
+    grid-area: q;
+    font-size: clamp(1.3rem, 3.6vw, 1.75rem);
+    margin-bottom: 6px;
+  }
+  .agegate__step--ask .agegate__sub {
+    grid-area: sub;
+    margin-bottom: 14px;
+    font-size: 0.92rem;
+  }
+  .agegate__step--ask .agegate__actions {
+    grid-area: actions;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+  .agegate__step--ask .agegate__actions .btn {
+    width: auto;
+    min-width: 0;
+  }
+  .agegate__yes {
+    flex: 1 1 auto;
+  }
+  .agegate__step--ask .agegate__fine {
+    grid-area: fine;
+    justify-content: flex-start;
+    margin-top: 12px;
+    font-size: 0.76rem;
+  }
+  .agegate__stamp {
+    width: 58px;
+  }
+  .agegate__games {
+    grid-template-columns: 1fr 1fr;
+  }
+  .agegate__wave {
+    font-size: 2rem;
+    margin-bottom: 6px;
+  }
+
+  /* Soodushüpik: pilt vasakul, vorm paremal — pealkiri, e-post ja nupp on kohe näha */
+  .promo-modal {
+    padding: max(10px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+  .promo-panel {
+    width: min(780px, 100%);
+    max-height: calc(100vh - 20px);
+    max-height: calc(100dvh - 20px);
+  }
+  .promo-scroll {
+    display: grid;
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+    align-items: start;
+  }
+  .promo-top {
+    position: sticky;
+    top: 0;
+    align-self: stretch;
+  }
+  .promo-hero {
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 220px;
+    -webkit-mask-image: linear-gradient(90deg, #000 70%, transparent 100%);
+    mask-image: linear-gradient(90deg, #000 70%, transparent 100%);
+  }
+  .promo-sticker--hero {
+    right: 10px;
+    bottom: 24px;
+    width: 84px;
+    height: 84px;
+  }
+  .promo-sticker--hero b {
+    font-size: 1.14rem;
+  }
+  .promo-body {
+    padding: 16px 22px 16px 10px;
+  }
+  .promo-step {
+    gap: 8px;
+  }
+  .promo-kicker,
+  .promo-step--code .promo-kicker,
+  .promo-title {
+    padding-right: 48px;
+  }
+  .promo-title {
+    font-size: 1.35rem;
+  }
+  .promo-lead {
+    font-size: 0.86rem;
+    line-height: 1.45;
+  }
+  .promo-perks {
+    display: none;
+  }
+  .promo-form__row {
+    flex-direction: row;
+    border-radius: var(--radius-pill);
+  }
+  .promo-form__icon {
+    top: 50%;
+  }
+  .promo-form__input,
+  .promo-form__btn {
+    min-height: 46px;
+  }
+  .promo-form__btn {
+    width: auto;
+    padding-inline: 16px;
+  }
+  .promo-later {
+    margin-top: -6px;
+  }
+  .scratch {
+    height: 108px;
+  }
+  .promo-actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .promo-actions .btn {
+    min-height: 48px;
+    padding-inline: 12px;
+    gap: 8px;
+    font-size: 0.86rem;
   }
 }

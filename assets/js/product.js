@@ -77,7 +77,7 @@ const imgFace = (src, alt = '') =>
 const BOX = {
   'mida-viiu': { theme: 'mida', title: 'MIDA V!!!U', tagline: 'Rohkem kui kaardimäng', facts: ['85 kaarti', '50+ shotti', '18+'] },
   'oled-semu': { theme: 'semu', title: 'OLED SEMU?', tagline: 'Seltskonna kaardimäng', facts: ['75 küsimust', '5 raskusastet', '7 boonuskaarti'] },
-  vigur: { theme: 'vigur', title: 'VIGUR', tagline: 'Seltskonna kaardimäng', facts: ['50 olukorda', '32 Shh-kaarti', 'Bluffi!'] },
+  vigur: { theme: 'vigur', title: 'VIGUR', tagline: 'Seltskonna kaardimäng', facts: ['50 olukorda', '32 „Shh“-kaarti', 'Bluffi!'] },
 };
 
 const GALLERY = {
@@ -100,7 +100,7 @@ const GALLERY = {
     { kind: 'box', label: '3D-karp' },
     { kind: 'image', src: '/assets/img/games/vigur-cover.webp', alt: 'Vigur kaanepilt: helendav VIGUR-logo roosal-punasel taustal', label: 'Kaanepilt' },
     { kind: 'hpair', back: HC.vigurBack(), front: HC.vigurSit('Mu kõige hullem reis'), alt: 'Olukorrakaart: „Mu kõige hullem reis“', label: 'Olukorrakaardid' },
-    { kind: 'hpair', back: HC.shhBack(), front: HC.shhFront(false), alt: 'Shh-tegevuskaart: „Valeta“', label: 'Shh-kaardid' },
+    { kind: 'hpair', back: HC.shhBack(), front: HC.shhFront(false), alt: '„Shh“-tegevuskaart: „Valeta“', label: '„Shh“-kaardid' },
   ],
 };
 
@@ -207,7 +207,7 @@ function buildDeck() {
   }
   return {
     start: 3,
-    labels: { sit: 'Olukorrakaart', truth: 'Shh-kaart · Räägi tõtt', lie: 'Shh-kaart · Valeta' },
+    labels: { sit: 'Olukorrakaart', truth: '„Shh“-kaart · Räägi tõtt', lie: '„Shh“-kaart · Valeta' },
     chips: [
       ['sit', 'Olukorrad'],
       ['truth', 'Räägi tõtt'],
@@ -216,7 +216,7 @@ function buildDeck() {
     cards: VIGUR_CARDS.map((c) =>
       c.sit
         ? { type: 'sit', aria: `Olukorrakaart: ${c.sit}`, back: HC.vigurBack(), front: HC.vigurSit(c.sit) }
-        : { type: c.shh ? 'truth' : 'lie', aria: `Shh-kaart: ${c.shh ? 'Räägi tõtt' : 'Valeta'}`, back: HC.shhBack(), front: HC.shhFront(c.shh) },
+        : { type: c.shh ? 'truth' : 'lie', aria: `„Shh“-kaart: ${c.shh ? 'Räägi tõtt' : 'Valeta'}`, back: HC.shhBack(), front: HC.shhFront(c.shh) },
     ),
   };
 }
@@ -432,10 +432,13 @@ function initBuybar() {
   const mobile = window.matchMedia('(max-width: 900px)');
   let ctaVisible = true;
   let ctaAbove = false;
+  let footerVisible = false;
   let shown = null;
 
   const update = () => {
-    const show = !ctaVisible && (ctaAbove || (mobile.matches && window.scrollY > 260));
+    // Desktopis hõljub riba pillina sisu kohal. Jaluse juures peidame selle, et see
+    // ei kataks vanusehoiatust ega jaluse linke (mobiilis jätab jalus riba jaoks ruumi).
+    const show = !ctaVisible && (ctaAbove || (mobile.matches && window.scrollY > 260)) && (mobile.matches || !footerVisible);
     if (show === shown) return;
     shown = show;
     bar.classList.toggle('is-visible', show);
@@ -451,6 +454,16 @@ function initBuybar() {
     },
     { threshold: 0 },
   ).observe(cta);
+  const footer = document.querySelector('.site-footer');
+  if (footer) {
+    new IntersectionObserver(
+      ([en]) => {
+        footerVisible = en.isIntersecting;
+        update();
+      },
+      { rootMargin: '0px 0px -24px 0px' },
+    ).observe(footer);
+  }
   let raf = 0;
   window.addEventListener(
     'scroll',
@@ -513,6 +526,11 @@ function initFlyToCart() {
 /* =========================================================================
    3D-mudeli modaal (Pacdora) — iframe laetakse alles avamisel
    ========================================================================= */
+// Kas Pacdora vaade avatakse lehe sees (modaalis)? Kui pärast avaldamist selgub, et
+// Pacdora keelab raamimise (modaalis on 3D asemel tühi valge kast), pane siia `false`
+// — siis avaneb 3D-vaade alati uues aknas, nagu puuteekraanidel praegu.
+const EMBED_3D = true;
+
 function initModelModal() {
   const modal = document.querySelector('[data-model-modal]');
   if (!modal) return;
@@ -522,6 +540,22 @@ function initModelModal() {
   let last = null;
   let loaded = false;
   modal.querySelectorAll('[data-model-link]').forEach((a) => (a.href = SITE.pacdora3d));
+  // Puuteekraanil on Pacdora 3D-vaade iframe'is kohmakas (ja kui Pacdora keelab
+  // raamimise, jääks modaali ainult tühi kast) — seal avame vaate kohe uues aknas.
+  const touch = window.matchMedia('(hover: none) and (pointer: coarse)');
+  const external = () => !EMBED_3D || touch.matches;
+  const syncTrigger = () =>
+    document.querySelectorAll('[data-open-model]').forEach((b) => {
+      if (external()) {
+        b.removeAttribute('aria-haspopup');
+        b.setAttribute('aria-label', `${b.textContent.trim()} (avaneb uues aknas)`);
+      } else {
+        b.setAttribute('aria-haspopup', 'dialog');
+        b.removeAttribute('aria-label');
+      }
+    });
+  syncTrigger();
+  touch.addEventListener?.('change', syncTrigger);
 
   const open = () => {
     last = document.activeElement;
@@ -555,7 +589,8 @@ function initModelModal() {
   document.addEventListener('click', (e) => {
     if (e.target.closest('[data-open-model]')) {
       e.preventDefault();
-      open();
+      if (external()) window.open(SITE.pacdora3d, '_blank', 'noopener');
+      else open();
     }
   });
   modal.addEventListener('click', (e) => {
@@ -836,8 +871,8 @@ function initDeck() {
    Vigur: „Tõde või vale?“ minimäng (ainult tõesed faktid ÄGE kohta + ilmsed valed)
    ========================================================================= */
 const BLUFF = [
-  { q: 'ÄGE müüs 2024/25 õppeaastal üle 200 mängu.', truth: true, a: 'Üle 200 ÄGE mängu leidis selle õppeaasta jooksul oma seltskonna.' },
-  { q: 'Viguri pakis on 500 olukorrakaarti.', truth: false, a: 'Olukorrakaarte on 50 ja lisaks 32 salajast „Shh“ tegevuskaarti.' },
+  { q: 'ÄGE müüs 2024/25. õppeaastal üle 200 mängu.', truth: true, a: 'Üle 200 ÄGE mängu leidis 2024/25. õppeaastal oma seltskonna.' },
+  { q: 'Viguri pakis on 500 olukorrakaarti.', truth: false, a: 'Olukorrakaarte on 50 ja lisaks 32 salajast „Shh“-tegevuskaarti.' },
   { q: 'ÄGE võitis JA Eesti auhinna „Sotsiaalmeedia täht“.', truth: true, a: 'Auhind tuli õpilasfirmade laadalt Rocca al Mares.' },
   { q: 'Vigurit saab mängida ainult kahekesi.', truth: false, a: 'Mängijaid on vaja vähemalt kolm — ja mida rohkem, seda raskem on valetajat tabada.' },
 ];

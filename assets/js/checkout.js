@@ -38,6 +38,8 @@ const store = {
 };
 
 const CARRIER_LABEL = { omniva: 'Omniva', smartpost: 'SmartPost', dpd: 'DPD Pickup' };
+// Omastav kääne lausete jaoks („Vali SmartPosti pakiautomaat“, „Laen SmartPosti automaate…“).
+const CARRIER_GEN = { omniva: 'Omniva', smartpost: 'SmartPosti', dpd: 'DPD Pickup' };
 const MANUAL_PLACEHOLDER = {
   omniva: 'nt Tartu Lõunakeskuse pakiautomaat, Ringtee 75, Tartu',
   smartpost: 'nt Tallinn Mustika Prisma, Tammsaare tee 116, Tallinn',
@@ -53,7 +55,17 @@ const SVG = {
   pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
   box: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>',
   go: '<svg class="lk__opt-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>',
+  spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21.5h4"/><path d="M12 2.5a6.5 6.5 0 0 0-4 11.6c.8.6 1.2 1.5 1.2 2.4V17h5.6v-.5c0-.9.4-1.8 1.2-2.4A6.5 6.5 0 0 0 12 2.5z"/></svg>',
 };
+
+/** Komplekti pisipilt: karbid lehvikuna (muidu näeks „Kõik 3 mängu“ välja nagu MIDA V!!!U). */
+function stackImgs(p, size) {
+  return p.includes
+    .map((id) => PRODUCTS[id])
+    .filter(Boolean)
+    .map((x) => `<img src="${esc(x.image)}" alt="" width="${size[0]}" height="${size[1]}" loading="lazy" decoding="async">`)
+    .join('');
+}
 
 /** Eemaldab diakriitikud (ä→a, õ→o, ü→u, ö→o, š→s, ž→z) ja teeb väiketähtedeks. */
 const norm = (s) =>
@@ -142,12 +154,7 @@ const state = {
    ========================================================================= */
 function thumbHTML(p) {
   if (p.includes?.length) {
-    const imgs = p.includes
-      .map((id) => PRODUCTS[id])
-      .filter(Boolean)
-      .map((x) => `<img src="${esc(x.image)}" alt="" width="1000" height="691" loading="lazy" decoding="async">`)
-      .join('');
-    return `<a class="co-thumb co-thumb--stack co-thumb--stack-${p.includes.length}" href="${esc(p.url)}" tabindex="-1" aria-hidden="true">${imgs}</a>`;
+    return `<a class="co-thumb co-thumb--stack co-thumb--stack-${p.includes.length}" href="${esc(p.url)}" tabindex="-1" aria-hidden="true">${stackImgs(p, [1000, 691])}</a>`;
   }
   return `<a class="co-thumb" href="${esc(p.url)}" style="--g:${esc(p.gradient)}" tabindex="-1" aria-hidden="true"><img src="${esc(p.image)}" alt="" width="1000" height="691" loading="lazy" decoding="async"></a>`;
 }
@@ -232,8 +239,9 @@ function renderLines(t) {
     li.classList.add('is-removing');
     setTimeout(() => li.remove(), REDUCED.matches ? 0 : 460);
   });
-  const n = Cart.count();
-  el.cartSub.textContent = `${plural(n, 'mäng', 'mängu')} ootab pakkimist. Kontrolli üle, kas kõik on õige.`;
+  // Komplekt „Kõik 3 mängu“ on pakis 3 mängu, mitte 1.
+  const games = t.lines.reduce((s, l) => s + l.qty * (l.product.includes?.length || 1), 0);
+  el.cartSub.textContent = `${plural(games, 'mäng', 'mängu')} ootab pakkimist. Kontrolli üle, kas kõik on õige.`;
 }
 
 function removeLine(id) {
@@ -256,7 +264,7 @@ function removeLine(id) {
         target.focus({ preventScroll: true });
       }
     }
-    toast(`<strong>${esc(p.name)}</strong> eemaldati korvist`, {
+    toast(`<strong>${esc(p.name)}</strong> eemaldati ostukorvist`, {
       image: p.image,
       link: { href: `#tagasi:${encodeURIComponent(id)}:${item.qty}`, label: 'Võta tagasi' },
       duration: 6000,
@@ -331,7 +339,7 @@ function renderBundle() {
   const list = names.length > 2 ? `${names.slice(0, -1).join(', ')} ja ${names.at(-1)}` : names.join(' ja ');
   el.bundle.innerHTML = `
     <div class="co-bundle">
-      <span class="co-bundle__icon" aria-hidden="true">💡</span>
+      <span class="co-bundle__icon" aria-hidden="true">${SVG.spark}</span>
       <p><strong>Nutikas diil:</strong> ${list} on korvis eraldi. Vaheta need komplekti <strong>„${esc(PRODUCTS[offer.id].name)}“</strong> vastu ja <strong class="save">säästad ${formatEur(offer.save)}</strong>.</p>
       <button class="btn btn--sm btn--white" type="button" data-bundle-swap="${esc(offer.id)}">Vaheta komplektiks</button>
     </div>`;
@@ -498,7 +506,7 @@ function renderSummary(t) {
     .map(
       ({ product: p, qty, totalCents }) => `
       <li class="co-sum-line">
-        <span class="co-sum-line__img"><img src="${esc(p.image)}" alt="" width="58" height="40" loading="lazy">${qty > 1 ? `<b aria-hidden="true">${qty}</b>` : ''}</span>
+        <span class="co-sum-line__img${p.includes?.length ? ' co-sum-line__img--stack' : ''}">${p.includes?.length ? `<span class="co-sum-stack">${stackImgs(p, [58, 40])}</span>` : `<img src="${esc(p.image)}" alt="" width="58" height="40" loading="lazy">`}${qty > 1 ? `<b aria-hidden="true">${qty}</b>` : ''}</span>
         <span class="co-sum-line__name">${esc(p.name)}${qty > 1 ? `<span class="sr-only">, ${qty} tk</span>` : ''}</span>
         <span class="co-sum-line__price">${formatEur(totalCents)}</span>
       </li>`,
@@ -622,18 +630,24 @@ function renderLocker() {
     return;
   }
   const label = CARRIER_LABEL[state.carrier];
+  const gen = CARRIER_GEN[state.carrier] || label;
   if (state.lockerMode === 'loading') {
-    host.innerHTML = `<div class="lk-skel" aria-hidden="true"><span class="s-label"></span><span class="s-input"></span><span class="s-row"></span><span class="s-row"></span><span class="s-row"></span></div><p class="sr-only">Laen ${esc(label)} automaate…</p>`;
+    host.innerHTML = `<div class="lk-skel" aria-hidden="true"><span class="s-label"></span><span class="s-input"></span><span class="s-row"></span><span class="s-row"></span><span class="s-row"></span></div><p class="sr-only">Laen ${esc(gen)} automaate…</p>`;
     return;
   }
   if (state.lockerMode === 'manual' || state.lockerMode === 'error') {
-    const note =
-      state.lockerMode === 'manual'
-        ? `<strong>${esc(label)} automaatide nimekiri pole hetkel saadaval.</strong> Pole hullu — kirjuta automaadi nimi ja aadress siia ning saadame paki sinna.`
-        : `<strong>Automaatide nimekirja laadimine ebaõnnestus.</strong> Kirjuta automaadi nimi ja aadress käsitsi või <button type="button" data-retry-lockers>proovi uuesti</button>.`;
+    let note;
+    if (state.lockerMode === 'error') {
+      note = `<strong>Automaatide nimekirja laadimine ebaõnnestus.</strong> Kirjuta automaadi nimi ja aadress käsitsi või <button type="button" data-retry-lockers>proovi uuesti</button>.`;
+    } else if (state.carrier === 'dpd') {
+      // DPD-l avalikku nimekirja pole (JUHEND.md) — see on tavaline olukord, mitte tõrge.
+      note = `<strong>DPD automaatide nimekirja me siin ei kuva.</strong> Kirjuta automaadi nimi ja aadress siia ning saadame paki sinna.`;
+    } else {
+      note = `<strong>${esc(gen)} automaatide nimekiri pole hetkel saadaval.</strong> Pole hullu — kirjuta automaadi nimi ja aadress siia ning saadame paki sinna.`;
+    }
     host.innerHTML = `
       <div class="lk-manual">
-        <div class="lk-manual__note"><span aria-hidden="true">📍</span><p>${note}</p></div>
+        <div class="lk-manual__note"><span aria-hidden="true">${SVG.pin}</span><p>${note}</p></div>
         <div class="field">
           <label for="f-locker-manual">Pakiautomaadi nimi ja aadress</label>
           <input class="input" id="f-locker-manual" name="lockerManual" type="text" autocomplete="off" maxlength="160" placeholder="${esc(MANUAL_PLACEHOLDER[state.carrier] || '')}" aria-describedby="f-locker-manual-error">
@@ -687,10 +701,10 @@ function renderLocker() {
   }
   host.innerHTML = `
     <div class="lk">
-      <label class="label" for="locker-input" id="locker-label">Vali ${esc(label)} pakiautomaat</label>
+      <label class="label" for="locker-input" id="locker-label">Vali ${esc(gen)} pakiautomaat</label>
       <div class="lk__box">
         ${SVG.search}
-        <input class="input lk__input" id="locker-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="locker-listbox" aria-describedby="locker-hint locker-error" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="Otsi linna, keskuse või tänava järgi">
+        <input class="input lk__input" id="locker-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="locker-listbox" aria-describedby="locker-hint locker-error" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="Linn, keskus või tänav">
         <button class="lk__clear" type="button" data-lk-clear aria-label="Tühjenda otsing" hidden>${SVG.close}</button>
       </div>
       <p class="lk__hint" id="locker-hint" data-lk-hint></p>
@@ -1000,7 +1014,21 @@ function afterShippingChange() {
 /* =========================================================================
    Kontaktandmed ja valideerimine
    ========================================================================= */
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// Sama reegel mis serveris (netlify/functions/_lib/order.mjs → isValidEmail): mida vorm
+// rohelisega lubab, seda ei lükka ka kassa server tagasi.
+const EMAIL_RE =
+  /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?\.)+\p{L}{2,}$/u;
+const isValidEmail = (s) => s.length <= 254 && EMAIL_RE.test(s);
+
+/** Konkreetne vihje, miks aadress ei sobi. */
+function emailProblem(s) {
+  const at = s.lastIndexOf('@');
+  const local = at > 0 ? s.slice(0, at) : '';
+  if (at < 1 || at === s.length - 1) return 'E-posti aadress tundub poolik — see peaks olema kujul nimi@domeen.ee.';
+  if (/[^\x00-\x7F]/.test(local)) return 'E-posti aadressi algusosas (enne @-märki) ei saa olla täpitähti (õ, ä, ö, ü).';
+  if (/\.\.|^\.|\.$/.test(local) || /\.\./.test(s)) return 'Kontrolli punkte: aadressis ei saa olla kahte punkti järjest ega punkti @-märgi kõrval.';
+  return 'See e-posti aadress ei tundu päris õige. Kontrolli üle.';
+}
 
 export function normalizePhone(raw) {
   let d = String(raw || '').replace(/[\s\-().]/g, '');
@@ -1028,7 +1056,7 @@ const V = {
   email(v) {
     const s = String(v || '').trim();
     if (!s) return 'Sisesta e-posti aadress — sinna tuleb kviitung.';
-    if (!EMAIL_RE.test(s)) return 'See e-posti aadress ei tundu päris õige. Kontrolli üle.';
+    if (!isValidEmail(s)) return emailProblem(s);
     return '';
   },
   phone(v) {
@@ -1211,7 +1239,7 @@ function readPromoEmail() {
     } catch {
       /* lihtne string */
     }
-    return EMAIL_RE.test(String(v).trim()) ? String(v).trim() : '';
+    return isValidEmail(String(v).trim()) ? String(v).trim() : '';
   } catch {
     return '';
   }
@@ -1292,7 +1320,7 @@ function collectErrors() {
   if (!state.carrier) {
     errs.push({ key: 'carrier', msg: 'Vali vedaja (Omniva, SmartPost või DPD).', focus: () => $('.carrier__input'), label: 'Vali vedaja' });
   } else if (state.lockerMode === 'loading') {
-    errs.push({ key: 'locker', msg: 'Automaatide nimekiri alles laeb — oota hetk.', focus: () => $(`.carrier__input[value="${state.carrier}"]`), label: 'Pakiautomaat' });
+    errs.push({ key: 'locker', msg: 'Automaatide nimekirja alles laaditakse — oota hetk.', focus: () => $(`.carrier__input[value="${state.carrier}"]`), label: 'Pakiautomaat' });
   } else if (state.lockerMode === 'manual' || state.lockerMode === 'error') {
     const m = V.manual(state.manual);
     if (m) errs.push({ key: 'manual', msg: m, focus: () => $('#f-locker-manual'), label: 'Pakiautomaat' });
@@ -1631,7 +1659,7 @@ function render() {
   el.titleCount.textContent = String(Cart.count());
   el.titleCount.setAttribute('aria-label', plural(Cart.count(), 'toode', 'toodet'));
   el.heroSub.innerHTML = has
-    ? 'Paar klikki ja pidu on teel. Saadame <span class="nowrap">1–3 tööpäevaga</span> sinu lähimasse pakiautomaati.'
+    ? 'Paar klikki ja pidu on teel. Saadame paki <span class="nowrap">1–3 tööpäevaga</span> teele sinu valitud pakiautomaati.'
     : 'Siin on hetkel vaikne — aga see on kergesti parandatav.';
   if (!has) {
     renderRecs();

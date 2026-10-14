@@ -25,7 +25,16 @@ const PCT_TXT = `−${PCT}%`;
 const TEASER_DELAY = 4000; // ms
 const SCROLL_TRIGGER = 0.3; // 30% lehest
 const REMIND_AFTER = 3 * 24 * 60 * 60 * 1000; // pärast 3 päeva näita teaserit uuesti
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const AUTO_TUCK_SCREENS = 1.5; // telefonis muutub teaser pill'iks pärast ~1,5 ekraani kerimist
+// Sama reegel mis serveris (netlify/functions/_lib/order.mjs), et vorm ei lubaks aadressi,
+// mille kassa hiljem tagasi lükkab.
+const EMAIL_RE =
+  /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?\.)+\p{L}{2,}$/u;
+/**
+ * Lehe võtmeelemendid, mida nurgakaart ei tohi katta: avalehe hind ja tellimisnupud,
+ * tootelehe ostuplokk ja galerii pisipildid. Teised lehed saavad lisada [data-promo-avoid].
+ */
+const AVOID = ['[data-hero-cta]', '.hero__price', '.hero__ctas', '[data-main-cta]', '[data-buy-now]', '.pdp-qty', '.pdp-thumbs', '[data-promo-avoid]'].join(',');
 
 const path = location.pathname.replace(/\.html$/, '').replace(/\/+$/, '') || '/';
 const NO_TEASER = /^\/(ostukorv|aitah|__forms)$/.test(path);
@@ -36,6 +45,7 @@ const seenRecently = () => {
   return Boolean(t) && Date.now() - t < REMIND_AFTER;
 };
 const finePointer = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+const SMALL_SCREEN = window.matchMedia('(max-width: 900px), (max-height: 500px)');
 const pageBusy = () => isAgeGateOpen() || document.body.classList.contains('is-locked') || document.body.classList.contains('ov-locked');
 
 const GIFT_ICON =
@@ -205,31 +215,83 @@ function buildDock() {
   });
   pill.addEventListener('click', () => openModal(pill));
   watchToasts();
-  tuckOnScroll();
+  watchDock();
 }
 
-/** Mobiilis peida pill allakerimisel (et see sisu ei kataks), näita üleskerimisel. */
-function tuckOnScroll() {
-  const mq = window.matchMedia('(max-width: 900px)');
+/* ---------- Nurgakaart ei tohi katta lehe põhinuppe ---------- */
+let scrollTucked = false;
+let teaserShownY = null;
+
+/**
+ * Nurgakaardi „kodukoht“ ekraanil (koos kleepsu ja sulgemisnupuga). offset* ei arvesta
+ * transform'e, nii et peitmine/sissetulek ei mõjuta mõõtmist (pole tagasisidetsüklit).
+ */
+function dockHomeRect() {
+  const x = dock.offsetLeft;
+  const y = dock.offsetTop;
+  return { left: x - 14, top: y - 20, right: x + dock.offsetWidth + 16, bottom: y + dock.offsetHeight + 4 };
+}
+
+/** Kas nurgakaart kataks praegu mõnda lehe põhielementi (hind, tellimisnupp, kogus …)? */
+function coversKeyUi() {
+  const d = dockHomeRect();
+  if (d.right - d.left < 30) return false;
+  for (const el of document.querySelectorAll(AVOID)) {
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height) continue;
+    if (r.left < d.right && r.right > d.left && r.top < d.bottom && r.bottom > d.top) return true;
+  }
+  return false;
+}
+
+/** Uuenda nurgakaardi nähtavust: oota vaba kohta, peida põhinuppude peal ja mobiilis allakerimisel. */
+function syncDock() {
+  if (!dock) return;
+  const blocked = coversKeyUi();
+  if (dock.classList.contains('is-waiting')) {
+    if (!blocked && !pageBusy()) revealTeaser();
+    return;
+  }
+  dock.classList.toggle('is-tucked', blocked || scrollTucked);
+}
+
+function watchDock() {
   let lastY = window.scrollY;
   let raf = 0;
-  window.addEventListener(
-    'scroll',
-    () => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        if (!dock) return;
-        const y = window.scrollY;
-        const dy = y - lastY;
-        if (Math.abs(dy) < 8) return;
-        const tuck = mq.matches && dock.dataset.state === 'pill' && dy > 0 && y > 120;
-        dock.classList.toggle('is-tucked', tuck);
+  const onScroll = () => {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      if (!dock) return;
+      const y = window.scrollY;
+      const dy = y - lastY;
+      if (Math.abs(dy) >= 8) {
+        // Mobiilis peida pill allakerimisel (et see sisu ei kataks), näita üleskerimisel.
+        scrollTucked = SMALL_SCREEN.matches && dock.dataset.state === 'pill' && dy > 0 && y > 120;
         lastY = y;
-      });
-    },
-    { passive: true },
-  );
+      }
+      // Telefonis ei jää suur teaser kerimise ajal sisu peale: ~1,5 ekraani järel saab sellest pill.
+      if (
+        SMALL_SCREEN.matches &&
+        dock.dataset.state === 'teaser' &&
+        teaserShownY !== null &&
+        !isOpen &&
+        Math.abs(y - teaserShownY) > window.innerHeight * AUTO_TUCK_SCREENS
+      ) {
+        teaserShownY = null;
+        storageSet(SEEN_KEY, String(Date.now()));
+        minimizeTeaser(false);
+        return;
+      }
+      syncDock();
+    });
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+  // Tootelehe/avalehe kleepuv osturiba tõstab nurgakaarti (body.has-buybar) — kontrolli uuesti.
+  if ('MutationObserver' in window) {
+    new MutationObserver(() => setTimeout(syncDock, 480)).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
 }
 
 function showTeaser() {
@@ -239,17 +301,29 @@ function showTeaser() {
   dock.dataset.state = 'teaser';
   pill.hidden = true;
   teaser.hidden = false;
-  requestAnimationFrame(() => requestAnimationFrame(() => teaser.classList.add('is-in')));
+  // Kaart ilmub alles siis, kui nurgas on vaba ruum (mitte hinna või tellimisnupu peale).
+  dock.classList.add('is-waiting');
+  syncDock();
+}
+
+function revealTeaser() {
+  if (!dock) return;
+  dock.classList.remove('is-waiting', 'is-tucked');
+  teaserShownY = window.scrollY;
+  requestAnimationFrame(() => requestAnimationFrame(() => teaser?.classList.add('is-in')));
 }
 
 function showPill({ pop = true } = {}) {
   if (joined()) return hideDock();
   buildDock();
   dock.dataset.state = 'pill';
+  dock.classList.remove('is-waiting');
+  teaserShownY = null;
   teaser.hidden = true;
   teaser.classList.remove('is-in', 'is-out', 'is-launched');
   pill.hidden = false;
-  if (pop && !prefersReducedMotion()) {
+  syncDock();
+  if (pop && !prefersReducedMotion() && !dock.classList.contains('is-tucked')) {
     pill.classList.remove('is-pop');
     void pill.offsetWidth;
     pill.classList.add('is-pop');
@@ -376,7 +450,7 @@ function buildModal() {
           <span class="promo-sticker promo-sticker--hero" aria-hidden="true">
             <svg class="promo-sticker__ring" viewBox="0 0 120 120">
               <defs><path id="promo-ring-path" d="M60,60 m-47,0 a47,47 0 1,1 94,0 a47,47 0 1,1 -94,0"/></defs>
-              <text><textPath href="#promo-ring-path" textLength="290" lengthAdjust="spacing">AINULT LIITUJATELE ✦ ESIMESELT TELLIMUSELT ✦</textPath></text>
+              <text><textPath href="#promo-ring-path" textLength="290" lengthAdjust="spacing">LIITUJATE ERIPAKKUMINE ✦ KOGU OSTUKORVILE ✦</textPath></text>
             </svg>
             <b>${PCT_TXT}</b>
           </span>
@@ -385,9 +459,9 @@ function buildModal() {
         <div class="promo-body">
           <!-- 1. samm: liitumine -->
           <section class="promo-step" data-step="${STEP_JOIN}">
-            <p class="promo-kicker" data-stagger><span class="promo-kicker__dot" aria-hidden="true"></span>Ainult uutele liitujatele</p>
-            <h2 class="promo-title" id="promo-title" data-stagger>Võta <span class="promo-title__pct">${PCT_TXT}</span> kogu tellimuselt</h2>
-            <p class="promo-lead" id="promo-desc" data-stagger>Liitu ÄGE seltskonnaga ja sooduskood on kohe sinu. Esimene MIDA V!!!U partii on piiratud — ole esimeste seas!</p>
+            <p class="promo-kicker" data-stagger><span class="promo-kicker__dot" aria-hidden="true"></span>Liitujate eripakkumine</p>
+            <h2 class="promo-title" id="promo-title" data-stagger>Võta <span class="promo-title__pct">${PCT_TXT}</span> kogu ostukorvilt</h2>
+            <p class="promo-lead" id="promo-desc" data-stagger>Liitu ÄGE seltskonnaga ja sooduskood on kohe sinu — kasuta seda kas või kohe MIDA V!!!U tellimisel.</p>
             <ul class="promo-perks" role="list" data-stagger>
               <li>${ICONS.check}<span>${PCT_TXT} kohe kätte</span></li>
               <li>${ICONS.check}<span>Uued mängud enne teisi</span></li>
@@ -429,7 +503,7 @@ function buildModal() {
               <button class="btn btn--ghost promo-actions__copy" type="button" data-copy>${COPY_ICON}<span>Kopeeri kood</span></button>
               <button class="btn btn--primary promo-actions__use" type="button" data-use><span>Kasuta kohe</span>${ICONS.arrow}</button>
             </div>
-            <p class="promo-small" data-stagger>Kood kehtib kogu ostukorvile. Sooduskoode ei saa omavahel kombineerida.</p>
+            <p class="promo-small" data-stagger>Kood kehtib kõigile mängudele ja komplektidele ostukorvis (v.a tarne). Sooduskoode ei saa omavahel kombineerida.</p>
           </section>
         </div>
       </div>
@@ -447,11 +521,14 @@ function buildModal() {
   modal.addEventListener('click', (e) => {
     if (e.target === modal) closeModal();
   });
+  // Esc kuulatakse dokumendil: see töötab ka siis, kui fookus pole (veel) dialoogi sees.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || !isOpen || e.defaultPrevented) return;
+    e.preventDefault();
+    closeModal();
+  });
   modal.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      closeModal();
-    } else if (e.key === 'Tab') {
+    if (e.key === 'Tab') {
       if (document.activeElement === panel) {
         const first = panel.querySelector('button:not([hidden]), input:not([type="hidden"])');
         if (first && !e.shiftKey) {
@@ -573,17 +650,20 @@ function doOpen(source) {
   unlock = lockPage(modal, backdrop);
 
   const focusFirst = () => {
-    if (!isOpen) return;
+    if (!isOpen || id !== openId) return;
     const input = modal.querySelector('#promo-email');
     if (step === STEP_JOIN && finePointer()) input.focus({ preventScroll: true });
-    else if (!panel.contains(document.activeElement)) panel.focus({ preventScroll: true });
+    // Varuvariant: kui sisend polnud veel fokusseeritav, vii fookus vähemalt dialoogi.
+    if (!panel.contains(document.activeElement)) panel.focus({ preventScroll: true });
   };
 
   if (prefersReducedMotion()) {
     panel.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: 'ease-out' });
     modal.classList.add('is-landed');
     playStep(step);
+    // Modaal muutub nähtavaks (visibility) alles järgmises kaadris — enne seda fookus ei püsi.
     focusFirst();
+    setTimeout(focusFirst, 60);
     if (step === STEP_CODE) live(`Sinu sooduskood on ${CODE}.`);
     return;
   }
@@ -778,6 +858,16 @@ function closeModal() {
 }
 
 /* ---------- Vorm ---------- */
+/** Konkreetne vihje, miks aadress ei sobi (sama loogika mis kassas). */
+function emailProblem(email) {
+  const at = email.lastIndexOf('@');
+  const local = at > 0 ? email.slice(0, at) : '';
+  if (at < 1 || at === email.length - 1) return 'Aadress tundub poolik — see peaks olema kujul nimi@domeen.ee.';
+  if (/[^\x00-\x7F]/.test(local)) return 'E-posti aadressi algusosas (enne @-märki) ei saa olla täpitähti (õ, ä, ö, ü).';
+  if (/\.\.|^\.|\.$/.test(local) || /\.\./.test(email)) return 'Kontrolli punkte: aadressis ei saa olla kahte punkti järjest ega punkti @-märgi kõrval.';
+  return 'See e-posti aadress ei tundu päris õige. Kontrolli üle?';
+}
+
 function setError(msg) {
   const input = modal.querySelector('#promo-email');
   const err = modal.querySelector('#promo-email-err');
@@ -805,7 +895,7 @@ async function onSubmit(e) {
     return;
   }
   if (!EMAIL_RE.test(email) || email.length > 254) {
-    setError('See e-posti aadress ei tundu päris õige. Kontrolli üle?');
+    setError(emailProblem(email));
     shake(form);
     input.focus();
     return;

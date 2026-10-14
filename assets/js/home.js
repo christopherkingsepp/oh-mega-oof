@@ -10,7 +10,7 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const wait = (ms) => new Promise((res) => setTimeout(res, ms));
 
-/** Täiseurod ilma senditeta („33 €“), muidu „17,50 €“. */
+/** Lävendid (nt „tasuta alates 30 €“) ilma senditeta; hinnad alati formatEur-iga („33,00 €“), nagu kassas. */
 const wholeEur = new Intl.NumberFormat('et-EE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
 const eurNice = (cents) => (cents % 100 === 0 ? wholeEur.format(cents / 100) : formatEur(cents));
 const sumCents = (ids) => ids.reduce((s, id) => s + toCents(PRODUCTS[id]?.price || 0), 0);
@@ -27,17 +27,17 @@ const ICON_CART =
 function fillPrices() {
   $$('[data-price]').forEach((el) => {
     const p = PRODUCTS[el.dataset.price];
-    if (p) el.textContent = eurNice(toCents(p.price));
+    if (p) el.textContent = formatEur(toCents(p.price));
   });
   $$('[data-bundle-old]').forEach((el) => {
     const p = PRODUCTS[el.dataset.bundleOld];
-    if (p?.includes) el.textContent = eurNice(sumCents(p.includes));
+    if (p?.includes) el.textContent = formatEur(sumCents(p.includes));
   });
   $$('[data-bundle-save]').forEach((el) => {
     const p = PRODUCTS[el.dataset.bundleSave];
-    if (p?.includes) el.textContent = eurNice(sumCents(p.includes) - toCents(p.price));
+    if (p?.includes) el.textContent = formatEur(sumCents(p.includes) - toCents(p.price));
   });
-  $$('[data-ship-price]').forEach((el) => (el.textContent = eurNice(toCents(SHIPPING.price))));
+  $$('[data-ship-price]').forEach((el) => (el.textContent = formatEur(toCents(SHIPPING.price))));
   $$('[data-ship-free]').forEach((el) => (el.textContent = eurNice(toCents(SHIPPING.freeFrom))));
 }
 
@@ -213,10 +213,10 @@ function renderGames() {
             <p class="game__short">${esc(p.short)}</p>
             <ul class="game__facts" role="list" aria-label="Mängu andmed">${facts.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
             <div class="game__buy">
-              <span class="game__price"><span class="sr-only">Hind: </span>${eurNice(toCents(p.price))}</span>
+              <span class="game__price"><span class="sr-only">Hind: </span>${formatEur(toCents(p.price))}</span>
               <div class="game__actions">
                 <a class="btn btn--ghost btn--sm" href="${esc(p.url)}" aria-label="Vaata lähemalt: ${esc(p.name)}">Vaata lähemalt</a>
-                <button class="btn btn--primary btn--sm" type="button" data-add-to-cart="${esc(id)}" aria-label="Lisa ostukorvi: ${esc(p.name)}">${ICON_CART}<span>Lisa korvi</span></button>
+                <button class="btn btn--primary btn--sm" type="button" data-add-to-cart="${esc(id)}" aria-label="Lisa ostukorvi: ${esc(p.name)}">${ICON_CART}<span>Lisa ostukorvi</span></button>
               </div>
             </div>
           </div>
@@ -592,6 +592,8 @@ function initBuybar() {
   const cta = $('[data-hero-cta]');
   if (!bar || !cta || !('IntersectionObserver' in window)) return;
   const btn = bar.querySelector('button');
+  // sama tingimus, millal home.css riba näitab (mobiil või telefon rõhtpaigutuses)
+  const BUYBAR_MQ = window.matchMedia('(max-width: 819px), (max-height: 500px) and (orientation: landscape)');
   const blockers = [$('[data-final]'), $('.site-footer')].filter(Boolean);
   let ctaGone = false;
   const blocked = new Set();
@@ -600,7 +602,7 @@ function initBuybar() {
     bar.classList.toggle('is-visible', show);
     bar.setAttribute('aria-hidden', String(!show));
     btn.tabIndex = show ? 0 : -1;
-    document.body.classList.toggle('has-buybar', show && window.matchMedia('(max-width: 819px)').matches);
+    document.body.classList.toggle('has-buybar', show && BUYBAR_MQ.matches);
   };
   new IntersectionObserver(([en]) => {
     // peida riba, kuni hero nupp on nähtav või alles allpool

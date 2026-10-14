@@ -449,8 +449,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 32px;
-  margin-top: 2px;
+  min-height: 44px; /* puuteala ≥ 44px */
+  margin: -4px 0 -6px -8px;
+  padding-inline: 8px;
+  border-radius: 10px;
   color: var(--faint);
   font-size: 0.82rem;
   font-weight: 700;
@@ -514,7 +516,18 @@
 }
 .co-bundle__icon {
   flex: none;
-  font-size: 1.5rem;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(140deg, #2bff9a, #12b5ff);
+  color: #04140c;
+  box-shadow: 0 0 22px rgba(43, 255, 154, 0.35);
+}
+.co-bundle__icon svg {
+  width: 22px;
+  height: 22px;
 }
 .co-bundle p {
   flex: 1;
@@ -703,7 +716,7 @@
   white-space: nowrap;
 }
 .co-mini .btn {
-  min-height: 40px;
+  min-height: 44px;
   padding: 8px 14px;
 }
 
@@ -1137,8 +1150,12 @@
 }
 .lk-manual__note > span:first-child {
   flex: none;
-  font-size: 1.2rem;
-  line-height: 1.3;
+  color: #6fd3ff;
+}
+.lk-manual__note > span:first-child svg {
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
 }
 .lk-manual__note a,
 .lk-manual__note button {
@@ -1264,18 +1281,43 @@
   vertical-align: 2px;
   margin-left: 2px;
 }
+/* Tagastamise teade — kliendi jaoks oluline ostutingimus, seega selgelt nähtav enne kinnitusi */
 .co-return-note {
   display: flex;
-  gap: 10px;
-  margin-top: 16px;
-  color: var(--faint);
-  font-size: 0.84rem;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(255, 138, 28, 0.45);
+  background: linear-gradient(120deg, rgba(255, 138, 28, 0.12), rgba(255, 138, 28, 0.03));
+  color: var(--muted);
+  font-size: 0.92rem;
   line-height: 1.5;
+}
+.co-return-note__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 138, 28, 0.18);
+  color: #ffb067;
 }
 .co-return-note .icon {
   width: 18px;
   height: 18px;
-  margin-top: 2px;
+}
+.co-return-note strong {
+  color: var(--text);
+}
+.co-return-note a {
+  color: var(--pink-soft);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
 }
 
 /* ---------- Kokkuvõte ---------- */
@@ -1346,6 +1388,39 @@
   object-fit: cover;
   border-radius: 8px;
   border: 1px solid var(--line);
+}
+.co-sum-stack {
+  position: relative;
+  display: block;
+  width: 58px;
+  height: 40px;
+}
+.co-sum-line__img .co-sum-stack img {
+  position: absolute;
+  width: 38px;
+  border-radius: 5px;
+  border-color: var(--line-strong);
+  box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.9);
+}
+.co-sum-stack img:nth-child(1) {
+  left: 0;
+  top: 1px;
+  transform: rotate(-7deg);
+}
+.co-sum-stack img:nth-child(2) {
+  left: 9px;
+  top: 7px;
+  transform: rotate(2deg);
+}
+.co-sum-stack img:nth-child(3) {
+  left: 19px;
+  top: 12px;
+  transform: rotate(8deg);
+}
+.co-sum-stack img:nth-child(2):last-child {
+  left: 17px;
+  top: 10px;
+  transform: rotate(6deg);
 }
 .co-sum-line__img b {
   position: absolute;
@@ -1553,6 +1628,12 @@
   display: flex;
   gap: 10px;
   align-items: center;
+}
+.co-perks .icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--pink-soft);
 }
 
 /* Mobiili makseriba */
@@ -1822,6 +1903,28 @@
     bottom: calc(96px + env(safe-area-inset-bottom));
   }
 }
+/* Rõhtpaigutusega telefon: kompaktne makseriba (muidu võtaks päis + riba ~40% ekraanist) */
+@media (max-width: 980px) and (max-height: 500px) and (orientation: landscape) {
+  .co-paybar {
+    padding: 8px max(var(--gutter), env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(var(--gutter), env(safe-area-inset-left));
+  }
+  .co-paybar__total {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .co-paybar__total strong {
+    font-size: 1.15rem;
+  }
+  .co-paybar__btn {
+    flex: 0 1 340px;
+    margin-left: auto;
+    min-height: 46px;
+  }
+  body.has-paybar .toast-region {
+    bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+}
 
 @media (max-width: 700px) {
   .co-carriers {
@@ -1858,6 +1961,9 @@
   .carrier__text {
     grid-area: text;
     align-self: end;
+  }
+  .carrier__meta {
+    white-space: normal;
   }
   .carrier__price {
     grid-area: price;
@@ -1920,7 +2026,8 @@
   .co-step a {
     flex-direction: column;
     gap: 6px;
-    font-size: 0.66rem;
+    font-size: 0.75rem;
+    letter-spacing: 0;
     text-align: center;
   }
   .co-step__dot {
@@ -1954,10 +2061,6 @@
   }
   .co-line__name {
     font-size: 0.95rem;
-  }
-  .co-line .qty button {
-    width: 40px;
-    height: 40px;
   }
   .co-bundle {
     flex-wrap: wrap;
@@ -2204,6 +2307,17 @@
   border-radius: 7px;
   border: 1px solid var(--line);
 }
+.ty-order__item .ty-order__stack {
+  width: 54px;
+  height: 37px;
+}
+.ty-order__item .ty-order__stack img {
+  position: absolute;
+  width: 36px;
+  border-radius: 5px;
+  border-color: var(--line-strong);
+  box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.9);
+}
 .ty-order__item strong {
   font-weight: 800;
 }
@@ -2226,8 +2340,14 @@
   color: var(--muted);
 }
 .ty-order__meta dt {
-  font-size: 1.05rem;
-  line-height: 1.3;
+  display: grid;
+  place-items: center;
+  height: 20px;
+  color: var(--pink-soft);
+}
+.ty-order__meta dt svg {
+  width: 18px;
+  height: 18px;
 }
 .ty-order__meta dd {
   margin: 0;
@@ -2304,13 +2424,29 @@
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  font-size: 1.5rem;
+  color: #fff;
   background: var(--g, var(--grad-brand));
   box-shadow: 0 12px 30px -10px rgba(255, 47, 168, 0.7);
 }
+.ty-step__icon svg {
+  width: 26px;
+  height: 26px;
+}
+/* Ilma tellimuseta (/aitah ilma session_id-ta): peidetud osad */
+.ty-burst[hidden],
+.ty-next[hidden] {
+  display: none;
+}
+.ty-cta.ty-cta--hero {
+  margin-top: 8px;
+  animation: ty-rise 0.9s 0.45s var(--ease-out) both;
+}
+.is-nosession .ty-share {
+  margin-top: clamp(8px, 2vw, 24px);
+}
 .ty-step__when {
   font-family: var(--font-display);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;

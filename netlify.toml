@@ -83,3 +83,10 @@
   for = "/assets/js/*"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
+
+# Halduspaneeli kood (andmeid seal pole — need tulevad ainult /api/admin/* kaudu sisselogituna)
+[[headers]]
+  for = "/assets/admin/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    X-Robots-Tag = "noindex, nofollow"

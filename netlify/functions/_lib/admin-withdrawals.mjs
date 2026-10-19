@@ -18,8 +18,10 @@ const ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const REF_RE = /^TAG-[A-Z0-9]{6}$/;
 
 function view(r) {
-  // received_date on Postgresi `date` — PGlite annab Date (UTC kesköö), Neon stringi.
-  const received = r.received_date instanceof Date ? r.received_date.toISOString().slice(0, 10) : r.received_date ? String(r.received_date).slice(0, 10) : null;
+  // received_date on Postgresi `date`. Loeme selle SQL-is tekstina (received_date_str), sest
+  // draiverid teisendavad `date` tüüpi erinevalt (PGlite: Date protsessi ajavööndis, Neon: string).
+  const rawDate = r.received_date_str ?? null;
+  const received = rawDate && /^\d{4}-\d{2}-\d{2}$/.test(String(rawDate)) ? String(rawDate) : null;
   return {
     id: r.id,
     reference: r.reference,
@@ -42,13 +44,15 @@ function view(r) {
   };
 }
 
-const SELECT = `SELECT w.*, o.number AS o_number, o.payment_status AS o_payment, o.fulfillment_status AS o_fulfillment
+const SELECT = `SELECT w.*, w.received_date::text AS received_date_str,
+    o.number AS o_number, o.payment_status AS o_payment, o.fulfillment_status AS o_fulfillment
   FROM withdrawals w LEFT JOIN orders o ON o.number = w.order_number`;
 
 export async function listWithdrawals(db, { status = '' } = {}) {
   const params = [];
   let where = '';
-  if (status) {
+  if (status === 'open') where = `WHERE w.status IN ('received','in_progress')`;
+  else if (status && WITHDRAWAL_STATUSES.includes(status)) {
     params.push(status);
     where = 'WHERE w.status = $1';
   }
@@ -97,7 +101,8 @@ export async function updateWithdrawal(db, key, patch) {
           admin_notes = CASE WHEN $4::boolean THEN $5::text ELSE admin_notes END
         WHERE ${column} = $1 RETURNING *
      )
-     SELECT upd.*, o.number AS o_number, o.payment_status AS o_payment, o.fulfillment_status AS o_fulfillment
+     SELECT upd.*, upd.received_date::text AS received_date_str,
+            o.number AS o_number, o.payment_status AS o_payment, o.fulfillment_status AS o_fulfillment
      FROM upd LEFT JOIN orders o ON o.number = upd.order_number`,
     [key.value, 'status' in patch, patch.status ?? null, 'adminNotes' in patch, patch.adminNotes ?? ''],
   );

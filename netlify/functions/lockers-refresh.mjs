@@ -10,19 +10,22 @@ import { enabledCarriers } from './_lib/config.mjs';
  * @param {{env?:object, getDb?:()=>Promise<object>, fetchImpl?:Function, logger?:Console, timeoutMs?:number}} deps
  * @returns {Promise<{carrier:string, count:number, ok:boolean, stale?:boolean, manual?:boolean}[]>}
  */
-export async function refreshAllLockers({ env = process.env, getDb: getDbImpl = () => getDb(env), fetchImpl, logger = console, timeoutMs = 20000 } = {}) {
+export async function refreshAllLockers({ env = process.env, getDb: getDbImpl = () => getDb(env), fetchImpl, logger = console, timeoutMs = 12000 } = {}) {
   const db = await getDbImpl();
-  const summary = [];
-  for (const carrier of enabledCarriers(env, logger)) {
-    const r = await getCarrierLockers(carrier, { db, env, fetchImpl, timeoutMs, logger, force: true });
-    summary.push({
-      carrier,
-      count: r.lockers.length,
-      ok: !r.stale && !r.manual,
-      ...(r.stale ? { stale: true } : {}),
-      ...(r.manual ? { manual: true } : {}),
-    });
-  }
+  // Vedajad paralleelselt: ajastatud funktsiooni ajalimiit on 30 s ja SmartPosti puhul võib
+  // kuluda kaks päringut (põhiallikas + varuallikas), seega 2 × 12 s mahub ära.
+  const summary = await Promise.all(
+    enabledCarriers(env, logger).map(async (carrier) => {
+      const r = await getCarrierLockers(carrier, { db, env, fetchImpl, timeoutMs, logger, force: true });
+      return {
+        carrier,
+        count: r.lockers.length,
+        ok: !r.stale && !r.manual,
+        ...(r.stale ? { stale: true } : {}),
+        ...(r.manual ? { manual: true } : {}),
+      };
+    }),
+  );
   logger.log?.(`[pakiautomaadid] ajastatud värskendus: ${summary.map((s) => `${s.carrier}=${s.count}${s.ok ? '' : s.stale ? ' (vana)' : ' (puudub)'}`).join(', ')}`);
   return summary;
 }

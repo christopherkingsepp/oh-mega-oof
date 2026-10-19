@@ -147,10 +147,20 @@ export function createHandler({
     }
 
     // 7) Sooduskupong (kui kood kehtib) + makseleht.
+    //    Makselehel ja Stripe'i andmetes on sama automaat, mis tellimusel (vedaja nimekirjast, mitte brauserist).
     const origin = resolveOrigin(req, env, context);
     const expiresAt = Math.floor((now() + SESSION_TTL_MS) / 1000);
+    const stripeOrder = {
+      ...order,
+      shipping: {
+        ...order.shipping,
+        lockerId: row.locker_id || '',
+        lockerName: row.locker_name,
+        lockerAddress: [row.locker_address, row.locker_city].filter(Boolean).join(', '),
+      },
+    };
     const params = (couponId) =>
-      buildSessionParams(order, { origin, couponId, orderId: row.id, orderNumber: row.number, token: row.public_token, expiresAt });
+      buildSessionParams(stripeOrder, { origin, couponId, orderId: row.id, orderNumber: row.number, token: row.public_token, expiresAt });
     const coupon = { code: order.totals.code, percent: order.totals.percent, amountOffCents: order.totals.discountCents };
     let stage = 'coupon';
     let session;

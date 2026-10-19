@@ -166,7 +166,7 @@ export function buildSessionParams(order, { origin, couponId = null, orderId = c
   const { totals, customer, shipping } = order;
 
   const line_items = totals.lines.map((line) => {
-    const image = absoluteUrl(origin, line.product.image);
+    const image = absoluteUrl(origin, line.product.imagePng || line.product.image);
     const product_data = {
       name: line.product.name,
       metadata: { product_id: line.product.id },

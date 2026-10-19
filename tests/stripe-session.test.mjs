@@ -54,7 +54,7 @@ test('read: hinnad sentides kataloogist, absoluutsed pildi-URL-id', () => {
   assert.equal(a.price_data.currency, 'eur');
   assert.equal(a.price_data.unit_amount, 1750);
   assert.equal(a.price_data.product_data.name, 'MIDA V!!!U');
-  assert.deepEqual(a.price_data.product_data.images, ['https://age.example/assets/img/games/mida-viiu-box-front.webp']);
+  assert.deepEqual(a.price_data.product_data.images, ['https://age.example/assets/img/games/mida-viiu-box.png']);
   assert.equal(a.price_data.product_data.metadata.product_id, 'mida-viiu');
   assert.equal(b.price_data.unit_amount, 2000);
   assert.ok(Number.isInteger(a.price_data.unit_amount));

@@ -109,7 +109,7 @@ function page({ entry, notice = '', error = '', deliveries = [] }) {
   .log{list-style:none;padding:0;margin:14px 0 0;font:12px/1.5 ui-monospace,monospace;word-break:break-word}
   .log li{padding:6px 10px;border-radius:10px;margin-bottom:6px;background:#1c0f19}.log .ok{color:#7dffb3}.log .bad{color:#ff8a9a}
   a{color:#ff7ac8}
-  .meta{font-size:13px;margin-top:10px}
+  .meta{font-size:13px;margin-top:10px;overflow-wrap:anywhere}
   img.logo{width:84px;height:auto;display:block;margin:0 0 8px}
 </style>
 </head>

@@ -2,12 +2,14 @@
 // 3/4 nurgast (esikülg + parem külg + natuke ülaklappi).
 //
 // Kasutus (repo juurkaustast):
-//   node scripts/assets/render-boxes.mjs [--out public/assets/img/games] [--work /tmp/kaust]
+//   node scripts/assets/render-boxes.mjs [--out public/assets/img/games] [--work /tmp/kaust] [--only <stseeni nimi>]
+//   (stseenid: mida-viiu-box, oled-semu-box, vigur-box, komplekt-semu-vigur, komplekt-koik, <id>-cover)
 //
 // Väljund (ruudukujulised, läbipaistva taustaga WebP-d — ühtsed pildid kataloogi, ostukorvi,
 // sahtli, kassa kokkuvõtte, toasti ja tootekaartide jaoks):
 //   <id>-box.webp (900x900) ja <id>-box-sm.webp (240x240) — mida-viiu, oled-semu, vigur
 //   komplekt-semu-vigur.webp / -sm.webp (2 karpi), komplekt-koik.webp / -sm.webp (3 karpi)
+//   + iga eelneva .png (480x480, alfaga) — Stripe Checkouti ja e-kirjade jaoks (WebP-d kõik ei toeta)
 //   <id>-cover.webp (1600x900) — 16:9 kaanepilt (karp eest + tagant brändi taustal), og:image jaoks
 //
 // Nõuded: playwright (devDependency) ja python3 + Pillow (PNG -> WebP koos alfaga).
@@ -44,8 +46,11 @@ const STAGE_HTML = `<!doctype html><html lang="et"><head><meta charset="utf-8">
   #fit{position:absolute;left:0;top:0;transform-origin:0 0}
   #row{display:flex;align-items:flex-end}
   .slot{position:relative;flex:none}
-  /* neutraalne kontaktvari (sobib nii tumedale kui heledale taustale) */
-  .box3d__shadow{background:radial-gradient(closest-side,rgba(0,0,0,.55),rgba(0,0,0,0));filter:blur(10px);opacity:.9;bottom:calc(var(--d)*-.02)}
+  /* box3d enda vari jääb hõljuva karbi alla liiga kaugele -> peidame selle ja joonistame
+     igale karbile kontaktvarju tema projitseeritud põhja järgi (vt renderScene) */
+  .box3d__shadow{display:none}
+  .cshadow{position:absolute;pointer-events:none;border-radius:50%;
+    background:radial-gradient(closest-side,rgba(0,0,0,.5),rgba(0,0,0,.22) 55%,rgba(0,0,0,0));filter:blur(6px)}
 </style></head><body><div id="stage"><div id="fit"><div id="row"></div></div></div>
 <script type="module">
   import { mountBox, BOX_FACES, BOX_DIMS } from '/assets/js/box3d.js';
@@ -61,7 +66,8 @@ const STAGE_HTML = `<!doctype html><html lang="et"><head><meta charset="utf-8">
       slot.className = 'slot';
       slot.style.marginLeft = (b.ml || 0) + 'px';
       slot.style.zIndex = b.z || 1;
-      slot.style.transform = 'scale(' + (b.scale || 1) + ')';
+      // dy < 0 tõstab karbi ülespoole (tagumine rida), scale vähendab (kaugemal)
+      slot.style.transform = 'translateY(' + (b.dy || 0) + 'px) scale(' + (b.scale || 1) + ')';
       slot.style.transformOrigin = '50% 100%';
       const el = document.createElement('div');
       slot.appendChild(el);
@@ -69,7 +75,11 @@ const STAGE_HTML = `<!doctype html><html lang="et"><head><meta charset="utf-8">
       mountBox(el, { faces: BOX_FACES[b.id], dims: BOX_DIMS, theme: b.theme, width: 300, interactive: false,
         angle: b.angle ?? -32, tilt: b.tilt ?? -13, shadow: true, label: b.id });
     }
+    // oota, kuni kõik tahupildid on laaditud JA dekodeeritud (muidu võib mõni tahk jääda tühjaks)
     await Promise.all([...document.images].map((im) => (im.complete ? 0 : new Promise((r) => { im.onload = im.onerror = r; }))));
+    await Promise.all([...document.images].map((im) => im.decode().catch(() => {})));
+    const bad = [...document.images].filter((im) => !im.naturalWidth).map((im) => im.getAttribute('src'));
+    if (bad.length) throw new Error('Pilt puudub: ' + bad.join(', '));
     // sobita kõigi tahkude (projitseeritud) ümbris kaadrisse
     const fit = document.getElementById('fit');
     fit.style.transform = 'none';
@@ -80,6 +90,19 @@ const STAGE_HTML = `<!doctype html><html lang="et"><head><meta charset="utf-8">
     const tx = (w - (x1 - x0) * s) / 2 - x0 * s;
     const ty = (h - (y1 - y0) * s) / 2 - y0 * s;
     fit.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + s + ')';
+    // kontaktvarjud: iga karbi põhja (nähtamatu tahk) projektsioon = jalajälg põrandal
+    stage.querySelectorAll('.cshadow').forEach((n) => n.remove());
+    const st = stage.getBoundingClientRect();
+    document.querySelectorAll('.box3d').forEach((bx, i) => {
+      const r = bx.querySelector('.box3d__face--bottom').getBoundingClientRect();
+      const sh = document.createElement('div');
+      sh.className = 'cshadow';
+      const sw = r.width * 1.08, shh = Math.max(r.height * 0.9, r.width * 0.12);
+      sh.style.cssText = 'left:' + (r.left - st.left + (r.width - sw) / 2) + 'px;top:' + (r.top - st.top + r.height * 0.55 - shh / 2) +
+        'px;width:' + sw + 'px;height:' + shh + 'px;z-index:0';
+      stage.insertBefore(sh, stage.firstChild);
+    });
+    fit.style.zIndex = 1;
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     return { s };
   };
@@ -115,7 +138,12 @@ for o in outs:
     r = im if im.size == (w, h) else im.resize((w, h), Image.LANCZOS)
     if not o.get('alpha', True):
         r = r.convert('RGB')
-    r.save(o['path'], 'WEBP', quality=o.get('q', 86), method=6, alpha_quality=90)
+    if o['path'].endswith('.png'):
+        # PNG (Stripe Checkout, e-kirjad — kõik kliendid ei näita WebP-d); täisvärv + alfa
+        # (256 värvi paletiga tekkisid gradientidesse triibud)
+        r.save(o['path'], 'PNG', optimize=True)
+    else:
+        r.save(o['path'], 'WEBP', quality=o.get('q', 86), method=6, alpha_quality=90)
     print(o['path'], w, h)
 `;
   process.stdout.write(execFileSync('python3', ['-I', '-c', py, png, JSON.stringify(outs)]).toString());
@@ -132,6 +160,7 @@ const SCENES = [
     outs: [
       { path: `${id}-box.webp`, size: [900, 900] },
       { path: `${id}-box-sm.webp`, size: [240, 240] },
+      { path: `${id}-box.png`, size: [480, 480] },
     ],
   })),
   {
@@ -139,13 +168,15 @@ const SCENES = [
     w: 450,
     h: 450,
     pad: 0.05,
+    // lehvik: vasak karp näitab vasakut külge, parem paremat; mõlema esikülg jääb täiesti nähtavaks
     boxes: [
-      { id: 'oled-semu', theme: 'semu', angle: -24, z: 1 },
-      { id: 'vigur', theme: 'vigur', angle: -38, ml: -40, z: 2 },
+      { id: 'oled-semu', theme: 'semu', angle: 24, z: 1 },
+      { id: 'vigur', theme: 'vigur', angle: -24, ml: 56, z: 2 },
     ],
     outs: [
       { path: 'komplekt-semu-vigur.webp', size: [900, 900] },
       { path: 'komplekt-semu-vigur-sm.webp', size: [240, 240] },
+      { path: 'komplekt-semu-vigur.png', size: [480, 480] },
     ],
   },
   {
@@ -153,14 +184,16 @@ const SCENES = [
     w: 450,
     h: 450,
     pad: 0.04,
+    // lehvik: MIDA V!!!U keskel ees, Oled Semu? ja Vigur veidi väiksemana selle taga külgedel
     boxes: [
-      { id: 'oled-semu', theme: 'semu', angle: -18, scale: 0.86, z: 1 },
-      { id: 'mida-viiu', theme: 'mida', angle: -30, ml: -95, z: 3 },
-      { id: 'vigur', theme: 'vigur', angle: -42, ml: -95, scale: 0.86, z: 2 },
+      { id: 'oled-semu', theme: 'semu', angle: 22, scale: 0.86, dy: -26, z: 1 },
+      { id: 'mida-viiu', theme: 'mida', angle: -8, ml: -64, z: 3 },
+      { id: 'vigur', theme: 'vigur', angle: -22, ml: -64, scale: 0.86, dy: -26, z: 2 },
     ],
     outs: [
       { path: 'komplekt-koik.webp', size: [900, 900] },
       { path: 'komplekt-koik-sm.webp', size: [240, 240] },
+      { path: 'komplekt-koik.png', size: [480, 480] },
     ],
   },
   // 16:9 kaanepildid (galerii „Kaanepilt“, og:image) — läbipaistmatu brändi taust

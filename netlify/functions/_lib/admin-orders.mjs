@@ -304,7 +304,7 @@ function cleanNotes(value) {
   return String(value ?? '')
     .replace(/\r\n?/g, '\n')
     // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u0009\u000B-\u001F\u007F-\u009F​-‍  ﻿]/g, ' ')
+    .replace(/[\u0000-\u0009\u000B-\u001F\u007F-\u009F\u200B-\u200D\u2028\u2029\uFEFF]/g, ' ')
     .split('\n')
     .map((l) => l.trimEnd())
     .join('\n')

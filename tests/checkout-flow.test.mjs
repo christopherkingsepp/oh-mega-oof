@@ -85,12 +85,18 @@ test('checkout: andmebaas seadistamata → 503 selge teatega; ühenduse viga →
 test('checkout: automaadi ametlikud andmed võetakse nimekirjast (kliendi saadetud nimi ei loe)', async () => {
   const db = await freshDb();
   await writeLockerCache(db, 'omniva', [{ id: '96331', name: 'Tallinna Kristiine keskuse pakiautomaat', city: 'Tallinn', address: 'Endla tn 45', postalCode: '96331' }]);
-  const { handler } = setup();
+  const { handler, stripe } = setup();
   const { data } = await call(handler, postJson(validBody({ shipping: { lockerName: '<b>Võltsnimi</b>', lockerAddress: 'kuskil' } })));
   const row = await getOrderByToken(db, data.token);
   assert.equal(row.locker_name, 'Tallinna Kristiine keskuse pakiautomaat');
   assert.equal(row.locker_address, 'Endla tn 45');
   assert.equal(row.locker_city, 'Tallinn');
+  // Ka Stripe'i makselehel ja makse andmetes on sama (ametlik) automaat.
+  const params = stripe.calls.sessions.at(-1);
+  assert.equal(params.metadata.locker_name, 'Tallinna Kristiine keskuse pakiautomaat');
+  assert.equal(params.metadata.locker_address, 'Endla tn 45, Tallinn');
+  assert.match(params.shipping_options[0].shipping_rate_data.display_name, /Kristiine/);
+  assert.doesNotMatch(JSON.stringify(params), /Võltsnimi|kuskil/);
 });
 
 test('checkout: tarnehind tuleb valitud vedaja hinnast; alla 30 € lisandub tarne', async () => {

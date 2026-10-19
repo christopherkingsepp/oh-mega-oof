@@ -7,7 +7,7 @@ Kasutus (repo juurkaustast):
 <fotode kaust> = kaust, kus on IMG_8180.jpeg … IMG_8193.jpeg (PRIVAATSED originaalid — EI lähe
 git'i ega public/ kausta; vt source/README.md). <väljundkaust> = vahetulemuste kaust (nt
 scratchpad), kuhu tekivad <mäng>-<tahk>.png (puhastatud põhi, vana logo ja vanad kontaktid
-eemaldatud). Lõpliku kujunduse (uus logo, kontaktid, klapid) paneb kokku compose-faces.mjs.
+eemaldatud). Lõpliku kujunduse (uus logo, kontaktid, klapid) paneb kokku compose-faces.py.
 
 Töövoog iga tahu jaoks:
   1. Perspektiivkorrektsioon (cv2.getPerspectiveTransform) — nurgad on leitud käsitsi

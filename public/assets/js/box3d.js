@@ -13,9 +13,16 @@
 //   });
 //   box.destroy();
 //
-// VANA (töötab edasi muutmata kujul): ainult esikülje pilt, ülejäänud tahud genereeritakse
+//   Lühidalt: faces võib olla ka mängu id ('mida-viiu' | 'oled-semu' | 'vigur') — siis võetakse
+//   BOX_FACES[id], mõõdud BOX_DIMS ja teema (kui `theme` pole antud) mängu järgi:
+//   mountBox(el, { faces: 'vigur', width: 260 });
+//
+// VANA (töötab edasi): ainult esikülje pilt, ülejäänud tahud genereeritakse
 //   (lapik karp suhtega 1.448:1, külgedel tekst).
 //   mountBox(el, { front: '/assets/img/…', theme, title, facts, tagline, width, speed, hint, label, startAngle, tilt })
+//   NB: kui `front` on mõne mängu tootepilt (/assets/img/games/<id>-box.webp, -box-sm.webp või vana
+//   -box-front.webp), kasutatakse automaatselt selle mängu kuut päris tahku ja püstiseid mõõte —
+//   nii jätkavad vanad kutsed `front: PRODUCTS[id].image` tööd ka pärast kataloogi piltide vahetust.
 //
 // Mõõdud (dims):
 //   * suhtena: { w: 1, h: 1.543, d: 0.601 } — tegelik suurus tuleb `width`-ist või CSS-i --w-st;
@@ -31,6 +38,10 @@
 // Lisavalikud: shadow (true | false — vari põrandal), interactive (true | false — false: ei
 //   pöörle, ei reageeri hiirele; sobib staatiliseks kuvamiseks ja tootepiltide renderdamiseks),
 //   startAngle / angle (kraadi, Y-telg), tilt (kraadi, X-telg).
+//
+// Tagastab { el, spin(kraadi/s), setSpeed(v), setAngle(y, x?), destroy() }.
+// boxHTML(valikud) -> HTML-string staatilisest karbist (3/4 nurk + varjutus, ilma JS-ita, aria-hidden).
+// Element vajab mõõtu: anna `width` või sea CSS-is --w (püstise karbi kõrgus = --w × 2.144).
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 /** Karbi mõõdud MIDA V!!!U stantsifailist (laius : kõrgus : sügavus). Kõik kolm mängu on sama formaati. */
@@ -53,6 +64,35 @@ export const BOX_FACES = Object.freeze({
   'oled-semu': facesOf('oled-semu'),
   vigur: facesOf('vigur'),
 });
+
+/** Mängu id -> box3d teema (varuvärvid, vari) ja nimi (vaikimisi pealkiri / aria-label). */
+const THEME_OF = Object.freeze({ 'mida-viiu': 'mida', 'oled-semu': 'semu', vigur: 'vigur' });
+const TITLE_OF = Object.freeze({ 'mida-viiu': 'MIDA V!!!U', 'oled-semu': 'Oled Semu?', vigur: 'Vigur' });
+
+/** Vana kutse tugi: `front` URL, mis viitab mõne mängu tootepildile -> selle mängu id. */
+const LEGACY_FRONT = /\/assets\/img\/games\/(mida-viiu|oled-semu|vigur)(?:-box(?:-sm|-front)?)?\.webp(?:[?#].*)?$/;
+
+/**
+ * Teeb valikutest ühtse kuju: faces (objekt või mängu id), mõõdud ja teema.
+ * Tagastab { faces, dims, theme, title } — faces/dims võivad olla null (vana lapik karp).
+ */
+function resolveFaces(opts) {
+  let { faces = null, dims = null, theme = null } = opts;
+  let gameId = null;
+  if (typeof faces === 'string') gameId = Object.prototype.hasOwnProperty.call(BOX_FACES, faces) ? faces : null;
+  else if (!faces && typeof opts.front === 'string') gameId = opts.front.match(LEGACY_FRONT)?.[1] || null;
+  if (gameId) {
+    faces = BOX_FACES[gameId];
+    dims = dims || BOX_DIMS;
+    theme = theme || THEME_OF[gameId];
+  } else if (typeof faces === 'string') {
+    faces = null; // tundmatu id -> vana genereeritud karp
+  }
+  // teema läheb klassinimeks -> lubame ainult lihtsaid nimesid
+  const safeTheme = typeof theme === 'string' && /^[a-z][a-z0-9-]*$/.test(theme) ? theme : 'mida';
+  const title = opts.title ?? (gameId ? TITLE_OF[gameId] : 'MIDA V!!!U');
+  return { faces: faces && typeof faces === 'object' ? faces : null, dims, theme: safeTheme, title };
+}
 
 const FACE_NAMES = ['front', 'back', 'right', 'left', 'top', 'bottom'];
 
@@ -129,21 +169,32 @@ function faceInner(name, src, { title, tagline, facts }) {
 
 /**
  * Karbi märgistus (ilma JS-animatsioonita) — nt staatilisteks kaartideks või SSR-iks.
- * Tagastab HTML-stringi `<div class="box3d …">…</div>`; sama valikud mis mountBox-il.
+ * Tagastab HTML-stringi `<div class="box3d box3d--static …">…</div>`, karp on juba 3/4 nurga all
+ * (angle/startAngle, tilt) koos varjutusega; sama valikud mis mountBox-il. Dekoratiivne (aria-hidden).
  */
 export function boxHTML(opts = {}) {
-  const { theme = 'mida', width, shadow = true, className = '' } = opts;
-  const { cls, style, inner } = buildParts(opts);
-  const w = width ? `--w:${Number(width)}px;` : '';
-  return `<div class="box3d box3d--${esc(theme)} ${cls} ${esc(className)}" style="${w}${style}" aria-hidden="true">${inner(shadow, false)}</div>`;
+  const { width, shadow = true, className = '', angle = opts.startAngle ?? -28, tilt = -12 } = opts;
+  const { cls, style, inner, theme } = buildParts(opts);
+  const w = Number(width) > 0 ? `--w:${Number(width)}px;` : '';
+  const rx = (Number(tilt) * Math.PI) / 180;
+  const ry = (Number(angle) * Math.PI) / 180;
+  const html = inner(shadow, false)
+    .replace('class="box3d__obj"', `class="box3d__obj" style="transform:rotateX(${Number(tilt).toFixed(2)}deg) rotateY(${Number(angle).toFixed(2)}deg)"`)
+    .replace(/data-face="(\w+)"/g, (m, n) => `${m} style="--shade:${shadeFor(NORMALS[n], rx, ry).toFixed(3)}"`);
+  return `<div class="box3d box3d--${esc(theme)} box3d--static ${cls} ${esc(className)}" style="${w}${style}" aria-hidden="true">${html}</div>`;
+}
+
+/** Tahu varjutus 0..0.52 vastavalt sellele, kui palju tahk valguse poole vaatab. */
+function shadeFor(normal, rxr, ryr) {
+  const n = rotate(normal, rxr, ryr);
+  const lit = Math.max(0, n[0] * LIGHT[0] + n[1] * LIGHT[1] + n[2] * LIGHT[2]);
+  return (1 - lit) * 0.52;
 }
 
 function buildParts(opts) {
+  const { faces, dims, theme, title } = resolveFaces(opts);
   const {
     front,
-    faces,
-    dims,
-    title = 'MIDA V!!!U',
     facts = ['85 kaarti', '50+ shotti', '18+'],
     tagline = 'Rohkem kui kaardimäng',
   } = opts;
@@ -165,13 +216,12 @@ function buildParts(opts) {
     </div>
     ${shadow ? '<div class="box3d__shadow"></div>' : ''}
     ${hint ? `<div class="box3d__hint" aria-hidden="true">${esc(hint)}</div>` : ''}`;
-  return { cls, style, inner, D };
+  return { cls, style, inner, D, theme, title };
 }
 
 export function mountBox(root, opts = {}) {
+  const { cls, inner, D, theme, title } = buildParts(opts);
   const {
-    theme = 'mida',
-    title = 'MIDA V!!!U',
     width,
     speed = 22,
     hint = 'Lohista, et keerutada',
@@ -182,7 +232,6 @@ export function mountBox(root, opts = {}) {
     interactive = true,
   } = opts;
 
-  const { cls, inner, D } = buildParts(opts);
   root.classList.add('box3d', `box3d--${theme}`, ...cls.split(' ').filter(Boolean));
   if (D) {
     root.style.setProperty('--hr', D.hr.toFixed(4));
@@ -224,11 +273,7 @@ export function mountBox(root, opts = {}) {
     root.style.setProperty('--shadow-scale', (1 - bob / 60).toFixed(3));
     const rxr = (curRx * Math.PI) / 180;
     const ryr = (curRy * Math.PI) / 180;
-    for (const f of faces) {
-      const n = rotate(f.n, rxr, ryr);
-      const lit = Math.max(0, n[0] * LIGHT[0] + n[1] * LIGHT[1] + n[2] * LIGHT[2]);
-      f.el.style.setProperty('--shade', ((1 - lit) * 0.52).toFixed(3));
-    }
+    for (const f of faces) f.el.style.setProperty('--shade', shadeFor(f.n, rxr, ryr).toFixed(3));
     // läige liigub üle esikülje vastavalt nurgale
     if (sheen) sheen.style.setProperty('--sheen', `${(-Math.sin(ryr) * 140).toFixed(1)}%`);
   }

@@ -9,7 +9,7 @@ import { formatTallinnDate, formatTallinnTime } from './time.mjs';
 import { parseItems, orderGameUnits } from './stats.mjs';
 import { PAYMENT_LABELS, FULFILLMENT_LABELS, carrierShortName, itemLabel } from './admin-orders.mjs';
 
-export const BOM = '﻿';
+export const BOM = '\uFEFF';
 export const SEPARATOR = ';';
 
 export const CSV_COLUMNS = [
@@ -46,10 +46,14 @@ export function csvMoney(cents) {
   return `${sign}${Math.floor(abs / 100)},${String(abs % 100).padStart(2, '0')}`;
 }
 
-/** Valemisüstimise kaitse (OWASP): ohtlik algusmärk → ette ülakoma. */
+/**
+ * Valemisüstimise kaitse (OWASP): kui lahter algab (ka pärast tühikuid) märgiga = + - @
+ * või tab/CR-iga (ka täislaiusega ＝ ＋ － ＠), saab see ette ülakoma, et tabelarvutus
+ * näitaks seda tekstina. NB! Ka telefoninumber „+372 …“ saab ülakoma — see on teadlik.
+ */
 export function neutralizeFormula(value) {
   const s = String(value ?? '');
-  return /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+  return /^[\s\u00A0]*[=+\-@\uFF1D\uFF0B\uFF0D\uFF20]|^[\t\r\n]/.test(s) ? `'${s}` : s;
 }
 
 /** Üks lahter: süstimiskaitse + jutumärgid, kui vaja (eraldaja, jutumärk, reavahetus, servatühik). */

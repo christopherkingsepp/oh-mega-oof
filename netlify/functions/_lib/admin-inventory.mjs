@@ -120,24 +120,31 @@ export async function applyInventoryChange(db, change) {
   }
 
   // delta-režiimis liidame andmebaasis (stock + delta), et samaaegne müük ei läheks kaduma;
+  // valvur (WHERE … >= 0) hoiab ära miinusesse minemise ka siis, kui laoseis vahepeal muutus.
   // set-režiimis salvestame liikumiseks tegeliku erinevuse eelmisest väärtusest.
+  // Kõigil alamlausetel on sama hetktõmmis, seega `prev` näeb väärtust ENNE muudatust.
   const rows = await db.query(
     `WITH prev AS (SELECT stock FROM inventory WHERE game_id = $1),
      up AS (
         INSERT INTO inventory (game_id, stock, updated_at)
-        VALUES ($1, CASE WHEN $2 = 'set' THEN $3::int ELSE $3::int END, now())
+        VALUES ($1, $3::int, now())
         ON CONFLICT (game_id) DO UPDATE
           SET stock = CASE WHEN $2 = 'set' THEN $3::int ELSE inventory.stock + $3::int END, updated_at = now()
+          WHERE $2 = 'set' OR inventory.stock + $3::int >= 0
         RETURNING stock
      ),
      mv AS (
         INSERT INTO inventory_movements (game_id, delta, reason, note)
         SELECT $1, CASE WHEN $2 = 'set' THEN $3::int - COALESCE((SELECT stock FROM prev), 0) ELSE $3::int END, $4, $5
+        WHERE EXISTS (SELECT 1 FROM up)
         RETURNING id, delta
      )
      SELECT (SELECT stock FROM up) AS stock, (SELECT delta FROM mv) AS delta, (SELECT id FROM mv) AS movement_id`,
     [change.gameId, change.mode, change.value, change.reason, change.note],
   );
+  if (!rows[0] || rows[0].stock === null || rows[0].stock === undefined) {
+    return { ok: false, status: 409, field: 'value', error: 'Laoseis muutus vahepeal (nt tuli tellimus). Värskenda vaadet ja proovi uuesti.' };
+  }
   const r = rows[0];
   return { ok: true, stock: Number(r.stock), delta: Number(r.delta), movementId: Number(r.movement_id) };
 }

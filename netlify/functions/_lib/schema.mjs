@@ -123,4 +123,12 @@ CREATE TABLE IF NOT EXISTS locker_cache (
   lockers     jsonb NOT NULL,
   fetched_at  timestamptz NOT NULL DEFAULT now()
 );
+
+-- Tellimuste ja maksete taustasüsteemi lisad (ainult lisavad, idempotentsed laused).
+-- Sündmus loetakse töödelduks alles siis, kui processed_at on seatud: kui töötlemine katkeb,
+-- kordab Stripe sündmust ja see töödeldakse uuesti (olekuvalvurid hoiavad ära topelttegevused).
+ALTER TABLE stripe_events ADD COLUMN IF NOT EXISTS processed_at timestamptz;
+-- Taganemisavalduse teavitus omanikule (ühekordne).
+ALTER TABLE withdrawals ADD COLUMN IF NOT EXISTS admin_notified_at timestamptz;
+CREATE INDEX IF NOT EXISTS withdrawals_created_at_idx ON withdrawals (created_at DESC);
 `;

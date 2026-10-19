@@ -15,7 +15,11 @@ import {
 } from '../netlify/functions/_lib/lockers.mjs';
 import { fixture } from './helpers.mjs';
 
-const shape = (l) => assert.deepEqual(Object.keys(l).sort(), ['address', 'city', 'id', 'name']);
+// postalCode on valikuline (ainult kehtiv 5-kohaline Eesti sihtnumber).
+const shape = (l) => {
+  assert.deepEqual(Object.keys(l).filter((k) => k !== 'postalCode').sort(), ['address', 'city', 'id', 'name']);
+  if ('postalCode' in l) assert.match(l.postalCode, /^\d{5}$/);
+};
 
 test('Omniva: ainult Eesti pakiautomaadid (TYPE 0), postkontorid ja LV/LT välja', () => {
   const list = normalizeOmniva(fixture('omniva-locations.json'));
@@ -31,7 +35,7 @@ test('Omniva: ainult Eesti pakiautomaadid (TYPE 0), postkontorid ja LV/LT välja
 
 test('Omniva: linn ja aadress', () => {
   const byId = Object.fromEntries(normalizeOmniva(fixture('omniva-locations.json')).map((l) => [l.id, l]));
-  assert.deepEqual(byId['96331'], { id: '96331', name: 'Tallinna Kristiine keskuse pakiautomaat', city: 'Tallinn', address: 'Endla tn 45' });
+  assert.deepEqual(byId['96331'], { id: '96331', name: 'Tallinna Kristiine keskuse pakiautomaat', city: 'Tallinn', address: 'Endla tn 45', postalCode: '96331' });
   assert.equal(byId['96051'].city, 'Tartu');
   assert.equal(byId['96195'].city, 'Jüri'); // Rae vald → asula
   assert.equal(byId['96310'].city, 'Kuressaare'); // Saaremaa vald → Kuressaare linn
@@ -87,8 +91,8 @@ test('Posti asukohateenus (SmartPosti varuallikas): EE + SMARTPOST tüüp, mitme
   const list = normalizePosti(fixture('posti-locations.json'));
   list.forEach(shape);
   assert.deepEqual(list, [
-    { id: '3101', name: 'Tallinn Rocca al Mare Prisma', city: 'Tallinn', address: 'Paldiski mnt 102' },
-    { id: '3245', name: 'Tartu Annelinna Prisma', city: 'Tartu', address: 'Nõlvaku 2' },
+    { id: '3101', name: 'Tallinn Rocca al Mare Prisma', city: 'Tallinn', address: 'Paldiski mnt 102', postalCode: '13522' },
+    { id: '3245', name: 'Tartu Annelinna Prisma', city: 'Tartu', address: 'Nõlvaku 2', postalCode: '50708' },
   ]);
 });
 

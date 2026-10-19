@@ -17,10 +17,21 @@
 [functions]
   node_bundler = "esbuild"
 
-# Funktsioonide aadressid (/api/checkout, /api/pakiautomaadid) on määratud
-# funktsioonifailides endis: `export const config = { path: '/api/…' }`.
+# Funktsioonide aadressid on määratud funktsioonifailides endis
+# (`export const config = { path: '/api/…' }`), et kood ja aadress oleksid koos:
+#   /api/checkout        create-checkout.mjs  — tellimus andmebaasi + Stripe'i makseleht
+#   /api/stripe-webhook  stripe-webhook.mjs   — Stripe'i sündmused (makstud/aegunud/tagasimakse)
+#   /api/tellimus        order-status.mjs     — kinnituslehe (/aitah) andmed tellimuse tunnusega
+#   /api/pakiautomaadid  parcel-lockers.mjs   — Omniva/SmartPosti/DPD automaadid (puhver andmebaasis)
+#   /api/taganemine      withdrawal.mjs       — taganemisavaldus veebivormist
+#   (ajastatud)          lockers-refresh.mjs  — värskendab automaatide nimekirja kord ööpäevas
+#                                               (`config.schedule = '@daily'` failis endas)
+#   /__mock-stripe/*     dev-mock-stripe.mjs  — AINULT kohalik test-Stripe; Netlifys vastab alati 404
+#   /admin, /api/admin/* admin*.mjs           — halduspaneel (serveerib funktsioon, mitte staatiline fail)
+# Kiiruspiirangud (rateLimit) on samuti funktsioonide config-is.
 # Lehekülje puudumisel näitab Netlify automaatselt faili public/404.html.
 # "Ilusad" aadressid töötavad vaikimisi: /mida-viiu → mida-viiu.html.
+# NB! Ära lisa kausta public/ faili admin.html ega kausta admin/ — /admin peab jääma funktsioonile.
 
 # --- Turvapäised kõigile vastustele ------------------------------------------
 # CSP: skriptid ainult oma domeenilt (inline-skripte EI tohi kasutada;
@@ -35,6 +46,21 @@
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     X-Frame-Options = "SAMEORIGIN"
     Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; frame-src https://www.pacdora.com https://pacdora.com https://*.pacdora.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; frame-ancestors 'self'; upgrade-insecure-requests"
+
+# Kinnitusleht: aadressis on tellimuse salajane tunnus (?t=…). Ära saada seda
+# Referer-päisega kuhugi edasi ja ära lase otsingumootoritel lehte indekseerida.
+# (Funktsioonide vastustele seab samad päised kood ise.)
+[[headers]]
+  for = "/aitah"
+  [headers.values]
+    Referrer-Policy = "no-referrer"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/aitah.html"
+  [headers.values]
+    Referrer-Policy = "no-referrer"
+    X-Robots-Tag = "noindex, nofollow"
 
 # --- Puhverdamine ------------------------------------------------------------
 # Pildid muutuvad harva: brauser hoiab neid nädal. Kui vahetad pildi, anna

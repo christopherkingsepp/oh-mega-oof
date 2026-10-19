@@ -1,7 +1,25 @@
-// Pakiautomaatide nimekirjad: allikad, allalaadimine ja normaliseerimine.
-// Kõik normaliseerijad tagastavad ühtse kuju: { id, name, city, address }
+// Pakiautomaatide nimekirjad: allikad, allalaadimine, normaliseerimine ja puhver andmebaasis.
+// Kõik normaliseerijad tagastavad ühtse kuju: { id, name, city, address, postalCode? }
 // ainult Eesti (EE) pakiautomaatidest, sorteerituna linna ja nime järgi.
+//
+// ALLIKAD (vt ka JUHEND.md):
+//  • Omniva — avalik võtmeta JSON https://www.omniva.ee/locations.json (kogu Baltikum; filtreerime EE + TYPE 0).
+//  • SmartPosti (Posti Grupp, endine Itella SmartPOST) — avalik https://www.smartpost.ee/places.json;
+//    varuallikas Posti avalik asukohateenus locationservice.posti.com (võtmeta).
+//  • DPD Pickup — avalikku võtmeta nimekirja pole kindlalt teada (DPD Baltics API vajab kliendilepingut
+//    ja kasutajatunnuseid). Seepärast ainult DPD_LOCKERS_URL kaudu (JSON, mille omanik saab DPD-lt või
+//    vahendajalt); muidu sisestab klient automaadi käsitsi.
+//
+// PUHVER: viimane õnnestunud nimekiri salvestatakse tabelisse locker_cache. Kui see on vanem kui
+// 12 h, laetakse uus; kui allikas ei vasta, kasutatakse viimast toimivat (stale: true); kui ka seda
+// pole, lubab kassa automaadi käsitsi sisestada (manual: true). Ajastatud funktsioon
+// lockers-refresh.mjs värskendab nimekirja kord ööpäevas ette.
+//
+// MOCK_LOCKERS=1 (ainult kohalikult, mitte Lambdas) → NÄIDISANDMED failidest tests/fixtures/mock-lockers-*.json.
+// Need on välja mõeldud arendamiseks — mitte päris automaatide nimekiri!
+import { readFile } from 'node:fs/promises';
 import { cleanText } from './http.mjs';
+import { isMockLockers } from './config.mjs';
 
 export const SOURCES = {
   omniva: 'https://www.omniva.ee/locations.json',
@@ -25,7 +43,10 @@ export function finalizeLockers(list) {
     const key = l.id ? `id:${l.id}` : `name:${l.name.toLowerCase()}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push({ id: String(l.id || ''), name: l.name, city: l.city || '', address: l.address || '' });
+    const row = { id: String(l.id || ''), name: l.name, city: l.city || '', address: l.address || '' };
+    const postalCode = cleanText(l.postalCode);
+    if (/^\d{5}$/.test(postalCode)) row.postalCode = postalCode; // Eesti sihtnumber
+    out.push(row);
   }
   out.sort((a, b) => {
     // Linnata kirjed lähevad lõppu.
@@ -80,7 +101,8 @@ export function normalizeOmniva(data) {
     const id = cleanText(r.ZIP);
     const name = cleanText(r.NAME);
     if (!id || !name) continue;
-    out.push({ id, name, city: omnivaCity(r), address: omnivaAddress(r) });
+    // Omniva automaadi ZIP on ühtlasi tema sihtnumber.
+    out.push({ id, name, city: omnivaCity(r), address: omnivaAddress(r), postalCode: id });
   }
   return finalizeLockers(out);
 }
@@ -102,7 +124,7 @@ export function normalizeSmartpost(data) {
     const id = cleanText(r.place_id ?? r.id ?? r.routingcode);
     const name = cleanText(r.name);
     if (!name) continue;
-    out.push({ id, name, city: settlementName(r.city), address: cleanText(r.address) });
+    out.push({ id, name, city: settlementName(r.city), address: cleanText(r.address), postalCode: cleanText(r.postalcode ?? r.postal_code ?? r.zip) });
   }
   return finalizeLockers(out);
 }
@@ -136,13 +158,15 @@ export function normalizePosti(data) {
     const addr = pickLang(r.address);
     let address = '';
     let city = '';
+    let postalCode = '';
     if (addr && typeof addr === 'object') {
       address = cleanText(addr.address) || [cleanText(addr.streetName), cleanText(addr.streetNumber)].filter(Boolean).join(' ');
       city = settlementName(addr.municipality || addr.postalCodeName || addr.city || addr.postOffice);
+      postalCode = cleanText(addr.postalCode);
     } else {
       address = cleanText(addr);
     }
-    out.push({ id, name, city, address });
+    out.push({ id, name, city, address, postalCode });
   }
   return finalizeLockers(out);
 }
@@ -173,7 +197,8 @@ export function normalizeDpd(data) {
         : [cleanText(r.street ?? addrObj?.street), cleanText(r.houseNo ?? r.house ?? addrObj?.houseNo ?? addrObj?.house)]
             .filter(Boolean)
             .join(' ');
-    out.push({ id, name, city, address });
+    const postalCode = cleanText(r.postalCode ?? r.postal_code ?? r.zip ?? r.pcode ?? addrObj?.postalCode ?? addrObj?.zip);
+    out.push({ id, name, city, address, postalCode });
   }
   return finalizeLockers(out);
 }
@@ -205,6 +230,7 @@ export async function fetchJson(url, { fetchImpl = globalThis.fetch, timeoutMs =
  * Viskab vea, kui allikas ei vasta või vastus on tühi (käsitleja teeb sellest manual:true).
  */
 export async function loadLockers(carrier, { fetchImpl, timeoutMs, env = {} } = {}) {
+  if (isMockLockers(env)) return loadMockLockers(carrier);
   const opts = { fetchImpl, timeoutMs };
   const nonEmpty = (lockers, source) => {
     if (!lockers.length) throw new Error(`${source}: nimekiri on tühi`);
@@ -234,4 +260,105 @@ export async function loadLockers(carrier, { fetchImpl, timeoutMs, env = {} } = 
   }
 
   throw new Error(`Tundmatu vedaja: ${carrier}`);
+}
+
+/* ---------------------------------------------------------------------------
+ * Näidisandmed (MOCK_LOCKERS=1, ainult kohalik arendus)
+ * ------------------------------------------------------------------------- */
+
+const MOCK_FILES = {
+  omniva: ['mock-lockers-omniva.json', normalizeOmniva],
+  smartpost: ['mock-lockers-smartpost.json', normalizeSmartpost],
+  dpd: ['mock-lockers-dpd.json', normalizeDpd],
+};
+
+/** Laeb NÄIDISNIMEKIRJA (välja mõeldud automaadid) kaustast tests/fixtures. */
+export async function loadMockLockers(carrier) {
+  const entry = MOCK_FILES[carrier];
+  if (!entry) throw new Error(`Tundmatu vedaja: ${carrier}`);
+  const [file, normalize] = entry;
+  const text = await readFile(new URL(`../../../tests/fixtures/${file}`, import.meta.url), 'utf8');
+  const lockers = normalize(JSON.parse(text));
+  if (!lockers.length) throw new Error(`${carrier}: näidisnimekiri on tühi`);
+  return { lockers, source: 'mock' };
+}
+
+/* ---------------------------------------------------------------------------
+ * Puhver andmebaasis (locker_cache)
+ * ------------------------------------------------------------------------- */
+
+export const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 h
+
+/** Viimane salvestatud nimekiri: { lockers, fetchedAt } või null. */
+export async function readLockerCache(db, carrier) {
+  const rows = await db.query('SELECT lockers, fetched_at FROM locker_cache WHERE carrier = $1', [carrier]);
+  if (!rows[0]) return null;
+  const lockers = Array.isArray(rows[0].lockers) ? rows[0].lockers : [];
+  return { lockers, fetchedAt: new Date(rows[0].fetched_at) };
+}
+
+/** Salvestab õnnestunud nimekirja (tühja nimekirja ei salvestata kunagi). */
+export async function writeLockerCache(db, carrier, lockers) {
+  if (!Array.isArray(lockers) || !lockers.length) return null;
+  const rows = await db.query(
+    `INSERT INTO locker_cache (carrier, lockers, fetched_at) VALUES ($1, $2::jsonb, now())
+     ON CONFLICT (carrier) DO UPDATE SET lockers = EXCLUDED.lockers, fetched_at = EXCLUDED.fetched_at
+     RETURNING fetched_at`,
+    [carrier, JSON.stringify(lockers)],
+  );
+  return rows[0] ? new Date(rows[0].fetched_at) : null;
+}
+
+/** Ühe automaadi andmed puhvrist (kassa jaoks: ametlik nimi/aadress/linn id järgi) või null. */
+export async function findCachedLocker(db, carrier, lockerId) {
+  if (!lockerId) return null;
+  const rows = await db.query(
+    `SELECT elem FROM locker_cache c, jsonb_array_elements(c.lockers) AS elem
+     WHERE c.carrier = $1 AND elem->>'id' = $2 LIMIT 1`,
+    [carrier, String(lockerId)],
+  );
+  return rows[0]?.elem || null;
+}
+
+/**
+ * Vedaja automaadid koos puhvri loogikaga.
+ * @param {string} carrier
+ * @param {{db?:object|null, env?:object, fetchImpl?:Function, timeoutMs?:number, ttlMs?:number,
+ *          now?:()=>number, logger?:Console, force?:boolean}} opts  force → ignoreeri värsket puhvrit (ajastatud värskendus)
+ * @returns {Promise<{carrier:string, lockers:object[], updatedAt:string|null, stale?:true, manual?:true, error?:string, source?:string}>}
+ */
+export async function getCarrierLockers(carrier, { db = null, env = {}, fetchImpl, timeoutMs, ttlMs = CACHE_TTL_MS, now = Date.now, logger = console, force = false } = {}) {
+  let cached = null;
+  if (db) {
+    try {
+      cached = await readLockerCache(db, carrier);
+    } catch (err) {
+      logger.error?.(`[pakiautomaadid] ${carrier}: puhvri lugemine ebaõnnestus — ${err?.message || err}`);
+    }
+  }
+  if (cached && !force && now() - cached.fetchedAt.getTime() < ttlMs) {
+    return { carrier, lockers: cached.lockers, updatedAt: cached.fetchedAt.toISOString(), source: 'cache' };
+  }
+
+  try {
+    const loaded = await loadLockers(carrier, { fetchImpl, timeoutMs, env });
+    if (loaded.manual) return { carrier, lockers: [], updatedAt: null, manual: true, source: loaded.source };
+    let updatedAt = new Date(now());
+    if (db) {
+      try {
+        updatedAt = (await writeLockerCache(db, carrier, loaded.lockers)) || updatedAt;
+      } catch (err) {
+        logger.error?.(`[pakiautomaadid] ${carrier}: puhvrisse salvestamine ebaõnnestus — ${err?.message || err}`);
+      }
+    }
+    return { carrier, lockers: loaded.lockers, updatedAt: updatedAt.toISOString(), source: loaded.source };
+  } catch (err) {
+    const message = String(err?.message || err);
+    if (cached?.lockers.length) {
+      logger.warn?.(`[pakiautomaadid] ${carrier}: allikas ei vasta (${message}) — kasutan viimast toimivat nimekirja (${cached.fetchedAt.toISOString()}).`);
+      return { carrier, lockers: cached.lockers, updatedAt: cached.fetchedAt.toISOString(), stale: true, error: message, source: 'cache' };
+    }
+    logger.error?.(`[pakiautomaadid] ${carrier}: nimekirja laadimine ebaõnnestus — ${message}`);
+    return { carrier, lockers: [], updatedAt: null, manual: true, error: message };
+  }
 }

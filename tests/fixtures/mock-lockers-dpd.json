@@ -1,0 +1,135 @@
+{
+ "_hoiatus": "NÄIDISANDMED ainult kohalikuks arenduseks (MOCK_LOCKERS=1). Automaatide ID-d, sihtnumbrid ja aadressid on välja mõeldud/ligikaudsed — see EI OLE päris pakiautomaatide nimekiri. Päris nimekiri tuleb vedaja avalikust allikast (vt netlify/functions/_lib/lockers.mjs).",
+ "lockers": [
+  {
+   "parcelShopId": "EE90101",
+   "company": "DPD Pickup Tallinn Järve Selver",
+   "city": "Tallinn",
+   "street": "Pärnu mnt",
+   "houseNo": "238",
+   "postalCode": "11624",
+   "countryCode": "EE",
+   "type": "PudoLocker"
+  },
+  {
+   "parcelShopId": "EE90102",
+   "company": "DPD Pickup Tallinn Kristiine",
+   "city": "Tallinn",
+   "street": "Endla",
+   "houseNo": "45",
+   "postalCode": "10615",
+   "countryCode": "EE",
+   "type": "PudoLocker"
+  },
+  {
+   "parcelShopId": "EE90103",
+   "company": "DPD Pickup Tallinn Ülemiste",
+   "city": "Tallinn",
+   "street": "Suur-Sõjamäe",
+   "houseNo": "4",
+   "postalCode": "11415",
+   "countryCode": "EE",
+   "type": "PudoLocker"
+  },
+  {
+   "parcelShopId": "EE90104",
+   "company": "DPD Pickup Tallinn Rocca al Mare",
+   "city": "Tallinn",
+   "street": "Paldiski mnt",
+   "houseNo": "102",
+   "postalCode": "13522",
+   "countryCode": "EE",
+   "type": "PudoLocker"
+  },
+  {
+   "parcelShopId": "EE90105",
+   "company": "DPD Pickup Tallinn Lasnamäe Centrum",
+   "city": "Tallinn",
+   "street": "Mustakivi tee",
+   "houseNo": "13",
+   "postalCode": "13912",
+   "countryCode": "EE",
+   "type": "PudoLocker"
+  },
+  {
+   "parcelShopId": "EE90201",
+   "company": "DPD Pickup Tartu Lõunakeskus",
+   "city": "Tartu",
+   "street": "Ringtee",
+   "houseNo": "75",
+   "postalCode": "50501",
+   "countryCode": "EE",
+   "type": "PudoLocker"
+  },
+  {
+   "parcelShopId": "EE90202",
+   "company": "DPD Pickup Tartu Kvartal",
+   "city": "Tartu",
+   "street": "Riia",
+   "houseNo": "2",
+   "postalCode": "51004",
+   "countryCode": "EE",
+   "type": "PudoLocker"
+  },
+  {
+   "parcelShopId": "EE90301",
+   "company": "DPD Pickup Pärnu Port Artur 2",
+   "city": "Pärnu",
+   "street": "Lai",
+   "houseNo": "11",
+   "postalCode": "80010",
+   "countryCode": "EE",
+   "type": "PudoLocker"
+  },
+  {
+   "parcelShopId": "EE90401",
+   "company": "DPD Pickup Narva Astri",
+   "city": "Narva",
+   "street": "Tallinna mnt",
+   "houseNo": "41",
+   "postalCode": "20304",
+   "countryCode": "EE",
+   "type": "PudoLocker"
+  },
+  {
+   "parcelShopId": "EE90501",
+   "company": "DPD Pickup Viljandi Centrum",
+   "city": "Viljandi",
+   "street": "Tallinna",
+   "houseNo": "24",
+   "postalCode": "71008",
+   "countryCode": "EE",
+   "type": "PudoLocker"
+  },
+  {
+   "parcelShopId": "EE90601",
+   "company": "DPD Pickup Rakvere Põhjakeskus",
+   "city": "Rakvere",
+   "street": "Haljala tee",
+   "houseNo": "4",
+   "postalCode": "44310",
+   "countryCode": "EE",
+   "type": "PudoLocker"
+  },
+  {
+   "parcelShopId": "EE90701",
+   "company": "DPD Pickup Kuressaare Auriga",
+   "city": "Kuressaare",
+   "street": "Tallinna",
+   "houseNo": "88",
+   "postalCode": "93815",
+   "countryCode": "EE",
+   "type": "PudoLocker"
+  },
+  {
+   "parcelShopId": "EE90801",
+   "company": "DPD Pickup Haapsalu Rannarootsi",
+   "city": "Haapsalu",
+   "street": "Tallinna mnt",
+   "houseNo": "1",
+   "postalCode": "90507",
+   "countryCode": "EE",
+   "type": "PudoLocker"
+  }
+ ]
+}

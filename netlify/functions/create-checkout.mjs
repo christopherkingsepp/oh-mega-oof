@@ -1,40 +1,41 @@
-// POST /api/checkout — loob Stripe Checkout'i makselehe ja tagastab selle URL-i.
+// POST /api/checkout — salvestab tellimuse ja loob Stripe Checkout'i makselehe.
 //
 // Brauser saadab: { items:[{id,qty}], code, customer:{name,email,phone},
-//   shipping:{carrier, lockerId, lockerName, lockerAddress}, ageConfirmed, termsAccepted, newsletter }
-// Vastus: 200 { url } | 4xx/5xx { error, field? }
+//   shipping:{carrier, lockerId, lockerName, lockerAddress, lockerCity?, manual?}, ageConfirmed, termsAccepted, newsletter }
+// Vastus: 200 { url, orderNumber, token, expiresAt, warnings? }
+//         4xx/5xx { error, field?, shortages? }
 //
-// Turvalisus: hinnad, soodustus ja tarne arvutatakse AINULT siin serveris
-// ühisest kataloogist (public/assets/js/catalog.js). Kliendi saadetud summasid ei loeta.
-// Vajalik keskkonnamuutuja: STRIPE_SECRET_KEY (vt .env.example).
-import Stripe from 'stripe';
+// Voog:
+//   1) valideerimine (_lib/order.mjs) + lubatud vedaja (ENABLED_CARRIERS)
+//   2) laoseisu kontroll (komplektid lahti võetuna; ainult mängud, millel on laoseis seatud) → 409
+//   3) tellimus andmebaasi (payment_status 'pending'; read, summad ja tarne hetktõmmisena)
+//   4) Stripe Checkout Session (metadata.order_id, client_reference_id, aegub 60 min pärast)
+//   5) sessiooni id/url/aegumine tellimuse juurde → kliendile makselehe URL
+// Makse tulemus jõuab tellimusse webhooki kaudu (stripe-webhook.mjs), mitte brauserist.
+//
+// Turvalisus: hinnad, soodustus ja tarne arvutatakse AINULT serveris ühisest kataloogist
+// (public/assets/js/catalog.js). Kliendi saadetud summasid ei loeta.
+// Vajalikud keskkonnamuutujad: STRIPE_SECRET_KEY, NETLIFY_DATABASE_URL (vt .env.example).
 import { json, readTextLimited } from './_lib/http.mjs';
 import { validateOrder } from './_lib/order.mjs';
-import { buildSessionParams, ensureCoupon, forgetCoupon, resolveOrigin, createOrderId } from './_lib/stripe-session.mjs';
+import { buildSessionParams, ensureCoupon, forgetCoupon, resolveOrigin } from './_lib/stripe-session.mjs';
+import { resolveStripe, defaultStripeFactory } from './_lib/stripe-client.mjs';
+import { getDb } from './_lib/db.mjs';
+import { checkAvailability, shortageMessage, createOrder, attachCheckoutSession, markFailed, toIso } from './_lib/orders.mjs';
+import { findCachedLocker } from './_lib/lockers.mjs';
+import { enabledCarriers, enabledCarrierNames } from './_lib/config.mjs';
 
 export const MAX_BODY_BYTES = 20 * 1024;
+/** Makselehe kehtivus. Stripe lubab 30 minutit kuni 24 tundi. */
+export const SESSION_TTL_MS = 60 * 60 * 1000;
 
 const MSG_NOT_CONFIGURED = 'Makse pole veel seadistatud. Võta meiega ühendust.';
 const MSG_STRIPE_FAILED = 'Makset ei õnnestunud alustada. Proovi uuesti.';
 const MSG_BAD_JSON = 'Vigane päring. Värskenda lehte ja proovi uuesti.';
 const MSG_TOO_LARGE = 'Päring on liiga suur. Värskenda lehte ja proovi uuesti.';
 const MSG_BAD_TYPE = 'Vigane päring (oodati JSON-i). Värskenda lehte ja proovi uuesti.';
-
-// Stripe klient luuakse üks kord soojas funktsioonis ja taaskasutatakse.
-const clients = new Map();
-function defaultStripeFactory(key) {
-  if (!clients.has(key)) {
-    clients.set(
-      key,
-      new Stripe(key, {
-        maxNetworkRetries: 1, // Stripe lisab korduspäringule ise idempotency-võtme
-        timeout: 8000, // Netlify funktsiooni ajalimiit on 10 s
-        appInfo: { name: 'AGE veebipood' },
-      }),
-    );
-  }
-  return clients.get(key);
-}
+const MSG_DB_MISSING = 'Tellimuste vastuvõtt on hetkel ajutiselt peatatud. Proovi hiljem uuesti või kirjuta meile.';
+const MSG_DB_FAILED = 'Tellimust ei õnnestunud salvestada. Proovi mõne hetke pärast uuesti.';
 
 /** Logime ainult vea tehnilised andmed — mitte kliendi isikuandmeid. */
 function logStripeError(logger, stage, err) {
@@ -47,11 +48,23 @@ function logStripeError(logger, stage, err) {
   });
 }
 
+function logDbError(logger, stage, err) {
+  logger.error(`[checkout] andmebaasi viga (${stage}):`, { code: err?.code, message: err?.message });
+}
+
 /**
- * Loob käsitleja. Testides saab süstida võlts-Stripe'i (stripeFactory) ja env-i.
- * @param {{stripeFactory?:(key:string)=>any, env?:object, logger?:Console, couponCache?:Set<string>}} deps
+ * Loob käsitleja. Testides saab süstida võlts-Stripe'i (stripeFactory), env-i ja andmebaasi.
+ * @param {{stripeFactory?:(key:string)=>any, env?:object, logger?:Console, couponCache?:Set<string>,
+ *          getDb?:()=>Promise<object>, now?:()=>number}} deps
  */
-export function createHandler({ stripeFactory = defaultStripeFactory, env = process.env, logger = console, couponCache } = {}) {
+export function createHandler({
+  stripeFactory = defaultStripeFactory,
+  env = process.env,
+  logger = console,
+  couponCache,
+  getDb: getDbImpl = () => getDb(env),
+  now = Date.now,
+} = {}) {
   return async function checkoutHandler(req, context = {}) {
     if (req.method !== 'POST') {
       return json(405, { error: 'Lubatud on ainult POST-päring.' }, { Allow: 'POST' });
@@ -76,42 +89,77 @@ export function createHandler({ stripeFactory = defaultStripeFactory, env = proc
     if (!result.ok) return json(400, { error: result.error, ...(result.field ? { field: result.field } : {}) });
     const { order } = result;
 
-    // 3) Stripe'i võti.
-    const key = (env.STRIPE_SECRET_KEY || '').trim();
-    if (!key) {
-      logger.error('[checkout] STRIPE_SECRET_KEY puudub — lisa see Netlify keskkonnamuutujatesse (vt .env.example).');
-      return json(500, { error: MSG_NOT_CONFIGURED });
-    }
-    if (!/^(sk|rk)_(test|live)_/.test(key)) {
-      logger.error('[checkout] STRIPE_SECRET_KEY on vales vormingus — see peab algama "sk_live_" või "sk_test_" (mitte "pk_").');
-      return json(500, { error: MSG_NOT_CONFIGURED });
+    if (!enabledCarriers(env, logger).includes(order.shipping.carrier)) {
+      return json(400, {
+        error: `Selle vedajaga praegu tellida ei saa. Vali ${enabledCarrierNames(env)} pakiautomaat.`,
+        field: 'shipping.carrier',
+      });
     }
 
-    let stripe;
+    // 3) Stripe'i võti (enne andmebaasi, et seadistamata poes ei tekiks pooleli tellimusi).
+    const resolved = resolveStripe(env, { stripeFactory });
+    if (resolved.error) {
+      if (resolved.error === 'init') logStripeError(logger, 'init', { message: resolved.detail });
+      else logger.error(`[checkout] ${resolved.detail}`);
+      return json(500, { error: MSG_NOT_CONFIGURED });
+    }
+    const { stripe } = resolved;
+
+    // 4) Andmebaas.
+    let db;
     try {
-      stripe = stripeFactory(key);
+      db = await getDbImpl();
     } catch (err) {
-      logStripeError(logger, 'init', err);
-      return json(500, { error: MSG_NOT_CONFIGURED });
+      if (err?.code === 'DB_NOT_CONFIGURED') {
+        logger.error('[checkout] Andmebaas pole seadistatud — lisa Netlify DB (NETLIFY_DATABASE_URL), vt JUHEND.md.');
+        return json(503, { error: MSG_DB_MISSING });
+      }
+      logDbError(logger, 'connect', err);
+      return json(503, { error: MSG_DB_FAILED });
     }
 
-    // 4) Sooduskupong (kui kood kehtib) + makseleht.
+    // 5) Laoseis (komplektid lahti võetuna).
+    try {
+      const availability = await checkAvailability(db, order.items);
+      if (!availability.ok) {
+        return json(409, {
+          error: shortageMessage(availability.shortages),
+          field: 'items',
+          shortages: availability.shortages.map(({ id, name, available }) => ({ id, name, available })),
+        });
+      }
+    } catch (err) {
+      logDbError(logger, 'inventory', err);
+      return json(503, { error: MSG_DB_FAILED });
+    }
+
+    // 6) Tellimus andmebaasi. Kui automaat on vedaja nimekirjas, kasutame sealt ametlikke andmeid.
+    let row;
+    try {
+      let locker = null;
+      if (!order.shipping.manual && order.shipping.lockerId) {
+        locker = await findCachedLocker(db, order.shipping.carrier, order.shipping.lockerId).catch(() => null);
+      }
+      row = await createOrder(db, order, { locker });
+    } catch (err) {
+      logDbError(logger, 'insert', err);
+      return json(503, { error: MSG_DB_FAILED });
+    }
+
+    // 7) Sooduskupong (kui kood kehtib) + makseleht.
     const origin = resolveOrigin(req, env, context);
-    const orderId = createOrderId();
+    const expiresAt = Math.floor((now() + SESSION_TTL_MS) / 1000);
+    const params = (couponId) =>
+      buildSessionParams(order, { origin, couponId, orderId: row.id, orderNumber: row.number, token: row.public_token, expiresAt });
+    const coupon = { code: order.totals.code, percent: order.totals.percent, amountOffCents: order.totals.discountCents };
     let stage = 'coupon';
+    let session;
     try {
       let couponId = null;
-      if (order.totals.code && order.totals.discountCents > 0) {
-        couponId = await ensureCoupon(
-          stripe,
-          { code: order.totals.code, percent: order.totals.percent, amountOffCents: order.totals.discountCents },
-          couponCache,
-        );
-      }
+      if (order.totals.code && order.totals.discountCents > 0) couponId = await ensureCoupon(stripe, coupon, couponCache);
       stage = 'session';
-      let session;
       try {
-        session = await stripe.checkout.sessions.create(buildSessionParams(order, { origin, couponId, orderId }));
+        session = await stripe.checkout.sessions.create(params(couponId), { idempotencyKey: `checkout-${row.id}` });
       } catch (err) {
         // Kupong kustutati vahepeal Stripe'i töölaual, aga soe funktsioon mäletab seda:
         // unusta, loo uuesti ja proovi ühe korra veel.
@@ -119,21 +167,35 @@ export function createHandler({ stripeFactory = defaultStripeFactory, env = proc
         if (!couponGone) throw err;
         forgetCoupon(couponId, couponCache);
         stage = 'coupon-retry';
-        couponId = await ensureCoupon(
-          stripe,
-          { code: order.totals.code, percent: order.totals.percent, amountOffCents: order.totals.discountCents },
-          couponCache,
-        );
+        couponId = await ensureCoupon(stripe, coupon, couponCache);
         stage = 'session-retry';
-        session = await stripe.checkout.sessions.create(buildSessionParams(order, { origin, couponId, orderId }));
+        session = await stripe.checkout.sessions.create(params(couponId), { idempotencyKey: `checkout-${row.id}-uuesti` });
       }
-      if (!session?.url) throw new Error('Stripe ei tagastanud makselehe URL-i');
-      logger.log?.(`[checkout] ${orderId}: makseleht loodud (${order.totals.totalCents} senti, ${order.items.length} rida)`);
-      return json(200, { url: session.url, orderId, ...(order.warnings.length ? { warnings: order.warnings } : {}) });
+      if (!session?.url || !session?.id) throw new Error('Stripe ei tagastanud makselehe URL-i');
     } catch (err) {
       logStripeError(logger, stage, err);
+      // Makselehte ei tekkinud — tellimus märgitakse ebaõnnestunuks (klient saab uuesti proovida).
+      await markFailed(db, row.id).catch((e) => logDbError(logger, 'mark-failed', e));
       return json(502, { error: MSG_STRIPE_FAILED });
     }
+
+    // 8) Sessiooni andmed tellimuse juurde. Kui see ebaõnnestub, leiab webhook tellimuse siiski
+    //    metadata.order_id järgi — seega klient võib maksma minna.
+    const sessionExpires = Number.isInteger(session.expires_at) ? session.expires_at : expiresAt;
+    try {
+      await attachCheckoutSession(db, row.id, { sessionId: session.id, url: session.url, expiresAt: sessionExpires });
+    } catch (err) {
+      logDbError(logger, 'attach-session', err);
+    }
+
+    logger.log?.(`[checkout] ${row.number}: makseleht loodud (${row.total_cents} senti, ${order.items.length} rida, ${order.shipping.carrier})`);
+    return json(200, {
+      url: session.url,
+      orderNumber: row.number,
+      token: row.public_token,
+      expiresAt: toIso(sessionExpires),
+      ...(order.warnings.length ? { warnings: order.warnings } : {}),
+    });
   };
 }
 

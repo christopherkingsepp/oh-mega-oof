@@ -238,3 +238,22 @@ test('resolveOrigin: tootmises Netlify URL, eelvaates päringu aadress, muidu p�
   assert.equal(resolveOrigin(req, {}), 'https://deploy-preview-7--age.netlify.app');
   assert.equal(resolveOrigin(req, { URL: 'javascript:alert(1)' }), 'https://deploy-preview-7--age.netlify.app');
 });
+
+test('tunnusega tellimus: tagasisuunamised /aitah?t=… ja /ostukorv?katkestatud=1&t=…, aegumine ja tellimuse number', () => {
+  const token = 'A'.repeat(43);
+  const p = buildSessionParams(orderOf(), {
+    origin: ORIGIN,
+    orderId: '3f2b0c1e-0000-4000-8000-000000000001',
+    orderNumber: 'AGE-1001',
+    token,
+    expiresAt: 1790000000,
+  });
+  assert.equal(p.success_url, `https://age.example/aitah?t=${token}&session_id={CHECKOUT_SESSION_ID}`);
+  assert.equal(p.cancel_url, `https://age.example/ostukorv?katkestatud=1&t=${token}`);
+  assert.equal(p.expires_at, 1790000000);
+  assert.equal(p.client_reference_id, '3f2b0c1e-0000-4000-8000-000000000001');
+  assert.equal(p.metadata.order_id, '3f2b0c1e-0000-4000-8000-000000000001');
+  assert.equal(p.metadata.order_number, 'AGE-1001');
+  assert.match(p.payment_intent_data.description, /^ÄGE tellimus AGE-1001: /);
+  assert.equal(p.payment_intent_data.metadata.order_number, 'AGE-1001');
+});

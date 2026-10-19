@@ -1,0 +1,292 @@
+{
+ "_hoiatus": "NÄIDISANDMED ainult kohalikuks arenduseks (MOCK_LOCKERS=1). Automaatide ID-d, sihtnumbrid ja aadressid on välja mõeldud/ligikaudsed — see EI OLE päris pakiautomaatide nimekiri. Päris nimekiri tuleb vedaja avalikust allikast (vt netlify/functions/_lib/lockers.mjs).",
+ "places": [
+  {
+   "place_id": 101,
+   "name": "Tallinn Rocca al Mare Prisma",
+   "city": "Tallinn",
+   "address": "Paldiski mnt 102",
+   "country": "EE",
+   "postalcode": "13522",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 102,
+   "name": "Tallinn Mustika Prisma",
+   "city": "Tallinn",
+   "address": "A. H. Tammsaare tee 116",
+   "country": "EE",
+   "postalcode": "13417",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 103,
+   "name": "Tallinn Kristiine Prisma",
+   "city": "Tallinn",
+   "address": "Endla 45",
+   "country": "EE",
+   "postalcode": "10615",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 104,
+   "name": "Tallinn Sikupilli Prisma",
+   "city": "Tallinn",
+   "address": "Tartu mnt 87",
+   "country": "EE",
+   "postalcode": "10112",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 105,
+   "name": "Tallinn Lasnamäe Prisma",
+   "city": "Tallinn",
+   "address": "Mustakivi tee 17",
+   "country": "EE",
+   "postalcode": "13912",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 106,
+   "name": "Tallinn Kadaka Selver",
+   "city": "Tallinn",
+   "address": "Kadaka tee 56a",
+   "country": "EE",
+   "postalcode": "12915",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 107,
+   "name": "Tallinn T1 Mall",
+   "city": "Tallinn",
+   "address": "Peterburi tee 2",
+   "country": "EE",
+   "postalcode": "11415",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 108,
+   "name": "Tallinn Telliskivi",
+   "city": "Tallinn",
+   "address": "Telliskivi 60a",
+   "country": "EE",
+   "postalcode": "10412",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 109,
+   "name": "Tallinn Nõmme Rimi",
+   "city": "Tallinn",
+   "address": "Jaama 18",
+   "country": "EE",
+   "postalcode": "11615",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 110,
+   "name": "Tallinn Pirita Selver",
+   "city": "Tallinn",
+   "address": "Rummu tee 4",
+   "country": "EE",
+   "postalcode": "11911",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 111,
+   "name": "Viimsi Prisma",
+   "city": "Haabneeme alevik",
+   "address": "Sõpruse tee 15",
+   "country": "EE",
+   "postalcode": "74001",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 112,
+   "name": "Keila Selver",
+   "city": "Keila linn",
+   "address": "Piiri 12",
+   "country": "EE",
+   "postalcode": "76610",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 113,
+   "name": "Maardu Maxima",
+   "city": "Maardu",
+   "address": "Keemikute 41",
+   "country": "EE",
+   "postalcode": "74114",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 245,
+   "name": "Tartu Annelinna Prisma",
+   "city": "Tartu",
+   "address": "Nõlvaku 2",
+   "country": "EE",
+   "postalcode": "50708",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 246,
+   "name": "Tartu Sõbra Prisma",
+   "city": "Tartu",
+   "address": "Sõbra 58",
+   "country": "EE",
+   "postalcode": "50106",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 247,
+   "name": "Tartu Tasku",
+   "city": "Tartu",
+   "address": "Turu 2",
+   "country": "EE",
+   "postalcode": "51014",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 248,
+   "name": "Tartu Lõunakeskus",
+   "city": "Tartu",
+   "address": "Ringtee 75",
+   "country": "EE",
+   "postalcode": "50501",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 301,
+   "name": "Pärnu Prisma",
+   "city": "Pärnu",
+   "address": "Papiniidu 8",
+   "country": "EE",
+   "postalcode": "80042",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 302,
+   "name": "Pärnu Keskus",
+   "city": "Pärnu",
+   "address": "Aia 7",
+   "country": "EE",
+   "postalcode": "80011",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 310,
+   "name": "Viljandi Uku keskus",
+   "city": "Viljandi linn",
+   "address": "Tallinna 41",
+   "country": "EE",
+   "postalcode": "71008",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 320,
+   "name": "Narva Prisma",
+   "city": "Narva",
+   "address": "Kangelaste 29",
+   "country": "EE",
+   "postalcode": "20607",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 321,
+   "name": "Jõhvi Tsentraal",
+   "city": "Jõhvi",
+   "address": "Keskväljak 4",
+   "country": "EE",
+   "postalcode": "41531",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 330,
+   "name": "Rakvere Vaala keskus",
+   "city": "Rakvere",
+   "address": "Lõuna põik 2",
+   "country": "EE",
+   "postalcode": "44310",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 340,
+   "name": "Paide Selver",
+   "city": "Paide",
+   "address": "Pärnu 6",
+   "country": "EE",
+   "postalcode": "72711",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 350,
+   "name": "Haapsalu Uuemõisa Selver",
+   "city": "Haapsalu",
+   "address": "Tallinna mnt 73",
+   "country": "EE",
+   "postalcode": "90503",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 360,
+   "name": "Kuressaare Auriga",
+   "city": "Kuressaare",
+   "address": "Tallinna 88",
+   "country": "EE",
+   "postalcode": "93815",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 370,
+   "name": "Võru Kagukeskus",
+   "city": "Võru",
+   "address": "Kooli 6",
+   "country": "EE",
+   "postalcode": "65608",
+   "availability": "E-P 8:00-22:00",
+   "active": 1
+  },
+  {
+   "place_id": 399,
+   "name": "Suletud automaat",
+   "city": "Narva",
+   "address": "Tallinna mnt 6",
+   "country": "EE",
+   "postalcode": "20304",
+   "active": 0
+  },
+  {
+   "place_id": 3001,
+   "name": "Helsinki Kamppi",
+   "city": "Helsinki",
+   "address": "Urho Kekkosen katu 1",
+   "country": "FI",
+   "active": 1
+  }
+ ]
+}

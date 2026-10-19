@@ -4,12 +4,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import checkoutDefault, { createHandler as createCheckoutHandler, config as checkoutConfig, MAX_BODY_BYTES } from '../netlify/functions/create-checkout.mjs';
 import lockersDefault, { createHandler as createLockersHandler, config as lockersConfig } from '../netlify/functions/parcel-lockers.mjs';
-import { validBody, mockStripe, stripeError, silentLogger, postJson, fixture } from './helpers.mjs';
+import { validBody, mockStripe, stripeError, silentLogger, postJson, fixture, testDb, call } from './helpers.mjs';
+import { getOrderByToken } from '../netlify/functions/_lib/orders.mjs';
 
 const KEY = 'sk_test_51AbCdEfGhIjKlMnOp';
 const ENV = { STRIPE_SECRET_KEY: KEY, URL: 'https://age.example' };
 
-/** Käsitleja võlts-Stripe'iga; tagastab ka logija ja Stripe'i väljakutsed. */
+/** Käsitleja võlts-Stripe'i ja mälus andmebaasiga; tagastab ka logija ja Stripe'i väljakutsed. */
 function checkoutSetup({ env = ENV, stripe = mockStripe() } = {}) {
   const logger = silentLogger();
   const keys = [];
@@ -17,24 +18,13 @@ function checkoutSetup({ env = ENV, stripe = mockStripe() } = {}) {
     env,
     logger,
     couponCache: new Set(),
+    getDb: () => testDb(),
     stripeFactory: (key) => {
       keys.push(key);
       return stripe;
     },
   });
   return { handler, logger, stripe, keys };
-}
-
-async function call(handler, req, context) {
-  const res = await handler(req, context);
-  const text = await res.text();
-  let data = null;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    /* mitte-JSON vastus */
-  }
-  return { res, data, text };
 }
 
 const assertJsonNoStore = (res) => {
@@ -146,14 +136,18 @@ test('checkout: avalik võti (pk_) Stripe\'i salajase võtme asemel → 500', as
   assert.ok(logger.lines.some((l) => /pk_/.test(l)));
 });
 
-test('checkout: õnnestub → 200 { url }, summad serverist, tagasisuunamine saidile', async () => {
+test('checkout: õnnestub → 200 { url, orderNumber, token }, summad serverist, tellimus andmebaasis', async () => {
   const { handler, stripe, keys } = checkoutSetup();
   const body = validBody({ items: [{ id: 'mida-viiu', qty: 2, price: 0.01 }], totalCents: 1 });
+  const started = Math.floor(Date.now() / 1000);
   const { res, data } = await call(handler, postJson(body));
   assert.equal(res.status, 200);
   assertJsonNoStore(res);
   assert.equal(data.url, 'https://checkout.stripe.com/c/pay/cs_test_a1b2c3');
-  assert.match(data.orderId, /^AGE-[A-Z2-9]{6}$/);
+  assert.match(data.orderNumber, /^AGE-\d{4,}$/);
+  assert.match(data.token, /^[A-Za-z0-9_-]{43}$/);
+  assert.ok(Date.parse(data.expiresAt) > Date.now() + 59 * 60 * 1000);
+  assert.equal(data.orderId, undefined, 'sisemist id-d kliendile ei anta');
   assert.equal(data.warnings, undefined);
   assert.deepEqual(keys, [KEY]);
 
@@ -162,11 +156,24 @@ test('checkout: õnnestub → 200 { url }, summad serverist, tagasisuunamine sai
   assert.equal(p.line_items[0].price_data.unit_amount, 1750, 'kliendi hind 0,01 € jäetakse tähelepanuta');
   assert.equal(p.line_items[0].quantity, 2);
   assert.equal(p.shipping_options[0].shipping_rate_data.fixed_amount.amount, 0, '35 € → tasuta tarne');
-  assert.equal(p.success_url, 'https://age.example/aitah?session_id={CHECKOUT_SESSION_ID}');
-  assert.equal(p.cancel_url, 'https://age.example/ostukorv?katkestatud=1');
-  assert.equal(p.client_reference_id, data.orderId);
+  assert.equal(p.success_url, `https://age.example/aitah?t=${data.token}&session_id={CHECKOUT_SESSION_ID}`);
+  assert.equal(p.cancel_url, `https://age.example/ostukorv?katkestatud=1&t=${data.token}`);
+  assert.ok(p.expires_at >= started + 3600 && p.expires_at <= started + 3605, 'makseleht aegub 60 min pärast');
+  assert.equal(p.metadata.order_number, data.orderNumber);
   assert.equal(p.discounts, undefined);
   assert.equal(stripe.calls.retrieve.length + stripe.calls.createCoupon.length, 0, 'ilma koodita kupongi ei puudutata');
+
+  // Tellimus on andmebaasis ootel ja sessioon on selle juures.
+  const order = await getOrderByToken(await testDb(), data.token);
+  assert.equal(order.number, data.orderNumber);
+  assert.equal(order.payment_status, 'pending');
+  assert.equal(p.client_reference_id, order.id);
+  assert.equal(p.metadata.order_id, order.id);
+  assert.equal(stripe.calls.sessionOptions[0].idempotencyKey, `checkout-${order.id}`);
+  assert.match(order.stripe_session_id, /^cs_test_/);
+  assert.equal(order.stripe_session_url, data.url);
+  assert.equal(order.total_cents, 3500);
+  assert.equal(order.carrier_name, 'Omniva pakiautomaat');
 });
 
 test('checkout: AGE15 → kupong luuakse ja lisatakse makselehele', async () => {
@@ -195,7 +202,7 @@ test('checkout: origin — ilma URL-ita kasutatakse Netlify konteksti saidi aadr
     site: { url: 'http://localhost:8104' },
   });
   assert.equal(res.status, 200);
-  assert.equal(stripe.calls.sessions[0].success_url, 'http://localhost:8104/aitah?session_id={CHECKOUT_SESSION_ID}');
+  assert.match(stripe.calls.sessions[0].success_url, /^http:\/\/localhost:8104\/aitah\?t=[A-Za-z0-9_-]{43}&session_id=\{CHECKOUT_SESSION_ID\}$/);
 });
 
 test('checkout: Stripe\'i viga → 502, logis pole kliendi isikuandmeid', async () => {
@@ -207,6 +214,9 @@ test('checkout: Stripe\'i viga → 502, logis pole kliendi isikuandmeid', async 
   assert.equal(res.status, 502);
   assertJsonNoStore(res);
   assert.equal(data.error, 'Makset ei õnnestunud alustada. Proovi uuesti.');
+  // Makselehte ei tekkinud → tellimus märgitakse ebaõnnestunuks.
+  const [row] = await (await testDb()).query("SELECT payment_status FROM orders WHERE customer_email = 'sass@example.ee' ORDER BY created_at DESC LIMIT 1");
+  assert.equal(row.payment_status, 'failed');
   const log = logger.lines.join('\n');
   assert.match(log, /req_123/);
   for (const secret of ['Salajane', 'sass@example.ee', '55551234', KEY]) assert.ok(!log.includes(secret), `logis on "${secret}"`);
@@ -249,6 +259,7 @@ test('checkout: Stripe kliendi loomine ebaõnnestub → 500', async () => {
 const lockersReq = (query = '', method = 'GET') => new Request(`https://age.example/api/pakiautomaadid${query}`, { method });
 const jsonResponse = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 
+/** Pakiautomaatide käsitleja ilma andmebaasita (puhvri loogikat testib lockers-cache.test.mjs). */
 function lockersSetup(fetchImpl, env = {}) {
   const logger = silentLogger();
   const urls = [];
@@ -256,6 +267,9 @@ function lockersSetup(fetchImpl, env = {}) {
     env,
     logger,
     timeoutMs: 500,
+    getDb: async () => {
+      throw Object.assign(new Error('andmebaas puudub (test)'), { code: 'DB_NOT_CONFIGURED' });
+    },
     fetchImpl: async (url, init) => {
       urls.push(url);
       return fetchImpl(url, init);
@@ -294,11 +308,22 @@ test('pakiautomaadid: Omniva → normaliseeritud nimekiri ja pikk CDN puhver', a
   assert.deepEqual(urls, ['https://www.omniva.ee/locations.json']);
   assert.equal(data.carrier, 'omniva');
   assert.equal(data.manual, undefined);
+  assert.equal(data.stale, undefined);
   assert.equal(data.lockers.length, 7);
-  for (const l of data.lockers) assert.deepEqual(Object.keys(l).sort(), ['address', 'city', 'id', 'name']);
-  assert.equal(res.headers.get('cache-control'), 'public, max-age=3600');
-  assert.match(res.headers.get('netlify-cdn-cache-control'), /s-maxage=86400/);
-  assert.match(res.headers.get('netlify-cdn-cache-control'), /stale-while-revalidate=604800/);
+  for (const l of data.lockers) {
+    assert.deepEqual(Object.keys(l).filter((k) => k !== 'postalCode').sort(), ['address', 'carrier', 'city', 'id', 'name']);
+    assert.equal(l.carrier, 'omniva');
+  }
+  assert.ok(Date.parse(data.updatedAt) > Date.now() - 60000);
+  // Vedajate info: hind sentides ja kas saab tellida (vaikimisi Omniva + SmartPosti).
+  assert.deepEqual(
+    data.carriers.map((c) => [c.id, c.priceCents, c.enabled]),
+    [['omniva', 299, true], ['smartpost', 299, true], ['dpd', 299, false]],
+  );
+  assert.equal(data.carriers[0].lockerCount, 7);
+  assert.equal(res.headers.get('cache-control'), 'public, max-age=900');
+  assert.match(res.headers.get('netlify-cdn-cache-control'), /s-maxage=3600/);
+  assert.match(res.headers.get('netlify-cdn-cache-control'), /stale-while-revalidate=86400/);
   assert.match(res.headers.get('content-type'), /^application\/json/);
 });
 
@@ -356,7 +381,12 @@ test('pakiautomaadid: DPD ilma DPD_LOCKERS_URL-ita → manual:true ilma veata', 
   const { handler, urls } = lockersSetup(async () => jsonResponse([]));
   const { res, data } = await call(handler, lockersReq('?carrier=dpd'));
   assert.equal(res.status, 200);
-  assert.deepEqual(data, { carrier: 'dpd', lockers: [], manual: true });
+  assert.equal(data.carrier, 'dpd');
+  assert.deepEqual(data.lockers, []);
+  assert.equal(data.manual, true);
+  assert.equal(data.error, undefined, 'seadistamata DPD ei ole viga');
+  assert.equal(data.errors, undefined);
+  assert.equal(data.carriers.find((c) => c.id === 'dpd').manual, true);
   assert.equal(urls.length, 0);
 });
 

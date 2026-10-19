@@ -53,7 +53,7 @@ const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
  * Valideerib ja normaliseerib /api/checkout päringu keha.
  *
  * Ootab: { items:[{id,qty}], code?, customer:{name,email,phone},
- *          shipping:{carrier, lockerId?, lockerName, lockerAddress?},
+ *          shipping:{carrier, lockerId?, lockerName, lockerAddress?, lockerCity?, manual?},
  *          termsAccepted:true, ageConfirmed?:true, newsletter?:bool }
  *
  * Tagastab { ok:true, order } või { ok:false, error, field }, kus `field` on
@@ -102,13 +102,16 @@ export function validateOrder(body) {
   const shipping = isObject(body.shipping) ? body.shipping : {};
   const carrierId = cleanText(shipping.carrier).toLowerCase();
   if (!Object.prototype.hasOwnProperty.call(SHIPPING.carriers, carrierId)) {
-    return fail('Vali pakiautomaadi vedaja: Omniva, SmartPost või DPD.', 'shipping.carrier');
+    return fail('Vali pakiautomaadi vedaja: Omniva, SmartPosti või DPD.', 'shipping.carrier');
   }
   const lockerName = cleanText(shipping.lockerName);
   if (lockerName.length < 2) return fail('Vali pakiautomaat, kuhu pakk saata.', 'shipping.lockerName');
   if (lockerName.length > 200) return fail('Pakiautomaadi nimi on liiga pikk. Kontrolli ja proovi uuesti.', 'shipping.lockerName');
   const lockerId = cleanText(shipping.lockerId).slice(0, 64);
   const lockerAddress = cleanText(shipping.lockerAddress).slice(0, 200);
+  const lockerCity = cleanText(shipping.lockerCity).slice(0, 100);
+  // Käsitsi sisestatud automaat (nimekirja ei saadud või klient kirjutas ise) — haldus näeb seda.
+  const manual = shipping.manual === true || !lockerId;
 
   /* ---- Nõusolekud ---- */
   if (body.termsAccepted !== true) {
@@ -125,7 +128,8 @@ export function validateOrder(body) {
   const warnings = [];
   if (rawCode && !code) warnings.push('Sooduskood ei kehti, seega jätsime selle välja.');
 
-  const totals = computeTotals(items, code);
+  // Tarnehind sõltub valitud vedajast (catalog.js SHIPPING.carriers[x].price).
+  const totals = computeTotals(items, code, carrierId);
 
   return {
     ok: true,
@@ -139,6 +143,8 @@ export function validateOrder(body) {
         lockerId,
         lockerName,
         lockerAddress,
+        lockerCity,
+        manual,
       },
       adult,
       ageConfirmed: body.ageConfirmed === true,

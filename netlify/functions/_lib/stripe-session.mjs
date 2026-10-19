@@ -155,9 +155,14 @@ function absoluteUrl(origin, path) {
 /**
  * Koostab stripe.checkout.sessions.create() parameetrid.
  * @param {object} order  validateOrder() tulemus (order)
- * @param {{origin:string, couponId?:string|null, orderId?:string}} opts
+ * @param {{origin:string, couponId?:string|null, orderId?:string, orderNumber?:string|null,
+ *          token?:string|null, expiresAt?:number|null}} opts
+ *   orderId     — andmebaasi tellimuse id (metadata.order_id ja client_reference_id)
+ *   orderNumber — inimloetav number "AGE-1001" (metadata.order_number, makse kirjeldus)
+ *   token       — tellimuse avalik tunnus: tagasisuunamised viivad /aitah?t=…&session_id=…
+ *   expiresAt   — makselehe aegumine (unix-sekundid; Stripe lubab 30 min … 24 h)
  */
-export function buildSessionParams(order, { origin, couponId = null, orderId = createOrderId() }) {
+export function buildSessionParams(order, { origin, couponId = null, orderId = createOrderId(), orderNumber = null, token = null, expiresAt = null }) {
   const { totals, customer, shipping } = order;
 
   const line_items = totals.lines.map((line) => {
@@ -180,6 +185,7 @@ export function buildSessionParams(order, { origin, couponId = null, orderId = c
 
   const metadata = toMetadata({
     order_id: orderId,
+    order_number: orderNumber || '',
     customer_name: customer.name,
     phone: customer.phone,
     carrier: shipping.carrier,
@@ -220,7 +226,7 @@ export function buildSessionParams(order, { origin, couponId = null, orderId = c
     ],
     metadata,
     payment_intent_data: {
-      description: truncate(`ÄGE tellimus ${orderId}: ${itemsReadable}`, 1000),
+      description: truncate(`ÄGE tellimus ${orderNumber || orderId}: ${itemsReadable}`, 1000),
       metadata,
       receipt_email: customer.email,
       shipping: {
@@ -242,10 +248,15 @@ export function buildSessionParams(order, { origin, couponId = null, orderId = c
         ),
       },
     },
-    success_url: `${origin}/aitah?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/ostukorv?katkestatud=1`,
+    // Tunnusega (token) tagasisuunamine: kinnitusleht laeb tellimuse /api/tellimus?t=… kaudu ja
+    // kontrollib makse oleku serveris Stripe'ist (session_id), mitte brauseri sõna peale.
+    success_url: token
+      ? `${origin}/aitah?t=${encodeURIComponent(token)}&session_id={CHECKOUT_SESSION_ID}`
+      : `${origin}/aitah?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: token ? `${origin}/ostukorv?katkestatud=1&t=${encodeURIComponent(token)}` : `${origin}/ostukorv?katkestatud=1`,
   };
 
+  if (Number.isInteger(expiresAt)) params.expires_at = expiresAt;
   if (couponId) params.discounts = [{ coupon: couponId }];
   return params;
 }

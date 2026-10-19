@@ -89,10 +89,12 @@ export const PRODUCTS = {
 export const SHIPPING = {
   price: 2.99,
   freeFrom: 30,
+  // Pakiautomaadivõrgud. `price` = tarnehind eurodes (tasuta alates freeFrom). Millised neist on
+  // ostmisel PÄRISELT valitavad, otsustab server keskkonnamuutujaga ENABLED_CARRIERS (vt .env.example).
   carriers: {
-    omniva: { id: 'omniva', name: 'Omniva pakiautomaat', eta: '1–3 tööpäeva' },
-    smartpost: { id: 'smartpost', name: 'SmartPosti pakiautomaat', eta: '1–3 tööpäeva' },
-    dpd: { id: 'dpd', name: 'DPD Pickup pakiautomaat', eta: '1–3 tööpäeva' },
+    omniva: { id: 'omniva', name: 'Omniva', label: 'Omniva pakiautomaat', price: 2.99, eta: '1–3 tööpäeva' },
+    smartpost: { id: 'smartpost', name: 'SmartPosti', label: 'SmartPosti pakiautomaat', price: 2.99, eta: '1–3 tööpäeva' },
+    dpd: { id: 'dpd', name: 'DPD', label: 'DPD Pickup pakiautomaat', price: 2.99, eta: '1–3 tööpäeva' },
   },
 };
 
@@ -104,6 +106,32 @@ export const DISCOUNT_CODES = {
 
 export const MAX_QTY_PER_ITEM = 20;
 
+/** Laoartiklid: ainult mängud. Komplektid koosnevad neist (PRODUCTS[id].includes). */
+export const GAMES = ['mida-viiu', 'oled-semu', 'vigur'];
+
+/** Komplekti sisu koos kogustega: [{ id, name, qty }] (tavalisel mängul [{ id, name, qty: 1 }]). */
+export function productContents(id) {
+  const p = Object.prototype.hasOwnProperty.call(PRODUCTS, id) ? PRODUCTS[id] : null;
+  if (!p) return [];
+  const ids = p.includes?.length ? p.includes : [p.id];
+  const out = [];
+  for (const gid of ids) {
+    const row = out.find((r) => r.id === gid);
+    if (row) row.qty += 1;
+    else out.push({ id: gid, name: PRODUCTS[gid].name, qty: 1 });
+  }
+  return out;
+}
+
+/** Mitu tükki igat mängu read sisaldavad (komplektid lahti võetuna): { 'vigur': 3, … }. */
+export function gameQuantities(items) {
+  const q = {};
+  for (const { id, qty } of items) {
+    for (const c of productContents(id)) q[c.id] = (q[c.id] || 0) + c.qty * (Number(qty) || 0);
+  }
+  return q;
+}
+
 /** Ümardab sendi täpsusega (väldib 0.1 + 0.2 probleeme). */
 export const toCents = (eur) => Math.round(eur * 100);
 
@@ -111,8 +139,9 @@ export const toCents = (eur) => Math.round(eur * 100);
  * Arvutab ostukorvi summad sentides. Kasutatakse nii brauseris kui serveris.
  * @param {{id:string, qty:number}[]} items
  * @param {string|null} code
+ * @param {string|null} [carrier] valitud pakiautomaadivõrk (tarnehinna jaoks)
  */
-export function computeTotals(items, code) {
+export function computeTotals(items, code, carrier = null) {
   const lines = [];
   for (const { id, qty } of items) {
     const p = Object.prototype.hasOwnProperty.call(PRODUCTS, id) ? PRODUCTS[id] : null;
@@ -125,7 +154,8 @@ export function computeTotals(items, code) {
   const percent = normalized ? DISCOUNT_CODES[normalized] : 0;
   const discountCents = Math.round((subtotalCents * percent) / 100);
   const afterDiscount = subtotalCents - discountCents;
-  const shippingCents = lines.length === 0 || afterDiscount >= toCents(SHIPPING.freeFrom) ? 0 : toCents(SHIPPING.price);
+  const carrierPrice = carrier && SHIPPING.carriers[carrier] ? SHIPPING.carriers[carrier].price : SHIPPING.price;
+  const shippingCents = lines.length === 0 || afterDiscount >= toCents(SHIPPING.freeFrom) ? 0 : toCents(carrierPrice);
   return {
     lines,
     code: percent ? normalized : null,

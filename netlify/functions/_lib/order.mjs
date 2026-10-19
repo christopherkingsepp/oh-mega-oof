@@ -135,7 +135,7 @@ export function validateOrder(body) {
       customer: { name, email, phone: phoneResult.phone },
       shipping: {
         carrier: carrierId,
-        carrierName: SHIPPING.carriers[carrierId].name,
+        carrierName: SHIPPING.carriers[carrierId].label,
         lockerId,
         lockerName,
         lockerAddress,

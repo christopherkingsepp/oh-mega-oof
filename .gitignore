@@ -7,3 +7,8 @@ node_modules/
 *.log
 /test-results/
 /playwright-report/
+
+# kohalik andmebaas ja mock-meilid
+.data/
+# privaatsed lähtefailid (repo on avalik!) — mängu täisfailid ei tohi git'i minna
+source/private/

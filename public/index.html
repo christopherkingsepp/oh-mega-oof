@@ -19,11 +19,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800;900&display=swap">
-  <link rel="preload" as="image" href="/assets/img/games/mida-viiu-box-front.webp" fetchpriority="high">
+  <link rel="preload" as="image" href="/assets/img/games/mida-viiu/front.webp" fetchpriority="high">
   <link rel="preload" as="image" href="/assets/img/brand/mida-viiu-logo.webp">
   <link rel="stylesheet" href="/assets/css/base.css">
   <link rel="stylesheet" href="/assets/css/overlays.css">
   <link rel="stylesheet" href="/assets/css/box3d.css">
+  <link rel="stylesheet" href="/assets/css/preview-deck.css">
   <link rel="stylesheet" href="/assets/css/home.css">
   <script type="module" src="/assets/js/main.js"></script>
   <script type="module" src="/assets/js/home.js"></script>
@@ -33,7 +34,7 @@
     "@type": "Product",
     "name": "MIDA V!!!U",
     "description": "18+ seltskonna- ja pidumäng: 85 kaarti (SH, OT, SHOT ja ÄGE boonuskaardid), 50+ shotti ja üks reegel — väljapääsu pole. Lamineeritud kaardid 91 × 61 mm.",
-    "image": ["/assets/img/games/mida-viiu-box-front.webp", "/assets/img/games/mida-viiu-cover.webp"],
+    "image": ["/assets/img/games/mida-viiu-box.webp", "/assets/img/games/mida-viiu-cover.webp"],
     "sku": "AGE-MIDA-VIIU",
     "category": "Seltskonnamängud",
     "brand": { "@type": "Brand", "name": "ÄGE" },
@@ -45,7 +46,20 @@
       "priceCurrency": "EUR",
       "availability": "https://schema.org/InStock",
       "itemCondition": "https://schema.org/NewCondition",
-      "seller": { "@type": "Organization", "name": "ÄGE" }
+      "seller": { "@type": "Organization", "name": "ÄGE" },
+      "shippingDetails": {
+        "@type": "OfferShippingDetails",
+        "shippingRate": { "@type": "MonetaryAmount", "value": "2.99", "currency": "EUR" },
+        "shippingDestination": { "@type": "DefinedRegion", "addressCountry": "EE" }
+      },
+      "hasMerchantReturnPolicy": {
+        "@type": "MerchantReturnPolicy",
+        "applicableCountry": "EE",
+        "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+        "merchantReturnDays": 14,
+        "returnMethod": "https://schema.org/ReturnByMail",
+        "returnFees": "https://schema.org/ReturnFeesCustomerResponsibility"
+      }
     }
   }
   </script>
@@ -97,13 +111,13 @@
         <div class="hero__stage">
           <div class="hero__spot" aria-hidden="true"></div>
           <div class="hero__float-cards" aria-hidden="true">
-            <img class="fcard fcard--1" src="/assets/img/cards/back-sh.webp" alt="" width="760" height="509" decoding="async">
-            <img class="fcard fcard--2" src="/assets/img/cards/back-shot.webp" alt="" width="760" height="509" decoding="async">
-            <img class="fcard fcard--3" src="/assets/img/cards/back-ot.webp" alt="" width="760" height="509" decoding="async">
-            <img class="fcard fcard--4" src="/assets/img/cards/back-age.webp" alt="" width="760" height="509" decoding="async">
+            <img class="fcard fcard--1" src="/assets/img/cards/mida-viiu/back-sh.webp" alt="" width="1074" height="720" decoding="async">
+            <img class="fcard fcard--2" src="/assets/img/cards/mida-viiu/back-shot.webp" alt="" width="1074" height="720" decoding="async">
+            <img class="fcard fcard--3" src="/assets/img/cards/mida-viiu/back-ot.webp" alt="" width="1074" height="720" decoding="async">
+            <img class="fcard fcard--4" src="/assets/img/cards/mida-viiu/back-age.webp" alt="" width="1074" height="720" decoding="async">
           </div>
           <div class="hero__box" id="hero-box">
-            <img class="hero__box-fallback" src="/assets/img/games/mida-viiu-box-front.webp" alt="MIDA V!!!U mängukarp" width="1000" height="691">
+            <img class="hero__box-fallback" src="/assets/img/games/mida-viiu-box.webp" alt="MIDA V!!!U mängukarp" width="900" height="900">
           </div>
           <div class="sticker" aria-hidden="true">
             <svg class="sticker__ring" viewBox="0 0 200 200">
@@ -165,183 +179,49 @@
     <div class="tape" aria-hidden="true">
       <div class="marquee tape__band tape__band--pink">
         <div class="marquee__track" style="--speed:40s">
-          <span>85 kaarti<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>50+ shotti<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>18+<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>Rohkem kui kaardimäng<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>Väljapääsu pole<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>Kõik joovad!<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg></span>
-          <span>85 kaarti<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>50+ shotti<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>18+<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>Rohkem kui kaardimäng<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>Väljapääsu pole<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>Kõik joovad!<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg></span>
+          <span>85 kaarti<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>50+ shotti<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>18+<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>Rohkem kui kaardimäng<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>Väljapääsu pole<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>Tee või joo<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg></span>
+          <span>85 kaarti<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>50+ shotti<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>18+<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>Rohkem kui kaardimäng<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>Väljapääsu pole<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg>Tee või joo<svg class="spark" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0z"/></svg></span>
         </div>
       </div>
       <div class="marquee tape__band tape__band--dark">
         <div class="marquee__track" style="--speed:48s">
-          <span><b>SH</b><i>Oled semu?</i><b>OT</b><i>Kes siit grupist?</i><b>SHOT</b><i>Tee või joo</i><b>ÄGE</b><i>Väljapääsu pole</i></span>
-          <span><b>SH</b><i>Oled semu?</i><b>OT</b><i>Kes siit grupist?</i><b>SHOT</b><i>Tee või joo</i><b>ÄGE</b><i>Väljapääsu pole</i></span>
+          <span><b>SH</b><i>Oled semu?</i><b>OT</b><i>Most likely to</i><b>SHOT</b><i>Tee või joo</i><b>ÄGE</b><i>Boonuskaart</i></span>
+          <span><b>SH</b><i>Oled semu?</i><b>OT</b><i>Most likely to</i><b>SHOT</b><i>Tee või joo</i><b>ÄGE</b><i>Boonuskaart</i></span>
         </div>
       </div>
     </div>
 
     <!-- =====================================================================
-         MIS KARBIS ON?
+         MIS KARBIS ON? — eelvaade (preview-deck.js, andmed preview-cards.js)
          ===================================================================== -->
-    <section class="section karbis" id="karbis" aria-labelledby="karbis-title">
-      <div class="container">
-        <div class="section-head section-head--center" data-reveal>
-          <span class="eyebrow">Mis karbis on?</span>
-          <h2 id="karbis-title">85 kaarti. 4 tüüpi. <span class="neon">Null halastust.</span></h2>
-          <p class="lead">Kaardi värv ütleb, mis sind ees ootab. Keera kaarti ja vaata, millised küsimused ja väljakutsed pakis peituvad.</p>
-        </div>
-
-        <ul class="types" role="list">
-          <li class="type" data-type="sh" data-reveal style="--delay:.05s">
-            <button class="flip" type="button" aria-pressed="false" aria-label="Keera SH-kaart ümber ja vaata näidiskaarti">
-              <span class="flip__inner">
-                <span class="flip__face flip__face--back"><img src="/assets/img/cards/back-sh.webp" alt="" width="760" height="509" loading="lazy" decoding="async"></span>
-                <span class="flip__face flip__face--front"><img src="/assets/img/cards/sh-vangi.webp" alt="SH-kaart: Mille eest ma vangi läheksin? Parim vastus saab kaardi." width="760" height="509" loading="lazy" decoding="async"></span>
-              </span>
-              <span class="flip__hint" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4.5h-4.5"/></svg>
-                Keera
-              </span>
-            </button>
-            <div class="type__body">
-              <div class="type__meta"><span class="type__tag">SH</span><span class="type__count">25 kaarti</span></div>
-              <h3>„Oled Semu?“</h3>
-              <p>Tõmbaja loeb ette küsimuse <strong>enda kohta</strong>. Kes vastab õigesti, saab kaardi endale. Vastused on aususe peale.</p>
-            </div>
-          </li>
-          <li class="type" data-type="ot" data-reveal style="--delay:.12s">
-            <button class="flip" type="button" aria-pressed="false" aria-label="Keera OT-kaart ümber ja vaata näidiskaarti">
-              <span class="flip__inner">
-                <span class="flip__face flip__face--back"><img src="/assets/img/cards/back-ot.webp" alt="" width="760" height="509" loading="lazy" decoding="async"></span>
-                <span class="flip__face flip__face--front"><img src="/assets/img/cards/ot-kaob-ara.webp" alt="OT-kaart: Kõige tõenäolisem inimene… Kes kaob ära õhtu jooksul?" width="760" height="509" loading="lazy" decoding="async"></span>
-              </span>
-              <span class="flip__hint" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4.5h-4.5"/></svg>
-                Keera
-              </span>
-            </button>
-            <div class="type__body">
-              <div class="type__meta"><span class="type__tag">OT</span><span class="type__count">25 kaarti</span></div>
-              <h3>Kõige tõenäolisemalt…</h3>
-              <p>Grupp otsustab, keda kaart kõige paremini kirjeldab. <strong>Väljavalitu saab kaardi</strong> — meeldib või mitte.</p>
-            </div>
-          </li>
-          <li class="type" data-type="shot" data-reveal style="--delay:.19s">
-            <button class="flip" type="button" aria-pressed="false" aria-label="Keera SHOT-kaart ümber ja vaata näidiskaarti">
-              <span class="flip__inner">
-                <span class="flip__face flip__face--back"><img src="/assets/img/cards/back-shot.webp" alt="" width="760" height="509" loading="lazy" decoding="async"></span>
-                <span class="flip__face flip__face--front"><img src="/assets/img/cards/shot-telefon.webp" alt="SHOT-kaart: Tee või joo. Anna oma telefon viieks minutiks teiste kasutusse." width="760" height="509" loading="lazy" decoding="async"></span>
-              </span>
-              <span class="flip__hint" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4.5h-4.5"/></svg>
-                Keera
-              </span>
-            </button>
-            <div class="type__body">
-              <div class="type__meta"><span class="type__tag">SHOT</span><span class="type__count">25 kaarti</span></div>
-              <h3>Tõde, tegu või joo</h3>
-              <p>Tee seda, mida kaart käsib, või võta üks shot. Kui teed ära, <strong>saadad shoti</strong> ükskõik kellele lauas.</p>
-            </div>
-          </li>
-          <li class="type" data-type="age" data-reveal style="--delay:.26s">
-            <button class="flip" type="button" aria-pressed="false" aria-label="Keera ÄGE-kaart ümber ja vaata näidiskaarti">
-              <span class="flip__inner">
-                <span class="flip__face flip__face--back"><img src="/assets/img/cards/back-age.webp" alt="" width="760" height="509" loading="lazy" decoding="async"></span>
-                <span class="flip__face flip__face--front"><img src="/assets/img/cards/age-pealekas.webp" alt="ÄGE boonuskaart: Pealekas läinud kolmeks ringiks." width="760" height="509" loading="lazy" decoding="async"></span>
-              </span>
-              <span class="flip__hint" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4.5h-4.5"/></svg>
-                Keera
-              </span>
-            </button>
-            <div class="type__body">
-              <div class="type__meta"><span class="type__tag">ÄGE</span><span class="type__count">5 kaarti</span></div>
-              <h3>Boonuskaart</h3>
-              <p>Grupp või mängija teeb täpselt nii, nagu kaardil kirjas. <strong>Väljapääsu pole.</strong> Pakis peidab end ka mõni „Üllatus!“-kaart.</p>
-            </div>
-          </li>
-        </ul>
-        <p class="types__swipe" aria-hidden="true">Libista, et näha kõiki tüüpe
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </p>
-
-        <div class="shot-rule" data-reveal>
-          <div class="shot-rule__eq" aria-hidden="true">
-            <span class="shot-rule__card shot-rule__card--sh"><img src="/assets/img/cards/back-sh.webp" alt="" width="760" height="509" loading="lazy" decoding="async"></span>
-            <span class="shot-rule__op">+</span>
-            <span class="shot-rule__card shot-rule__card--ot"><img src="/assets/img/cards/back-ot.webp" alt="" width="760" height="509" loading="lazy" decoding="async"></span>
-            <span class="shot-rule__op">=</span>
-            <span class="shot-rule__word">SHOT</span>
-          </div>
-          <div class="shot-rule__text">
-            <h3>Kogu kokku sõna <span class="text-gradient">SHOT</span></h3>
-            <p>Võidetud kaardid jäävad sulle. Kui sul on käes SH- ja OT-kaart, on sõna SHOT koos — ja <strong>sina otsustad, kes joob</strong>. Iga kord uuesti.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =====================================================================
-         TÕMBA KAART — mini-demo
-         ===================================================================== -->
-    <section class="section draw grain" id="tomba" aria-labelledby="draw-title">
+    <section class="section peek grain" id="karbis" aria-labelledby="peek-title">
       <div class="bg-blobs" aria-hidden="true">
-        <span style="--x:58%;--y:-10%;--s:46vw;--c:rgba(139,44,255,.38);--d:20s;--o:.7"></span>
-        <span style="--x:-10%;--y:40%;--s:40vw;--c:rgba(255,47,168,.36);--d:23s;--o:.7"></span>
+        <span style="--x:58%;--y:-10%;--s:46vw;--c:rgba(139,44,255,.34);--d:20s;--o:.7"></span>
+        <span style="--x:-10%;--y:40%;--s:40vw;--c:rgba(255,47,168,.34);--d:23s;--o:.7"></span>
       </div>
-      <div class="container draw__grid">
-        <div class="draw__head" data-reveal>
-          <span class="eyebrow">Mini-demo</span>
-          <h2 id="draw-title">Tõmba kaart. <span class="neon">Kui julged.</span></h2>
-          <p class="lead">Vajuta pakile ja vaata, mis sind ootab. Päris mängus kaardist ei pääse — siin võid veel lihtsalt uue tõmmata.</p>
+      <div class="container peek__grid">
+        <div class="section-head peek__head" data-reveal>
+          <span class="eyebrow">Mis karbis on?</span>
+          <h2 id="peek-title">85 kaarti. 4 tüüpi. <span class="neon">Null halastust.</span></h2>
+          <p class="lead">Piilu pakki: iga voor toob 10 kaarti meie avalikust valikust. Puuduta kaarti, et see ümber pöörata, ja libista järgmise juurde.</p>
         </div>
 
-        <div class="draw__table" data-reveal style="--delay:.1s">
-          <div class="draw__stage" data-draw-stage>
-            <button class="deck" type="button" data-draw-deck aria-label="Tõmba pakist kaart" aria-controls="draw-result">
-              <span class="deck__card" style="--i:5"></span>
-              <span class="deck__card" style="--i:4"></span>
-              <span class="deck__card" style="--i:3"></span>
-              <span class="deck__card" style="--i:2"></span>
-              <span class="deck__card" style="--i:1"></span>
-              <span class="deck__card deck__card--top" style="--i:0"><img src="/assets/img/cards/back-shot.webp" alt="" width="760" height="509" loading="lazy" decoding="async" data-deck-top></span>
-              <span class="deck__tap" aria-hidden="true">Vajuta</span>
-            </button>
-            <div class="slot" data-draw-slot>
-              <div class="slot__empty" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="6" width="17" height="12" rx="2.5"/><path d="M12 9.5v5M9.5 12h5"/></svg>
-                <span>Siia tuleb sinu kaart</span>
-              </div>
-            </div>
-          </div>
-          <div class="draw__result" id="draw-result" aria-live="polite" aria-atomic="true" data-draw-result>
-            <span class="type-chip" data-type="none">Pakk on segatud</span>
-            <p class="draw__text">Vajuta pakile või nupule „Tõmba kaart“.</p>
-            <p class="draw__rule">Kaardi tagakülg reedab tüübi juba enne, kui selle ümber keerad.</p>
-          </div>
+        <div class="peek__deck" data-reveal style="--delay:.08s">
+          <div data-preview-deck data-cta="mida-viiu"></div>
         </div>
 
-        <div class="draw__controls" data-reveal style="--delay:.15s">
-          <div class="draw__stats">
-            <div class="counter">
-              <span class="counter__label">Tõmmatud</span>
-              <span class="counter__value"><output data-draw-count>0</output><span class="counter__total">/85</span></span>
-              <span class="counter__bar" aria-hidden="true"><span data-draw-bar></span></span>
+        <div class="peek__legend" data-reveal style="--delay:.12s">
+          <ul class="pvd-legend" role="list" data-pvd-legend aria-label="Kaarditüübid"></ul>
+          <div class="shot-rule">
+            <div class="shot-rule__eq" aria-hidden="true">
+              <span class="shot-rule__card"><img src="/assets/img/cards/mida-viiu/back-sh.webp" alt="" width="1074" height="720" loading="lazy" decoding="async"></span>
+              <span class="shot-rule__op">+</span>
+              <span class="shot-rule__card"><img src="/assets/img/cards/mida-viiu/back-ot.webp" alt="" width="1074" height="720" loading="lazy" decoding="async"></span>
+              <span class="shot-rule__op">=</span>
+              <span class="shot-rule__word">SHOT</span>
             </div>
-            <div class="shot-meter" data-shot-meter>
-              <span class="shot-meter__label">Kogu SHOT</span>
-              <span class="shot-meter__letters" aria-hidden="true"><span data-l="S">S</span><span data-l="H">H</span><span data-l="O">O</span><span data-l="T">T</span></span>
-              <span class="sr-only" data-shot-sr>Sõna SHOT: ühtegi tähte pole veel kogutud.</span>
-            </div>
+            <p class="shot-rule__text" data-shot-rule>Kaardipakis on kolme sorti kaarte: SH, OT ja SHOT. Iga kord, kui saad kaartidest kokku sõna SHOT, võid kellelegi shoti saata.</p>
           </div>
-          <div class="draw__buttons">
-            <button class="btn btn--primary" type="button" data-draw-btn>
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="12" height="15" rx="2" transform="rotate(-10 9 14.5)"/><rect x="9" y="3" width="12" height="15" rx="2"/></svg>
-              <span data-draw-label>Tõmba kaart</span>
-            </button>
-            <button class="btn btn--ghost" type="button" data-shuffle-btn>
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h3.2c2 0 3.2 1 4.3 2.6l2.9 4.8c1.1 1.6 2.3 2.6 4.3 2.6H21"/><path d="M3 17h3.2c1.3 0 2.3-.4 3.1-1.2"/><path d="M14.6 8.2c.8-.8 1.8-1.2 3.1-1.2H21"/><path d="m18 4 3 3-3 3M18 14l3 3-3 3"/></svg>
-              Sega pakk
-            </button>
-          </div>
-          <p class="draw__note">Siin on valik leebemaid kaarte. Ülejäänud on liiga vürtsikad, et neid internetis näidata — need ootavad karbis.</p>
         </div>
       </div>
     </section>
@@ -357,9 +237,9 @@
             <h2 id="games-title">Kolm mängu. <span class="text-gradient">Lõputult õhtuid.</span></h2>
             <p class="lead">Üks pidudeks, kaks kõigiks muudeks kordadeks — sõpradega, perega ja kõigiga, keda tahad paremini tundma õppida.</p>
           </div>
-          <a class="games__deal" href="#komplekt" data-reveal style="--delay:.1s">
-            <span class="games__deal-tag">Komplektid</span>
-            <span>Kõik 3 mängu <strong data-price="komplekt-koik">33,00&nbsp;€</strong></span>
+          <a class="games__deal" href="/kataloog" data-reveal style="--delay:.1s">
+            <span class="games__deal-tag">Kataloog</span>
+            <span>Kõik mängud ja komplektid</span>
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
         </div>
@@ -387,41 +267,42 @@
         </div>
 
         <div class="bundles__grid">
-          <article class="bundle bundle--all" data-reveal aria-labelledby="bundle-all-title">
+          <article class="bundle bundle--all" id="komplekt-koik" data-reveal aria-labelledby="bundle-all-title">
             <div class="bundle__visual">
-              <div class="fan fan--3" data-fan="komplekt-koik"></div>
-              <span class="save-burst" aria-hidden="true"><span>Säästad</span><strong data-bundle-save="komplekt-koik">10,40&nbsp;€</strong></span>
+              <img class="bundle__img" src="/assets/img/games/komplekt-koik.webp" alt="Komplekt „Kõik 3 mängu“: MIDA V!!!U, Oled Semu? ja Vigur karbid koos" width="900" height="900" loading="lazy" decoding="async">
             </div>
             <div class="bundle__body">
-              <span class="badge">Parim diil</span>
+              <div class="bundle__badges"><span class="badge">Parim diil</span><span class="badge badge--18">18+</span></div>
               <h3 id="bundle-all-title">Kõik 3 mängu</h3>
-              <p class="bundle__desc">MIDA V!!!U + Oled Semu? + Vigur. Täiskomplekt igaks olukorraks — ja lisaks parim hind, mida meilt saad.</p>
+              <p class="bundle__contents" data-contents="komplekt-koik">1× MIDA V!!!U, 1× Oled Semu?, 1× Vigur</p>
+              <p class="bundle__desc">Täiskomplekt igaks olukorraks: üks pidudeks, kaks kõigiks muudeks kordadeks.</p>
               <div class="bundle__price">
-                <s data-bundle-old="komplekt-koik" aria-label="Tavahind">43,40&nbsp;€</s>
                 <strong data-price="komplekt-koik">33,00&nbsp;€</strong>
+                <span class="bundle__was">Eraldi ostes <s data-bundle-old="komplekt-koik">43,40&nbsp;€</s></span>
               </div>
-              <button class="btn btn--primary btn--lg bundle__btn" type="button" data-add-to-cart="komplekt-koik">
+              <p class="bundle__save">Säästad <b data-bundle-save="komplekt-koik">10,40&nbsp;€</b></p>
+              <button class="btn btn--primary btn--lg bundle__btn" type="button" data-add-to-cart="komplekt-koik" aria-label="Lisa ostukorvi: Kõik 3 mängu">
                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h15l-1.5 9h-12z"/><path d="M6 7 5 3H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
                 Lisa ostukorvi
               </button>
-              <p class="bundle__fine">Sisaldab 18+ mängu MIDA V!!!U.</p>
             </div>
           </article>
 
-          <article class="bundle bundle--duo" data-reveal style="--delay:.1s" aria-labelledby="bundle-duo-title">
+          <article class="bundle bundle--duo" id="komplekt-semu-vigur" data-reveal style="--delay:.1s" aria-labelledby="bundle-duo-title">
             <div class="bundle__visual">
-              <div class="fan fan--2" data-fan="komplekt-semu-vigur"></div>
-              <span class="save-burst save-burst--alt" aria-hidden="true"><span>Säästad</span><strong data-bundle-save="komplekt-semu-vigur">5,90&nbsp;€</strong></span>
+              <img class="bundle__img" src="/assets/img/games/komplekt-semu-vigur.webp" alt="Komplekt „Oled Semu? + Vigur“: kaks mängukarpi koos" width="900" height="900" loading="lazy" decoding="async">
             </div>
             <div class="bundle__body">
-              <span class="badge badge--outline">Kogu perele</span>
+              <div class="bundle__badges"><span class="badge badge--outline">Kogu perele</span></div>
               <h3 id="bundle-duo-title">Oled Semu? + Vigur</h3>
+              <p class="bundle__contents" data-contents="komplekt-semu-vigur">1× Oled Semu?, 1× Vigur</p>
               <p class="bundle__desc">Kaks klassikut, mis sobivad igasse seltskonda — ka siis, kui vanaema mängib kaasa.</p>
               <div class="bundle__price">
-                <s data-bundle-old="komplekt-semu-vigur" aria-label="Tavahind">25,90&nbsp;€</s>
                 <strong data-price="komplekt-semu-vigur">20,00&nbsp;€</strong>
+                <span class="bundle__was">Eraldi ostes <s data-bundle-old="komplekt-semu-vigur">25,90&nbsp;€</s></span>
               </div>
-              <button class="btn btn--white btn--lg bundle__btn" type="button" data-add-to-cart="komplekt-semu-vigur">
+              <p class="bundle__save">Säästad <b data-bundle-save="komplekt-semu-vigur">5,90&nbsp;€</b></p>
+              <button class="btn btn--white btn--lg bundle__btn" type="button" data-add-to-cart="komplekt-semu-vigur" aria-label="Lisa ostukorvi: Oled Semu? + Vigur">
                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h15l-1.5 9h-12z"/><path d="M6 7 5 3H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
                 Lisa ostukorvi
               </button>
@@ -449,7 +330,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3.2c2 0 3.2 1 4.3 2.6l2.9 4.8c1.1 1.6 2.3 2.6 4.3 2.6H21"/><path d="M3 17h3.2c1.3 0 2.3-.4 3.1-1.2"/><path d="M14.6 8.2c.8-.8 1.8-1.2 3.1-1.2H21"/><path d="m18 4 3 3-3 3M18 14l3 3-3 3"/></svg>
             </span>
             <h3>Sega pakk</h3>
-            <p>Sega kaardid, pane pakk laua keskele ja võtke ringis istet. Mängida saab 3–12 inimest.</p>
+            <p>Sega kaardid, pane pakk kirjaga allapoole laua keskele ja võtke ringis istet.</p>
           </li>
           <li class="step" data-reveal style="--delay:.08s">
             <span class="step__num" aria-hidden="true">02</span>
@@ -457,7 +338,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="12" height="15" rx="2" transform="rotate(-10 9 14.5)"/><rect x="9" y="3" width="12" height="15" rx="2"/></svg>
             </span>
             <h3>Tõmba kaart</h3>
-            <p>Kordamööda tõmbab igaüks ühe kaardi ja loeb selle valjult ette. Värv ütleb, mis tüüpi väljakutse ootab.</p>
+            <p>Kordamööda tõmbab igaüks ühe kaardi ja loeb selle valjult ette. Kaardi tagakülg ütleb juba enne, mis tüüpi kaart see on.</p>
           </li>
           <li class="step" data-reveal style="--delay:.16s">
             <span class="step__num" aria-hidden="true">03</span>
@@ -465,7 +346,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16v10.5H10l-5 4v-4H4z"/><path d="M10 9.2a2 2 0 1 1 2.8 1.8c-.5.3-.8.7-.8 1.2M12 14h.01"/></svg>
             </span>
             <h3>Vasta, vali või tee</h3>
-            <p><b class="k k--sh">SH</b>-kaardil vastavad teised sinu kohta, <b class="k k--ot">OT</b>-kaardil valib grupp süüdlase, <b class="k k--shot">SHOT</b>-kaardil teed ülesande või jood. <b class="k k--age">ÄGE</b>-kaardi eest ei pääse keegi.</p>
+            <p><b class="k k--sh">SH</b>: küsid küsimuse enda kohta, õige vastaja saab kaardi. <b class="k k--ot">OT</b>: grupp valib, keda kaart kirjeldab. <b class="k k--shot">SHOT</b>: tee ülesanne või võta shot. <b class="k k--age">ÄGE</b>: tee nii, nagu kaardil kirjas.</p>
           </li>
           <li class="step" data-reveal style="--delay:.24s">
             <span class="step__num" aria-hidden="true">04</span>
@@ -473,7 +354,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12l-1.6 15.2a2 2 0 0 1-2 1.8H9.6a2 2 0 0 1-2-1.8z"/><path d="M6.6 9.5h10.8"/></svg>
             </span>
             <h3>Kogu SHOT ja saada shotte</h3>
-            <p>Võidetud SH- ja OT-kaardid moodustavad koos sõna SHOT. Iga kord, kui see on koos, saadad kellelegi shoti.</p>
+            <p>Iga kord, kui saad kaartidest kokku sõna SHOT, võid kellelegi shoti saata. SH + OT = SHOT.</p>
           </li>
         </ol>
 
@@ -500,46 +381,21 @@
             <span class="eyebrow">Meie lugu</span>
             <h2 id="story-title">Õpilasfirmast <span class="neon">sinu peole</span></h2>
             <p class="lead">ÄGE ehk Äärmiselt Geniaalne Ettevõtmine on õpilasfirmast kasvanud Tallinna noorte tiim. Teeme mänge, et inimesed paneksid telefonid käest ja räägiksid päriselt.</p>
-            <ol class="timeline" role="list">
-              <li>
-                <span class="timeline__when">2024/25</span>
-                <p>Õpilasfirmana müüme õppeaasta jooksul üle 200 mängu — kaubaks lähevad <strong>Oled Semu?</strong> ja bluffimäng <strong>Vigur</strong>.</p>
-              </li>
-              <li>
-                <span class="timeline__when">JA Eesti laat</span>
-                <p>Rocca al Mare laadal võidame auhinna <strong>„Sotsiaalmeedia täht“</strong> ja meie TikToki videod koguvad kuni 25 000 vaatamist.</p>
-              </li>
-              <li class="is-now">
-                <span class="timeline__when">Nüüd</span>
-                <p>Toome välja oma kõige julgema mängu: <strong>MIDA V!!!U</strong>.</p>
-              </li>
-            </ol>
           </div>
-
-          <div class="stats" role="list">
-            <div class="stat" role="listitem" data-reveal style="--delay:.05s">
-              <span class="stat__num" aria-hidden="true"><span data-count="200">200</span>+</span>
-              <span class="sr-only">Üle 200</span>
-              <span class="stat__label">müüdud mängu</span>
-            </div>
-            <div class="stat" role="listitem" data-reveal style="--delay:.12s">
-              <span class="stat__num" aria-hidden="true"><span data-count="25">25</span>k</span>
-              <span class="sr-only">Kuni 25 000</span>
-              <span class="stat__label">vaatamist ühel TikToki videol</span>
-            </div>
-            <div class="stat" role="listitem" data-reveal style="--delay:.19s">
-              <span class="stat__num" aria-hidden="true"><span data-count="3">3</span></span>
-              <span class="sr-only">3</span>
-              <span class="stat__label">mängu, mida ise armastame</span>
-            </div>
-            <div class="stat stat--award" role="listitem" data-reveal style="--delay:.26s">
-              <span class="stat__trophy" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3.5h8v5.5a4 4 0 0 1-8 0z"/><path d="M8 5.5H5.2a3 3 0 0 0 3 4.3M16 5.5h2.8a3 3 0 0 1-3 4.3"/><path d="M12 13v3.5M9 20.5h6M10 16.5h4l.5 4h-5z"/></svg>
-              </span>
-              <span class="stat__award">„Sotsiaalmeedia täht“</span>
-              <span class="stat__label">JA Eesti õpilasfirmade laat</span>
-            </div>
-          </div>
+          <ol class="timeline" role="list" data-reveal style="--delay:.08s">
+            <li>
+              <span class="timeline__when">2024/25</span>
+              <p>Õpilasfirmana müüme õppeaasta jooksul üle 200 mängu — kaubaks lähevad <strong>Oled Semu?</strong> ja bluffimäng <strong>Vigur</strong>.</p>
+            </li>
+            <li>
+              <span class="timeline__when">JA Eesti laat</span>
+              <p>Rocca al Mare laadal võidame auhinna <strong>„Sotsiaalmeedia täht“</strong> ja meie TikToki videod koguvad kuni 25 000 vaatamist.</p>
+            </li>
+            <li class="is-now">
+              <span class="timeline__when">Nüüd</span>
+              <p>Toome välja oma kõige julgema mängu: <strong>MIDA V!!!U</strong>.</p>
+            </li>
+          </ol>
         </div>
       </div>
     </section>
@@ -552,7 +408,7 @@
         <div class="faq-preview__head" data-reveal>
           <span class="eyebrow">KKK</span>
           <h2 id="faq-title">Küsimusi? <span class="neon">Vastused.</span></h2>
-          <p class="lead">Kõige sagedamini küsitu käib tarne, tagastamise ja soodustuste kohta. Ülejäänu leiad KKK lehelt.</p>
+          <p class="lead">Kõige sagedamini küsitakse tarne, taganemise ja soodustuste kohta. Ülejäänu leiad KKK lehelt.</p>
           <a class="btn btn--ghost" href="/kkk">
             Kõik küsimused
             <svg class="icon arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -569,7 +425,7 @@
           <details class="faq" name="kkk-eelvaade">
             <summary><span>Kas mängu saab tagastada?</span><span class="faq__icon" aria-hidden="true"></span></summary>
             <div class="faq__body">
-              <p>Ei, mänge me tagasi ei võta — kõik ostud on lõplikud, nii et vali julgelt. Kui pakk saabub aga katkisena või millestki on puudu, kirjuta meile ja <strong>vahetame toote kiiresti välja</strong>.</p>
+              <p>Jah. Sul on <strong>14-päevane taganemisõigus</strong> alates paki kättesaamisest — põhjust pole vaja öelda. Esita avaldus <a href="/taganemine">taganemise vormiga</a> või kirjuta meile; tagastamise otsekulu kannab ostja. Täpsemalt loe <a href="/tingimused#taganemine">müügitingimustest</a>. Kui pakk saabub katkisena või millestki on puudu, kirjuta meile ja lahendame selle kiiresti.</p>
             </div>
           </details>
           <details class="faq" name="kkk-eelvaade">
@@ -609,7 +465,7 @@
             Telli MIDA V!!!U — <span data-price="mida-viiu">17,50&nbsp;€</span>
             <svg class="icon arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
-          <a class="btn btn--ghost btn--lg" href="#mangud">Vaata kõiki mänge</a>
+          <a class="btn btn--ghost btn--lg" href="/kataloog">Vaata kõiki mänge</a>
         </div>
         <div class="final__social" data-reveal style="--delay:.24s">
           <span>Pidu jätkub meie kanalites</span>
@@ -627,16 +483,6 @@
       </div>
     </section>
   </main>
-
-  <!-- Mobiilis kleepuv osturiba (näidatakse, kui hero nupud on vaatest väljas) -->
-  <div class="buybar" data-buybar aria-hidden="true">
-    <img src="/assets/img/games/mida-viiu-box-front.webp" alt="" width="64" height="44" loading="lazy" decoding="async">
-    <div class="buybar__info">
-      <strong>MIDA V!!!U</strong>
-      <span data-price="mida-viiu">17,50&nbsp;€</span>
-    </div>
-    <button class="btn btn--primary btn--sm" type="button" data-add-to-cart="mida-viiu" tabindex="-1">Lisa ostukorvi</button>
-  </div>
 
   <div data-site-footer></div>
 </body>

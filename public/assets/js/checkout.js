@@ -1,7 +1,8 @@
-// Ostukorv + kassa (/ostukorv): korvi read, sooduskood, pakiautomaadi valija,
-// kontaktvorm, kinnitused, kokkuvõte ja makse (POST /api/checkout -> Stripe).
+// Ostukorv + kassa (/ostukorv): korvi read, sooduskood, pakiautomaadi valija (kõik võrgud ühes
+// nimekirjas + filter), kontaktvorm, kinnitused, kokkuvõte ja makse (POST /api/checkout -> Stripe).
+// Tagasitulek Stripe'ist: /ostukorv?katkestatud=1&t=TOKEN → GET /api/tellimus → „Jätka makset“.
 import { Cart } from './cart.js';
-import { PRODUCTS, SHIPPING, MAX_QTY_PER_ITEM, computeTotals, formatEur, toCents } from './catalog.js';
+import { PRODUCTS, SHIPPING, MAX_QTY_PER_ITEM, computeTotals, formatEur, toCents, productContents, gameQuantities } from './catalog.js';
 import { ICONS, toast, esc, freeShippingHTML } from './layout.js';
 import { isValidEmail } from './validate.js'; // sama reegel mis serveris
 
@@ -14,10 +15,12 @@ const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
 const MOBILE = window.matchMedia('(max-width: 980px)');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const FORM_KEY = 'age_checkout_v1';
-const LOCKER_KEY = 'age_lockers_v1_';
-const LOCKER_TTL = 6 * 60 * 60 * 1000;
-const LAST_ORDER_KEY = 'age_last_order_v1';
+const FORM_KEY = 'age_checkout_v2';
+const OLD_FORM_KEY = 'age_checkout_v1';
+const LOCKER_KEY = 'age_lockers_v2_all';
+const LOCKER_TTL = 30 * 60 * 1000;
+const LAST_ORDER_KEY = 'age_last_order_v2'; // {orderNumber, token, expiresAt, at} — „Jätka makset“ jaoks
+const TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
 const MAX_RESULTS = 50;
 
 const store = {
@@ -38,8 +41,7 @@ const store = {
   },
 };
 
-const CARRIER_LABEL = { omniva: 'Omniva', smartpost: 'SmartPost', dpd: 'DPD Pickup' };
-// Omastav kääne lausete jaoks („Vali SmartPosti pakiautomaat“, „Laadin SmartPosti automaate…“).
+// Omastav kääne lausete jaoks („Otsi SmartPosti pakiautomaati“).
 const CARRIER_GEN = { omniva: 'Omniva', smartpost: 'SmartPosti', dpd: 'DPD' };
 const MANUAL_PLACEHOLDER = {
   omniva: 'nt Tartu Lõunakeskuse pakiautomaat, Ringtee 75, Tartu',
@@ -57,17 +59,17 @@ const SVG = {
   box: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>',
   go: '<svg class="lk__opt-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>',
   truck: '<svg class="co-upsell__truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.5h11v10h-11z"/><path d="M13.5 10h4.2l3.3 3.4v3.1h-7.5"/><circle cx="6.5" cy="17.5" r="1.9"/><circle cx="17" cy="17.5" r="1.9"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.2v.01"/></svg>',
+  arrow: '<svg class="icon arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
   spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21.5h4"/><path d="M12 2.5a6.5 6.5 0 0 0-4 11.6c.8.6 1.2 1.5 1.2 2.4V17h5.6v-.5c0-.9.4-1.8 1.2-2.4A6.5 6.5 0 0 0 12 2.5z"/></svg>',
 };
 
-/** Komplekti pisipilt: karbid lehvikuna (muidu näeks „Kõik 3 mängu“ välja nagu MIDA V!!!U). */
-function stackImgs(p, size) {
-  return p.includes
-    .map((id) => PRODUCTS[id])
-    .filter(Boolean)
-    .map((x) => `<img src="${esc(x.image)}" alt="" width="${size[0]}" height="${size[1]}" loading="lazy" decoding="async">`)
-    .join('');
-}
+/** Komplekti sisu tekstina: „Oled Semu? + Vigur“ (kogusega, kui sama mäng on mitu korda). */
+const contentsText = (id) =>
+  productContents(id)
+    .map((c) => (c.qty > 1 ? `${c.name} ×${c.qty}` : c.name))
+    .join(' + ');
 
 /** Eemaldab diakriitikud (ä→a, õ→o, ü→u, ö→o, š→s, ž→z) ja teeb väiketähtedeks. */
 const norm = (s) =>
@@ -101,8 +103,9 @@ const el = {
   codeName: $('[data-code-name]'),
   codeDesc: $('[data-code-desc]'),
   upsell: $('[data-upsell]'),
-  carriers: $('.co-carriers'),
+  filters: $('[data-lk-filters]'),
   carrierError: $('#carrier-error'),
+  stock: $('[data-stock]'),
   locker: $('[data-locker]'),
   lkStatus: $('[data-lk-status]'),
   name: $('#f-name'),
@@ -130,11 +133,15 @@ const el = {
 };
 
 const state = {
-  carrier: null,
-  lockerMode: 'idle', // idle | loading | list | manual | error
+  filter: 'all', // 'all' | 'omniva' | 'smartpost' | 'dpd'
+  lockerMode: 'loading', // loading | list | manual (nimekirja pole) | error (päring ebaõnnestus)
+  carrierMeta: {}, // id -> {id, name, label, priceCents, eta, enabled, lockerCount, stale?, manual?}
   lockers: [],
-  locker: null, // {id, name, city, address}
+  locker: null, // {id, carrier, name, city, address, postalCode}
+  stale: false,
+  updatedAt: null,
   manual: '',
+  shortages: [], // 409: [{id, name, available}]
   query: '',
   results: [],
   activeIndex: -1,
@@ -154,11 +161,9 @@ const state = {
 /* =========================================================================
    Ostukorvi read
    ========================================================================= */
+/** Tootepilt: ruudukujuline läbipaistev karp (komplektidel oma kompositsioon). */
 function thumbHTML(p) {
-  if (p.includes?.length) {
-    return `<a class="co-thumb co-thumb--stack co-thumb--stack-${p.includes.length}" href="${esc(p.url)}" tabindex="-1" aria-hidden="true">${stackImgs(p, [1000, 691])}</a>`;
-  }
-  return `<a class="co-thumb" href="${esc(p.url)}" style="--g:${esc(p.gradient)}" tabindex="-1" aria-hidden="true"><img src="${esc(p.image)}" alt="" width="1000" height="691" loading="lazy" decoding="async"></a>`;
+  return `<a class="co-thumb" href="${esc(p.url)}" style="--a:${esc(p.accent || '#ff2fa8')}" tabindex="-1" aria-hidden="true"><img src="${esc(p.image)}" alt="" width="240" height="240" loading="lazy" decoding="async"></a>`;
 }
 
 function createLine(line, index) {
@@ -178,7 +183,9 @@ function createLine(line, index) {
           ${badges ? `<div class="co-line__badges">${badges}</div>` : ''}
           <h3 class="co-line__name"><a href="${esc(p.url)}">${esc(p.name)}</a></h3>
           <p class="co-line__tag">${esc(p.tagline)}</p>
+          ${p.includes?.length ? `<p class="co-line__contents">Sisaldab: ${esc(contentsText(p.id))}</p>` : ''}
           <p class="co-line__unit"><span data-line-unit></span> / tk</p>
+          <p class="co-line__stock" data-line-stock hidden></p>
           <button class="co-line__remove" type="button" data-line-remove>${SVG.trash}Eemalda<span class="sr-only"> ${esc(p.name)}</span></button>
         </div>
         <div class="qty" role="group" aria-label="Kogus: ${esc(p.name)}">
@@ -371,9 +378,9 @@ function renderUpsell() {
   const items = Cart.items();
   const covered = new Set(items.flatMap((i) => [i.id, ...(PRODUCTS[i.id]?.includes || [])]));
   const cands = UPSELL_IDS.filter((id) => !covered.has(id)).slice(0, 2);
-  const t = Cart.totals();
+  const t = currentTotals();
   const info = cands.map((id) => {
-    const unlocks = t.shippingCents > 0 && computeTotals([...items, { id, qty: 1 }], Cart.code()).shippingCents === 0;
+    const unlocks = t.shippingCents > 0 && computeTotals([...items, { id, qty: 1 }], Cart.code(), currentCarrier()).shippingCents === 0;
     return { id, unlocks };
   });
   const key = info.map((i) => `${i.id}${i.unlocks ? '+' : ''}`).join(',');
@@ -392,7 +399,7 @@ function renderUpsell() {
         .map(({ id, unlocks }) => {
           const p = PRODUCTS[id];
           return `<div class="co-mini">
-            <a href="${esc(p.url)}" tabindex="-1" aria-hidden="true"><img src="${esc(p.image)}" alt="" width="64" height="44" loading="lazy"></a>
+            <a href="${esc(p.url)}" tabindex="-1" aria-hidden="true"><img src="${esc(p.image)}" alt="" width="240" height="240" loading="lazy"></a>
             <div>
               <div class="co-mini__name"><a href="${esc(p.url)}">${esc(p.name)}</a></div>
               <div class="co-mini__price">${formatEur(toCents(p.price))}</div>
@@ -501,6 +508,11 @@ function payLabel(t) {
   return `Maksa ${formatEur(t.totalCents)}`;
 }
 
+/** Kassa summad koos valitud vedaja tarnehinnaga (sama arvutus mis serveris). */
+function currentTotals() {
+  return computeTotals(Cart.items(), Cart.code(), currentCarrier());
+}
+
 function renderSummary(t) {
   const n = Cart.count();
   el.sumCount.textContent = plural(n, 'toode', 'toodet');
@@ -508,8 +520,10 @@ function renderSummary(t) {
     .map(
       ({ product: p, qty, totalCents }) => `
       <li class="co-sum-line">
-        <span class="co-sum-line__img${p.includes?.length ? ' co-sum-line__img--stack' : ''}">${p.includes?.length ? `<span class="co-sum-stack">${stackImgs(p, [58, 40])}</span>` : `<img src="${esc(p.image)}" alt="" width="58" height="40" loading="lazy">`}${qty > 1 ? `<b aria-hidden="true">${qty}</b>` : ''}</span>
-        <span class="co-sum-line__name">${esc(p.name)}${qty > 1 ? `<span class="sr-only">, ${qty} tk</span>` : ''}</span>
+        <span class="co-sum-line__img"><img src="${esc(p.image)}" alt="" width="240" height="240" loading="lazy">${qty > 1 ? `<b aria-hidden="true">${qty}</b>` : ''}</span>
+        <span class="co-sum-line__name">${esc(p.name)}${qty > 1 ? `<span class="sr-only">, ${qty} tk</span>` : ''}${
+          p.includes?.length ? `<small class="co-sum-line__contents">${esc(contentsText(p.id))}</small>` : ''
+        }</span>
         <span class="co-sum-line__price">${formatEur(totalCents)}</span>
       </li>`,
     )
@@ -520,8 +534,9 @@ function renderSummary(t) {
     el.sumDiscountLabel.textContent = `Soodustus ${t.code} (−${t.percent}%)`;
     el.sumDiscount.textContent = `−${formatEur(t.discountCents)}`;
   }
-  el.sumShipLabel.textContent = state.carrier ? `Tarne · ${CARRIER_LABEL[state.carrier]}` : 'Tarne pakiautomaati';
-  el.sumShip.textContent = t.shippingCents ? formatEur(t.shippingCents) : 'Tasuta';
+  const carrier = currentCarrier();
+  el.sumShipLabel.textContent = carrier ? `Tarne · ${carrierInfo(carrier).name}` : 'Tarne pakiautomaati';
+  el.sumShip.textContent = priceText(t.shippingCents);
   el.sumShip.classList.toggle('is-free', !t.shippingCents);
   el.sumFree.innerHTML =
     t.freeShippingRemainingCents > 0
@@ -529,93 +544,170 @@ function renderSummary(t) {
       : '';
   animateTotal(t.totalCents);
   if (!state.submitting) $$('[data-pay-label]').forEach((s) => (s.textContent = payLabel(t)));
-  // Vedajakaartide hind
-  $$('[data-ship-price]').forEach((s) => {
-    s.textContent = t.shippingCents ? formatEur(t.shippingCents) : 'Tasuta';
-    s.classList.toggle('is-free', !t.shippingCents);
+  // Hinnad kiipidel, nimekirjas ja valitud automaadi kaardil (tasuta tarne piir võib muutuda).
+  updateFilters();
+  const pp = $('[data-picked-price]');
+  if (pp && carrier) {
+    const c = shipCents(carrier);
+    const txt = pp.closest('.lk-picked') ? (c ? `Tarne ${formatEur(c)}` : 'Tarne tasuta') : priceText(c);
+    if (pp.textContent !== txt) pp.textContent = txt;
+    pp.classList.toggle('is-free', !c);
+  }
+  if (!$('[data-lk-pop]')?.hidden) renderOptionPrices();
+}
+
+/** Uuenda avatud nimekirja hinnad ilma valikut kaotamata. */
+function renderOptionPrices() {
+  $$('.lk__opt').forEach((opt) => {
+    const l = state.results[Number(opt.dataset.index)];
+    const p = $('.lk__opt-price', opt);
+    if (!l || !p) return;
+    const c = shipCents(l.carrier);
+    p.textContent = priceText(c);
+    p.classList.toggle('is-free', !c);
   });
 }
 
 /* =========================================================================
-   Pakiautomaadid
+   Pakiautomaadid: üks ühtne nimekiri (GET /api/pakiautomaadid?carrier=all),
+   võrgu filter (Kõik / Omniva / SmartPosti / DPD) ja otsitav combobox.
+   Vedaja = valitud automaadi vedaja (käsitsi sisestusel valitud võrk).
    ========================================================================= */
+const CARRIER_IDS = Object.keys(SHIPPING.carriers);
+// Kui nimekirja üldse ei saadud, eeldame serveri vaikimisi ENABLED_CARRIERS väärtust.
+// Server kontrollib vedajat niikuinii ise (400, field 'shipping.carrier').
+const DEFAULT_ENABLED = ['omniva', 'smartpost'];
+
+/** Väike vedajamärk (nimekirja ridades ja valitud automaadi kaardil). */
+function markHTML(id, cls = '') {
+  const inner = id === 'dpd' ? SVG.box : id === 'smartpost' ? 'S' : id === 'omniva' ? 'O' : SVG.pin;
+  return `<span class="lk-mark lk-mark--${esc(id)}${cls ? ` ${cls}` : ''}" aria-hidden="true">${inner}</span>`;
+}
+
+function carrierInfo(id) {
+  const cat = SHIPPING.carriers[id] || {};
+  const api = state.carrierMeta[id];
+  return {
+    id,
+    name: api?.name || cat.name || id,
+    label: api?.label || cat.label || id,
+    eta: api?.eta || cat.eta || '1–3 tööpäeva',
+    enabled: api ? api.enabled !== false : DEFAULT_ENABLED.includes(id),
+    count: state.lockers.reduce((n, l) => n + (l.carrier === id ? 1 : 0), 0),
+    stale: Boolean(api?.stale),
+  };
+}
+
+const enabledCarriers = () => CARRIER_IDS.filter((id) => carrierInfo(id).enabled);
+const orList = (arr) => (arr.length > 1 ? `${arr.slice(0, -1).join(', ')} või ${arr.at(-1)}` : arr[0] || '');
+
+/** Tarnehind sentides selle vedajaga (sama arvutus mis serveris: catalog.js computeTotals). */
+const shipCents = (carrier) => computeTotals(Cart.items(), Cart.code(), carrier || null).shippingCents;
+const priceText = (cents) => (cents ? formatEur(cents) : 'Tasuta');
+
+const lockersFor = (filter) => (filter === 'all' ? state.lockers : state.lockers.filter((l) => l.carrier === filter));
+
+/** Käsitsi sisestus: nimekirja pole üldse VÕI valitud võrgu nimekiri puudub. */
+function manualMode() {
+  if (state.lockerMode === 'manual' || state.lockerMode === 'error') return true;
+  return state.lockerMode === 'list' && state.filter !== 'all' && !lockersFor(state.filter).length;
+}
+
+function currentCarrier() {
+  if (state.locker) return state.locker.carrier;
+  if (manualMode() && state.filter !== 'all' && carrierInfo(state.filter).enabled) return state.filter;
+  return null;
+}
+
+/** „Ringtee 75, 50501 Tartu“ */
+function lockerAddress(l) {
+  const place = [l.postalCode, l.city].filter(Boolean).join(' ');
+  return [l.address, place].filter(Boolean).join(', ');
+}
+
 function prepareLockers(list) {
   const clean = list
-    .filter((l) => l && l.name)
+    .filter((l) => l && l.name && Object.prototype.hasOwnProperty.call(SHIPPING.carriers, l.carrier))
     .map((l) => {
-      const city = String(l.city || '').trim() || 'Muu';
+      const city = String(l.city || '').trim();
+      const address = String(l.address || '').trim();
+      const postalCode = String(l.postalCode || '').trim();
       return {
         id: String(l.id ?? '').trim(),
+        carrier: l.carrier,
         name: String(l.name).trim(),
         city,
-        address: String(l.address || '').trim(),
-        _n: norm(`${l.name} ${city} ${l.address || ''}`),
+        address,
+        postalCode,
+        _g: city || 'Muu',
+        _n: norm(`${l.name} ${city} ${address} ${postalCode} ${SHIPPING.carriers[l.carrier].name}`),
         _c: norm(city),
       };
     });
-  clean.sort((a, b) => a.name.localeCompare(b.name, 'et', { numeric: true }));
+  clean.sort((a, b) => a.name.localeCompare(b.name, 'et', { numeric: true }) || a.carrier.localeCompare(b.carrier));
   const cityCount = new Map();
-  clean.forEach((l) => cityCount.set(l.city, (cityCount.get(l.city) || 0) + 1));
-  clean.forEach((l) => (l._cc = cityCount.get(l.city)));
+  clean.forEach((l) => cityCount.set(l._g, (cityCount.get(l._g) || 0) + 1));
+  clean.forEach((l) => (l._cc = cityCount.get(l._g)));
   return clean;
 }
 
-async function loadLockers(carrier) {
+async function loadLockers({ force = false } = {}) {
   const token = ++state.loadToken;
-  const cached = store.get(LOCKER_KEY + carrier);
+  const cached = force ? null : store.get(LOCKER_KEY);
   if (cached?.data && Date.now() - cached.t < LOCKER_TTL) {
     applyLockerData(cached.data);
     return;
   }
   state.lockerMode = 'loading';
-  renderLocker();
+  renderShipping();
   announce('Laadin pakiautomaatide nimekirja…');
   const started = performance.now();
   try {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 12000);
-    const res = await fetch(`/api/pakiautomaadid?carrier=${encodeURIComponent(carrier)}`, {
-      headers: { Accept: 'application/json' },
-      signal: ctrl.signal,
-    });
+    const timer = setTimeout(() => ctrl.abort(), 15000);
+    const res = await fetch('/api/pakiautomaadid?carrier=all', { headers: { Accept: 'application/json' }, signal: ctrl.signal });
     clearTimeout(timer);
     const data = await res.json().catch(() => null);
-    const wait = 420 - (performance.now() - started); // väldi skeletoni välgatust
+    const wait = 380 - (performance.now() - started); // väldi skeletoni välgatust
     if (wait > 0) await sleep(wait);
     if (token !== state.loadToken) return;
     if (!res.ok || !data) throw new Error(data?.error || `HTTP ${res.status}`);
-    if (!data.manual && Array.isArray(data.lockers) && data.lockers.length) store.set(LOCKER_KEY + carrier, { t: Date.now(), data });
+    if (!data.stale && !data.manual && Array.isArray(data.lockers) && data.lockers.length) store.set(LOCKER_KEY, { t: Date.now(), data });
     applyLockerData(data);
   } catch {
     if (token !== state.loadToken) return;
     state.lockerMode = 'error';
     state.lockers = [];
-    renderLocker();
+    state.carrierMeta = {};
+    state.locker = null;
+    if (state.filter === 'all' || !carrierInfo(state.filter).enabled) state.filter = 'all';
+    renderShipping();
     afterShippingChange();
   }
 }
 
 function applyLockerData(data) {
-  const list = Array.isArray(data?.lockers) ? prepareLockers(data.lockers) : [];
-  if (data?.manual || !list.length) {
-    state.lockerMode = 'manual';
-    state.lockers = [];
-  } else {
-    state.lockerMode = 'list';
-    state.lockers = list;
-    if (state.locker) {
-      const found = list.find((l) => sameLocker(l, state.locker));
-      state.locker = found ? pickLocker(found) : null;
-    }
-    announce(`${plural(list.length, 'pakiautomaat', 'pakiautomaati')} laaditud. Otsi linna või keskuse järgi.`);
+  state.carrierMeta = Object.fromEntries((Array.isArray(data?.carriers) ? data.carriers : []).filter((c) => c && c.id).map((c) => [c.id, c]));
+  state.lockers = Array.isArray(data?.lockers) ? prepareLockers(data.lockers) : [];
+  state.stale = Boolean(data?.stale);
+  state.updatedAt = data?.updatedAt || null;
+  state.lockerMode = state.lockers.length ? 'list' : 'manual';
+  if (state.filter !== 'all' && !carrierInfo(state.filter).enabled) state.filter = 'all';
+  if (state.locker) {
+    const found = state.lockers.find((l) => sameLocker(l, state.locker));
+    state.locker = found ? pickLocker(found) : null;
   }
-  renderLocker();
+  if (state.lockerMode === 'list') {
+    announce(`${plural(state.lockers.length, 'pakiautomaat', 'pakiautomaati')} laaditud. Otsi linna, keskuse või tänava järgi.`);
+  }
+  renderShipping();
   afterShippingChange();
 }
 
-// Mõnel vedajal võib id puududa — siis võrdleme nime järgi.
-const sameLocker = (a, b) => (a.id && b.id ? a.id === String(b.id) : norm(a.name) === norm(b.name));
-const pickLocker = (l) => ({ id: l.id, name: l.name, city: l.city === 'Muu' ? '' : l.city, address: l.address });
+// Võrdle vedaja + id järgi (id puudumisel nime järgi).
+const sameLocker = (a, b) =>
+  a.carrier === b.carrier && (a.id && b.id ? a.id === String(b.id) : norm(a.name) === norm(b.name));
+const pickLocker = (l) => ({ id: l.id, carrier: l.carrier, name: l.name, city: l.city, address: l.address, postalCode: l.postalCode || '' });
 
 let announceTimer;
 function announce(msg) {
@@ -625,88 +717,106 @@ function announce(msg) {
   }, 60);
 }
 
+function renderShipping() {
+  updateFilters();
+  renderLocker();
+}
+
+/* ---------- Võrgu filter (raadionupud kiipidena; nooleklahvid töötavad loomulikult) ---------- */
+function updateFilters() {
+  const loading = state.lockerMode === 'loading';
+  const globalManual = state.lockerMode === 'manual' || state.lockerMode === 'error';
+  const cheapest = Math.min(...(enabledCarriers().map((id) => shipCents(id)).concat(loading ? [shipCents(null)] : [])));
+  $$('[data-chip]', el.filters).forEach((chip) => {
+    const id = chip.dataset.chip;
+    const input = $('input', chip);
+    const meta = $('[data-chip-meta]', chip);
+    const price = $('[data-chip-price]', chip);
+    let text;
+    let priceTxt = '';
+    let disabled = false;
+    if (id === 'all') {
+      chip.hidden = globalManual;
+      text = loading ? 'Laadin…' : plural(state.lockers.length, 'automaat', 'automaati');
+      priceTxt = Number.isFinite(cheapest) ? priceText(cheapest) : '';
+    } else {
+      const c = carrierInfo(id);
+      if (!c.enabled) {
+        disabled = true;
+        text = 'Hetkel pole saadaval';
+      } else {
+        text = loading ? 'Laadin…' : globalManual || !c.count ? 'Sisesta käsitsi' : plural(c.count, 'automaat', 'automaati');
+        priceTxt = priceText(shipCents(id));
+      }
+    }
+    input.disabled = disabled;
+    chip.classList.toggle('is-disabled', disabled);
+    input.checked = state.filter === id && !(id === 'all' && globalManual);
+    if (meta.textContent !== text) meta.textContent = text;
+    if (price.textContent !== priceTxt) price.textContent = priceTxt;
+    price.classList.toggle('is-free', priceTxt === 'Tasuta');
+  });
+}
+
+el.filters.addEventListener('change', (e) => {
+  if (e.target.name === 'lkFilter') selectFilter(e.target.value);
+});
+
+function selectFilter(filter) {
+  if (filter !== 'all' && !carrierInfo(filter).enabled) return;
+  const prev = state.filter;
+  state.filter = filter;
+  // Teise võrgu valimine tähendab, et klient tahab automaati vahetada.
+  if (state.locker && filter !== 'all' && state.locker.carrier !== filter) state.locker = null;
+  if (prev !== filter) state.activeIndex = -1;
+  showError(null, '', el.carrierError);
+  $$('.lk-chip').forEach((c) => c.classList.remove('is-invalid'));
+  persist();
+  renderShipping();
+  afterShippingChange();
+  if (!state.locker && !manualMode() && state.lockerMode === 'list') {
+    const n = lockersFor(filter).length;
+    announce(filter === 'all' ? `Kõik võrgud: ${plural(n, 'automaat', 'automaati')}.` : `${carrierInfo(filter).name}: ${plural(n, 'automaat', 'automaati')}.`);
+  }
+}
+
+/* ---------- Automaadi valik ---------- */
+function staleNote() {
+  if (!state.stale) return '';
+  let when = '';
+  if (state.updatedAt) {
+    const d = new Date(state.updatedAt);
+    if (!Number.isNaN(d.getTime())) {
+      when = ` (uuendatud ${new Intl.DateTimeFormat('et-EE', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Tallinn' }).format(d)})`;
+    }
+  }
+  return `<p class="lk-stale"><span aria-hidden="true">${SVG.clock}</span><span>Nimekiri võib olla veidi vananenud${esc(when)}. Kui sinu automaati pole, vali lähim või kirjuta meile.</span></p>`;
+}
+
+/** Lubatud võrgud, mille nimekiri puudub (näidatakse „Kõik“ vaates vihjena). */
+function missingListNote() {
+  if (state.filter !== 'all' || state.lockerMode !== 'list') return '';
+  const missing = enabledCarriers().filter((id) => !carrierInfo(id).count);
+  if (!missing.length) return '';
+  const names = missing.map((id) => carrierInfo(id).name);
+  return `<p class="lk-stale lk-stale--info"><span aria-hidden="true">${SVG.pin}</span><span>${esc(orList(names))} automaatide nimekiri pole hetkel saadaval — vali ülalt ${esc(orList(names))}, et automaat käsitsi sisestada.</span></p>`;
+}
+
 function renderLocker() {
   const host = el.locker;
-  if (!state.carrier) {
-    host.innerHTML = `<div class="lk-idle">${SVG.pin}<span>Vali esmalt vedaja — siis saad otsida endale sobiva pakiautomaadi.</span></div>`;
-    return;
-  }
-  const label = CARRIER_LABEL[state.carrier];
-  const gen = CARRIER_GEN[state.carrier] || label;
   if (state.lockerMode === 'loading') {
-    host.innerHTML = `<div class="lk-skel" aria-hidden="true"><span class="s-label"></span><span class="s-input"></span><span class="s-row"></span><span class="s-row"></span><span class="s-row"></span></div><p class="sr-only">Laadin ${esc(gen)} automaate…</p>`;
+    host.innerHTML = `<div class="lk-skel" aria-hidden="true"><span class="s-label"></span><span class="s-input"></span><span class="s-row"></span><span class="s-row"></span><span class="s-row"></span></div><p class="sr-only">Laadin pakiautomaatide nimekirja…</p>`;
     return;
   }
-  if (state.lockerMode === 'manual' || state.lockerMode === 'error') {
-    let note;
-    if (state.lockerMode === 'error') {
-      note = `<strong>Automaatide nimekirja laadimine ebaõnnestus.</strong> Kirjuta automaadi nimi ja aadress käsitsi või <button type="button" data-retry-lockers>proovi uuesti</button>.`;
-    } else if (state.carrier === 'dpd') {
-      // DPD-l avalikku nimekirja pole (JUHEND.md) — see on tavaline olukord, mitte tõrge.
-      note = `<strong>DPD automaatide nimekirja me siin ei kuva.</strong> Kirjuta automaadi nimi ja aadress siia ning saadame paki sinna.`;
-    } else {
-      note = `<strong>${esc(gen)} automaatide nimekiri pole hetkel saadaval.</strong> Pole hullu — kirjuta automaadi nimi ja aadress siia ning saadame paki sinna.`;
-    }
-    host.innerHTML = `
-      <div class="lk-manual">
-        <div class="lk-manual__note"><span aria-hidden="true">${SVG.pin}</span><p>${note}</p></div>
-        <div class="field">
-          <label for="f-locker-manual">Pakiautomaadi nimi ja aadress</label>
-          <input class="input" id="f-locker-manual" name="lockerManual" type="text" autocomplete="off" maxlength="160" placeholder="${esc(MANUAL_PLACEHOLDER[state.carrier] || '')}" aria-describedby="f-locker-manual-error">
-          <p class="field-error" id="f-locker-manual-error" aria-live="polite"></p>
-        </div>
-      </div>`;
-    const input = $('#f-locker-manual', host);
-    input.value = state.manual;
-    input.addEventListener('input', () => {
-      state.manual = input.value;
-      if (input.getAttribute('aria-invalid') === 'true') showError(input, V.manual(input.value));
-      persistSoon();
-      stepsSoon();
-    });
-    input.addEventListener('blur', () => {
-      if (input.value.trim() || input.getAttribute('aria-invalid') === 'true') showError(input, V.manual(input.value));
-    });
-    $('[data-retry-lockers]', host)?.addEventListener('click', () => {
-      try {
-        sessionStorage.removeItem(LOCKER_KEY + state.carrier);
-      } catch {
-        /* ignore */
-      }
-      loadLockers(state.carrier);
-    });
-    return;
-  }
-  if (state.locker) {
-    const l = state.locker;
-    const addr = [l.address, l.city].filter(Boolean).join(', ');
-    host.innerHTML = `
-      <div class="lk-picked">
-        <span class="lk-picked__pin" aria-hidden="true">${SVG.pin}</span>
-        <div class="lk-picked__text">
-          <span class="lk-picked__carrier">${esc(label)} · valitud automaat</span>
-          <strong class="lk-picked__name">${esc(l.name)}</strong>
-          ${addr ? `<span class="lk-picked__addr">${esc(addr)}</span>` : ''}
-        </div>
-        <button class="btn btn--sm btn--ghost" type="button" data-change-locker aria-label="Muuda pakiautomaati (praegu ${esc(l.name)})">Muuda</button>
-      </div>`;
-    $('[data-change-locker]', host).addEventListener('click', () => {
-      state.locker = null;
-      state.query = '';
-      persist();
-      renderLocker();
-      afterShippingChange();
-      const input = $('#locker-input');
-      input?.focus();
-    });
-    return;
-  }
+  if (manualMode()) return renderManual(host);
+  if (state.locker) return renderPicked(host);
+  const gen = state.filter === 'all' ? '' : `${CARRIER_GEN[state.filter] || carrierInfo(state.filter).name} `;
   host.innerHTML = `
     <div class="lk">
-      <label class="label" for="locker-input" id="locker-label">Vali ${esc(gen)} pakiautomaat</label>
+      <label class="label" for="locker-input" id="locker-label">Otsi ${esc(gen)}pakiautomaati</label>
       <div class="lk__box">
         ${SVG.search}
-        <input class="input lk__input" id="locker-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="locker-listbox" aria-describedby="locker-hint locker-error" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="Linn, keskus või tänav">
+        <input class="input lk__input" id="locker-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="locker-listbox" aria-describedby="locker-hint locker-error" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="Linn, keskus, tänav või automaat">
         <button class="lk__clear" type="button" data-lk-clear aria-label="Tühjenda otsing" hidden>${SVG.close}</button>
       </div>
       <p class="lk__hint" id="locker-hint" data-lk-hint></p>
@@ -716,8 +826,78 @@ function renderLocker() {
         <p class="lk__more" data-lk-more></p>
       </div>
       <p class="field-error" id="locker-error" aria-live="polite"></p>
+      ${staleNote()}${missingListNote()}
     </div>`;
   bindCombobox();
+}
+
+function renderPicked(host) {
+  const l = state.locker;
+  const c = carrierInfo(l.carrier);
+  const cents = shipCents(l.carrier);
+  const addr = lockerAddress(l);
+  host.innerHTML = `
+    <div class="lk-picked lk-picked--${esc(l.carrier)}">
+      ${markHTML(l.carrier, 'lk-mark--lg')}
+      <div class="lk-picked__text">
+        <span class="lk-picked__carrier">${esc(c.label)}<span class="lk-picked__ok"> · valitud</span></span>
+        <strong class="lk-picked__name">${esc(l.name)}</strong>
+        ${addr ? `<span class="lk-picked__addr">${esc(addr)}</span>` : ''}
+        <span class="lk-picked__meta"><span class="lk-picked__price${cents ? '' : ' is-free'}" data-picked-price>${cents ? `Tarne ${formatEur(cents)}` : 'Tarne tasuta'}</span><span aria-hidden="true">·</span><span>teele ${esc(c.eta)} jooksul</span></span>
+      </div>
+      <button class="btn btn--sm btn--ghost" type="button" data-change-locker aria-label="Muuda pakiautomaati (praegu ${esc(l.name)})">Muuda</button>
+    </div>
+    ${staleNote()}`;
+  $('[data-change-locker]', host).addEventListener('click', () => {
+    state.locker = null;
+    state.query = '';
+    persist();
+    renderShipping();
+    afterShippingChange();
+    $('#locker-input')?.focus();
+  });
+}
+
+function renderManual(host) {
+  const carrier = currentCarrier();
+  const globalError = state.lockerMode === 'error';
+  const globalManual = state.lockerMode === 'manual';
+  const names = orList(enabledCarriers().map((id) => carrierInfo(id).name));
+  let note;
+  if (globalError) {
+    note = `<strong>Automaatide nimekirja laadimine ebaõnnestus.</strong> Vali ülalt võrk (${esc(names)}) ja kirjuta automaadi nimi ja aadress või <button type="button" data-retry-lockers>proovi uuesti</button>.`;
+  } else if (globalManual) {
+    note = `<strong>Automaatide nimekiri pole hetkel saadaval.</strong> Pole hullu — vali ülalt võrk (${esc(names)}) ja kirjuta automaadi nimi ja aadress. Saadame paki sinna.`;
+  } else {
+    const gen = CARRIER_GEN[state.filter] || carrierInfo(state.filter).name;
+    note = `<strong>${esc(gen)} automaatide nimekiri pole hetkel saadaval.</strong> Kirjuta automaadi nimi ja aadress siia — saadame paki sinna.`;
+  }
+  const c = carrier ? carrierInfo(carrier) : null;
+  const priceRow = c
+    ? `<p class="lk-manual__price">${markHTML(carrier)}<span><strong>${esc(c.label)}</strong> · tarne <span class="${shipCents(carrier) ? '' : 'is-free'}" data-picked-price>${esc(priceText(shipCents(carrier)))}</span> · teele ${esc(c.eta)} jooksul</span></p>`
+    : '';
+  host.innerHTML = `
+    <div class="lk-manual">
+      <div class="lk-manual__note"><span aria-hidden="true">${SVG.pin}</span><p>${note}</p></div>
+      ${priceRow}
+      <div class="field">
+        <label for="f-locker-manual">Pakiautomaadi nimi ja aadress</label>
+        <input class="input" id="f-locker-manual" name="lockerManual" type="text" autocomplete="off" maxlength="160" placeholder="${esc(MANUAL_PLACEHOLDER[carrier] || 'nt Tartu Lõunakeskus, Ringtee 75, Tartu')}" aria-describedby="f-locker-manual-error">
+        <p class="field-error" id="f-locker-manual-error" aria-live="polite"></p>
+      </div>
+    </div>`;
+  const input = $('#f-locker-manual', host);
+  input.value = state.manual;
+  input.addEventListener('input', () => {
+    state.manual = input.value;
+    if (input.getAttribute('aria-invalid') === 'true') showError(input, V.manual(input.value));
+    persistSoon();
+    stepsSoon();
+  });
+  input.addEventListener('blur', () => {
+    if (input.value.trim() || input.getAttribute('aria-invalid') === 'true') showError(input, V.manual(input.value));
+  });
+  $('[data-retry-lockers]', host)?.addEventListener('click', () => loadLockers({ force: true }));
 }
 
 /* ---------- Otsitav combobox (WAI-ARIA 1.2 muster) ---------- */
@@ -765,25 +945,27 @@ function highlight(text, tokens) {
 
 function filterLockers() {
   const tokens = tokenize(state.query);
-  const matched = tokens.length ? state.lockers.filter((l) => tokens.every((t) => l._n.includes(t))) : state.lockers;
+  const pool = lockersFor(state.filter);
+  const matched = tokens.length ? pool.filter((l) => tokens.every((t) => l._n.includes(t))) : pool;
   const groups = new Map();
   matched.forEach((l) => {
-    if (!groups.has(l.city)) groups.set(l.city, []);
-    groups.get(l.city).push(l);
+    if (!groups.has(l._g)) groups.set(l._g, []);
+    groups.get(l._g).push(l);
   });
   const first = tokens[0] || '';
   const ordered = [...groups.entries()].sort((a, b) => {
     const am = first && a[1][0]._c.startsWith(first) ? 1 : 0;
     const bm = first && b[1][0]._c.startsWith(first) ? 1 : 0;
-    return bm - am || b[1][0]._cc - a[1][0]._cc || a[0].localeCompare(b[0], 'et');
+    return bm - am || b[1].length - a[1].length || a[0].localeCompare(b[0], 'et');
   });
-  return { tokens, matched, ordered };
+  return { tokens, matched, ordered, pool };
 }
 
 function renderOptions() {
   const list = $('[data-lk-list]');
   if (!list) return;
-  const { tokens, matched, ordered } = filterLockers();
+  const { tokens, matched, ordered, pool } = filterLockers();
+  const prices = Object.fromEntries(enabledCarriers().map((id) => [id, shipCents(id)]));
   state.results = [];
   let html = '';
   let g = 0;
@@ -795,10 +977,14 @@ function renderOptions() {
     take.forEach((l) => {
       const i = state.results.length;
       state.results.push(l);
-      html += `<div class="lk__opt" role="option" id="lk-opt-${i}" data-index="${i}" aria-selected="false">
-        <span class="lk__opt-name">${highlight(l.name, tokens)}</span>
-        <span class="lk__opt-addr">${highlight([l.address, l.city === 'Muu' ? '' : l.city].filter(Boolean).join(', '), tokens)}</span>
-        ${SVG.go}
+      const cents = prices[l.carrier] ?? shipCents(l.carrier);
+      html += `<div class="lk__opt lk__opt--${esc(l.carrier)}" role="option" id="lk-opt-${i}" data-index="${i}" aria-selected="false">
+        ${markHTML(l.carrier)}
+        <span class="lk__opt-main">
+          <span class="lk__opt-name">${highlight(l.name, tokens)}</span>
+          <span class="lk__opt-addr"><span class="lk__opt-op">${esc(SHIPPING.carriers[l.carrier].name)}</span> · ${highlight(lockerAddress(l), tokens)}</span>
+        </span>
+        <span class="lk__opt-price${cents ? '' : ' is-free'}">${esc(priceText(cents))}</span>
       </div>`;
     });
     html += '</div>';
@@ -809,15 +995,18 @@ function renderOptions() {
 
   const none = $('[data-lk-none]');
   none.hidden = matched.length > 0;
-  if (!matched.length) none.innerHTML = `Päringule „<strong>${esc(state.query.trim())}</strong>“ ei leidnud ühtegi automaati. Proovi linna, keskuse või tänava nime.`;
+  if (!matched.length) {
+    const other = state.filter !== 'all' && tokens.length && state.lockers.some((l) => tokens.every((t) => l._n.includes(t)));
+    none.innerHTML = `Päringule „<strong>${esc(state.query.trim())}</strong>“ ei leidnud ühtegi ${state.filter === 'all' ? '' : `${esc(CARRIER_GEN[state.filter] || '')} `}automaati.${
+      other ? ' <button type="button" data-lk-all>Otsi kõigist võrkudest</button>' : ' Proovi linna, keskuse või tänava nime.'
+    }`;
+  }
   const more = $('[data-lk-more]');
   more.textContent =
-    matched.length > state.results.length
-      ? `Näitan ${state.results.length} / ${matched.length}. Kirjuta täpsemalt — nt linn, keskus või tänav.`
-      : '';
+    matched.length > state.results.length ? `Näitan ${state.results.length} / ${matched.length}. Kirjuta täpsemalt — nt linn, keskus või tänav.` : '';
   $('[data-lk-hint]').textContent = tokens.length
     ? `${plural(matched.length, 'automaat', 'automaati')} vastab otsingule`
-    : `${plural(state.lockers.length, 'automaat', 'automaati')} üle Eesti · nt „Tartu“, „Ülemiste“, „Prisma“`;
+    : `${plural(pool.length, 'automaat', 'automaati')} üle Eesti · nt „Tartu“, „Ülemiste“, „Prisma“`;
   announce(matched.length ? `${plural(matched.length, 'tulemus', 'tulemust')}. Kasuta nooleklahve ja Enterit.` : 'Tulemusi pole.');
   // Kui on täpselt üks vaste, märgi see kohe aktiivseks — Enter valib.
   if (tokens.length && state.results.length === 1) setActive(0);
@@ -878,9 +1067,9 @@ function chooseLocker(i) {
   state.locker = pickLocker(l);
   state.query = '';
   persist();
-  renderLocker();
+  renderShipping();
   afterShippingChange();
-  announce(`Valitud: ${l.name}`);
+  announce(`Valitud: ${l.name}, ${SHIPPING.carriers[l.carrier].name}, tarne ${priceText(shipCents(l.carrier))}.`);
   $('[data-change-locker]')?.focus({ preventScroll: true });
 }
 
@@ -968,7 +1157,10 @@ function bindCombobox() {
       default:
     }
   });
-  list.addEventListener('mousedown', (e) => e.preventDefault()); // fookus jääb sisendisse
+  const pop = $('[data-lk-pop]');
+  pop.addEventListener('mousedown', (e) => {
+    if (!e.target.closest('button')) e.preventDefault(); // fookus jääb sisendisse
+  });
   list.addEventListener('click', (e) => {
     const opt = e.target.closest('[role="option"]');
     if (opt) chooseLocker(Number(opt.dataset.index));
@@ -976,6 +1168,20 @@ function bindCombobox() {
   list.addEventListener('mousemove', (e) => {
     const opt = e.target.closest('[role="option"]');
     if (opt && Number(opt.dataset.index) !== state.activeIndex) setActive(Number(opt.dataset.index));
+  });
+  pop.addEventListener('click', (e) => {
+    if (!e.target.closest('[data-lk-all]')) return;
+    const q = state.query;
+    selectFilter('all');
+    state.query = q;
+    const next = $('#locker-input');
+    if (next) {
+      next.value = q;
+      $('[data-lk-clear]').hidden = !q;
+      renderOptions();
+      next.focus();
+      openList();
+    }
   });
   clear.addEventListener('click', () => {
     input.value = '';
@@ -987,29 +1193,8 @@ function bindCombobox() {
   });
 }
 
-/* ---------- Vedaja valik ---------- */
-function selectCarrier(carrier, { keepLocker = false } = {}) {
-  if (!SHIPPING.carriers[carrier]) return;
-  const changed = state.carrier !== carrier;
-  state.carrier = carrier;
-  if (changed && !keepLocker) {
-    state.locker = null;
-    state.manual = '';
-    state.query = '';
-  }
-  showError(null, '', el.carrierError);
-  $$('.carrier').forEach((c) => c.classList.remove('is-invalid'));
-  persist();
-  loadLockers(carrier);
-  afterShippingChange();
-}
-
-el.carriers.addEventListener('change', (e) => {
-  if (e.target.name === 'carrier') selectCarrier(e.target.value);
-});
-
 function afterShippingChange() {
-  renderSummary(Cart.totals());
+  renderSummary(currentTotals());
   updateSteps();
 }
 
@@ -1214,7 +1399,7 @@ function persist() {
     name: el.name.value,
     email: el.email.value,
     phone: el.phone.value,
-    carrier: state.carrier,
+    filter: state.filter,
     locker: state.locker,
     manual: state.manual,
   });
@@ -1243,7 +1428,15 @@ function readPromoEmail() {
 }
 
 function restore() {
-  const s = store.get(FORM_KEY, {}) || {};
+  let s = store.get(FORM_KEY, null);
+  if (!s) {
+    // Vana vorm (v1): automaadil polnud vedajat küljes.
+    const old = store.get(OLD_FORM_KEY, null);
+    if (old) {
+      s = { ...old, filter: 'all', locker: old.locker && old.carrier ? { ...old.locker, carrier: old.carrier } : null };
+    }
+  }
+  s = s || {};
   if (s.name) el.name.value = s.name;
   if (s.email) el.email.value = s.email;
   else {
@@ -1254,28 +1447,24 @@ function restore() {
   CONTACT.forEach(({ input, check }) => {
     if (input.value.trim() && !check(input.value)) input.classList.add('is-valid');
   });
-  if (s.carrier && SHIPPING.carriers[s.carrier]) {
-    const radio = $(`.carrier__input[value="${s.carrier}"]`);
-    if (radio) radio.checked = true;
-    state.locker = s.locker && s.locker.name ? s.locker : null;
-    state.manual = s.manual || '';
-    selectCarrier(s.carrier, { keepLocker: true });
-  } else {
-    renderLocker();
-  }
+  if (s.filter === 'all' || Object.prototype.hasOwnProperty.call(SHIPPING.carriers, s.filter || '')) state.filter = s.filter;
+  if (s.locker && s.locker.name && SHIPPING.carriers[s.locker.carrier]) state.locker = { ...s.locker, id: String(s.locker.id ?? '') };
+  state.manual = typeof s.manual === 'string' ? s.manual : '';
+  renderShipping();
+  loadLockers();
 }
 
 /* =========================================================================
    Sammud
    ========================================================================= */
 function shippingDone() {
-  if (!state.carrier) return false;
-  if (state.lockerMode === 'manual' || state.lockerMode === 'error') return !V.manual(state.manual);
-  return state.lockerMode === 'list' && Boolean(state.locker);
+  if (state.lockerMode === 'loading') return false;
+  if (manualMode()) return Boolean(currentCarrier()) && !V.manual(state.manual);
+  return Boolean(state.locker);
 }
 
 function updateSteps() {
-  const t = Cart.totals();
+  const t = currentTotals();
   const done = [
     t.lines.length > 0,
     shippingDone(),
@@ -1312,15 +1501,19 @@ function stepsSoon() {
    ========================================================================= */
 function collectErrors() {
   const errs = [];
-  const t = Cart.totals();
+  const t = currentTotals();
   if (!t.lines.length) errs.push({ key: 'cart', msg: 'Ostukorv on tühi.', focus: () => $('#h-ostukorv') });
-  if (!state.carrier) {
-    errs.push({ key: 'carrier', msg: 'Vali vedaja (Omniva, SmartPost või DPD).', focus: () => $('.carrier__input'), label: 'Vali vedaja' });
-  } else if (state.lockerMode === 'loading') {
-    errs.push({ key: 'locker', msg: 'Automaatide nimekirja alles laaditakse — oota hetk.', focus: () => $(`.carrier__input[value="${state.carrier}"]`), label: 'Pakiautomaat' });
-  } else if (state.lockerMode === 'manual' || state.lockerMode === 'error') {
-    const m = V.manual(state.manual);
-    if (m) errs.push({ key: 'manual', msg: m, focus: () => $('#f-locker-manual'), label: 'Pakiautomaat' });
+  const firstChip = () => $('.lk-chip__input:checked:not(:disabled)') || $('.lk-chip:not([hidden]) .lk-chip__input:not(:disabled)');
+  if (state.lockerMode === 'loading') {
+    errs.push({ key: 'locker', msg: 'Automaatide nimekirja alles laaditakse — oota hetk.', focus: firstChip, label: 'Pakiautomaat' });
+  } else if (manualMode()) {
+    if (!currentCarrier()) {
+      const names = orList(enabledCarriers().map((id) => carrierInfo(id).name));
+      errs.push({ key: 'carrier', msg: `Vali pakiautomaadi võrk${names ? ` (${names})` : ''}.`, focus: firstChip, label: 'Võrk' });
+    } else {
+      const m = V.manual(state.manual);
+      if (m) errs.push({ key: 'manual', msg: m, focus: () => $('#f-locker-manual'), label: 'Pakiautomaat' });
+    }
   } else if (!state.locker) {
     errs.push({ key: 'locker', msg: 'Vali nimekirjast pakiautomaat, kuhu pakk saata.', focus: () => $('#locker-input'), label: 'Pakiautomaat' });
   }
@@ -1340,7 +1533,7 @@ function markErrors(errs) {
     switch (e.key) {
       case 'carrier':
         showError(null, e.msg, el.carrierError);
-        $$('.carrier').forEach((c) => c.classList.add('is-invalid'));
+        $$('.lk-chip:not(.is-disabled)').forEach((c) => c.classList.add('is-invalid'));
         break;
       case 'locker': {
         const input = $('#locker-input');
@@ -1398,7 +1591,7 @@ el.payError.addEventListener('click', (e) => {
 
 function focusField(node) {
   if (!node) return;
-  const scrollTarget = node.closest('.field, .co-check-wrap, .co-carriers, .lk, .co-card') || node;
+  const scrollTarget = node.closest('.field, .co-check-wrap, .lk-filter, .lk, .co-card') || node;
   scrollTarget.scrollIntoView({ behavior: REDUCED.matches ? 'auto' : 'smooth', block: 'center' });
   if (node.tagName === 'H2' || node.tagName === 'H3') node.tabIndex = -1;
   setTimeout(() => node.focus({ preventScroll: true }), REDUCED.matches ? 0 : 350);
@@ -1406,7 +1599,7 @@ function focusField(node) {
 
 function setSubmitting(on) {
   state.submitting = on;
-  const t = Cart.totals();
+  const t = currentTotals();
   $$('[data-pay]').forEach((b) => {
     b.disabled = on;
     b.classList.toggle('is-loading', on);
@@ -1433,6 +1626,9 @@ const SERVER_FIELD = {
   shipping: 'locker',
   'shipping.lockerId': 'locker',
   'shipping.lockerName': 'locker',
+  'shipping.lockerAddress': 'locker',
+  'shipping.lockerCity': 'locker',
+  'shipping.manual': 'locker',
   terms: 'terms',
   termsAccepted: 'terms',
   age: 'age',
@@ -1449,6 +1645,16 @@ function markServerField(field, msg) {
     return focusField(Cart.code() ? $('[data-remove-code]') : el.codeInput);
   }
   if (key === 'cart') return focusField($('#h-ostukorv'));
+  if (key === 'carrier') {
+    // Vedaja pole (enam) lubatud — värskenda nimekiri ja lase uuesti valida.
+    state.locker = null;
+    try {
+      sessionStorage.removeItem(LOCKER_KEY);
+    } catch {
+      /* ignore */
+    }
+    loadLockers({ force: true });
+  }
   if (key === 'name' || key === 'email' || key === 'phone') {
     serverErrors.set(el[key], { key: valueKey(el[key], el[key].value), msg });
     updateSteps();
@@ -1466,7 +1672,7 @@ function markServerField(field, msg) {
       phone: () => el.phone,
       terms: () => el.terms,
       age: () => el.age,
-      carrier: () => $('.carrier__input:checked') || $('.carrier__input'),
+      carrier: () => $('.lk-chip__input:checked:not(:disabled)') || $('.lk-chip:not([hidden]) .lk-chip__input:not(:disabled)'),
       locker: () => $('#locker-input') || $('#f-locker-manual') || $('[data-change-locker]'),
     };
     target = { key, msg, focus: map[key] || (() => null) };
@@ -1476,16 +1682,14 @@ function markServerField(field, msg) {
 }
 
 function buildPayload() {
-  const t = Cart.totals();
-  const manual = state.lockerMode === 'manual' || state.lockerMode === 'error';
-  const shipping = manual
-    ? { carrier: state.carrier, lockerId: '', lockerName: state.manual.trim(), lockerAddress: '', manual: true }
-    : {
-        carrier: state.carrier,
-        lockerId: state.locker.id,
-        lockerName: state.locker.name,
-        lockerAddress: [state.locker.address, state.locker.city].filter(Boolean).join(', '),
-      };
+  const t = currentTotals();
+  const carrier = currentCarrier();
+  const l = state.locker;
+  // Server võtab ametliku nime/aadressi/linna nimekirjast id järgi; aadress ilma linnata.
+  const shipping =
+    manualMode() || !l
+      ? { carrier, lockerId: '', lockerName: state.manual.trim(), lockerAddress: '', manual: true }
+      : { carrier, lockerId: l.id, lockerName: l.name, lockerAddress: l.address, lockerCity: l.city };
   return {
     items: Cart.items(),
     code: Cart.code(),
@@ -1501,18 +1705,54 @@ function buildPayload() {
   };
 }
 
-function saveLastOrder(payload) {
-  const t = Cart.totals();
-  store.set(LAST_ORDER_KEY, {
-    at: Date.now(),
-    items: payload.items,
-    code: payload.code,
-    totals: { subtotalCents: t.subtotalCents, discountCents: t.discountCents, shippingCents: t.shippingCents, totalCents: t.totalCents, percent: t.percent },
-    carrier: state.carrier,
-    carrierLabel: CARRIER_LABEL[state.carrier],
-    locker: { name: payload.shipping.lockerName, address: payload.shipping.lockerAddress },
-    firstName: payload.customer.name.split(' ')[0],
-    email: payload.customer.email,
+function saveLastOrder(data) {
+  if (!TOKEN_RE.test(String(data?.token || ''))) return;
+  store.set(LAST_ORDER_KEY, { orderNumber: data.orderNumber, token: data.token, expiresAt: data.expiresAt || null, at: Date.now() });
+}
+
+/* ---------- Laopuudus (409) ---------- */
+function stockShortfalls() {
+  if (!state.shortages.length) return [];
+  const q = gameQuantities(Cart.items());
+  return state.shortages.filter((s) => (q[s.id] || 0) > Math.max(0, Number(s.available) || 0));
+}
+
+function renderStock() {
+  const short = stockShortfalls();
+  if (!short.length) {
+    state.shortages = [];
+    el.stock.hidden = true;
+    el.stock.innerHTML = '';
+    if (el.payError.dataset.kind === 'stock') hidePayError();
+  } else {
+    const q = gameQuantities(Cart.items());
+    el.stock.hidden = false;
+    el.stock.innerHTML = `
+      <span class="co-stock__icon" aria-hidden="true">${SVG.alert}</span>
+      <div>
+        <p><strong>Kõike ei ole laos piisavalt.</strong> Vähenda kogust või eemalda toode ja proovi siis uuesti maksta.</p>
+        <ul>${short
+          .map((s) => {
+            const avail = Math.max(0, Number(s.available) || 0);
+            return `<li><strong>${esc(s.name)}</strong> — ${avail ? `laos ${avail} tk, korvis ${q[s.id] || 0} tk (komplektid kaasa arvatud)` : 'hetkel otsas'}</li>`;
+          })
+          .join('')}</ul>
+      </div>`;
+  }
+  // Märgi read, mille sisu puudub laost (komplektid lahti võetuna).
+  $$('.co-line', el.lines).forEach((li) => {
+    const contents = productContents(li.dataset.id).map((c) => c.id);
+    const hit = short.filter((s) => contents.includes(s.id));
+    li.classList.toggle('is-short', hit.length > 0);
+    const note = $('[data-line-stock]', li);
+    if (!note) return;
+    note.hidden = !hit.length;
+    note.textContent = hit
+      .map((s) => {
+        const avail = Math.max(0, Number(s.available) || 0);
+        return avail ? `${s.name}: laos ainult ${avail} tk` : `${s.name} on hetkel otsas`;
+      })
+      .join(' · ');
   });
 }
 
@@ -1556,11 +1796,19 @@ async function onSubmit(e) {
     return;
   }
   if (res.ok && data?.url) {
-    saveLastOrder(payload);
+    saveLastOrder(data);
     window.location.href = data.url;
     return;
   }
   setSubmitting(false);
+  if (res.status === 409 && Array.isArray(data?.shortages) && data.shortages.length) {
+    state.shortages = data.shortages.filter((s) => s && s.id);
+    renderStock();
+    showServerError(data.error || 'Kõike ei ole laos piisavalt. Muuda ostukorvi ja proovi uuesti.');
+    el.payError.dataset.kind = 'stock';
+    focusField($('#h-ostukorv'));
+    return;
+  }
   const msg =
     data?.error ||
     (res.status >= 500
@@ -1578,6 +1826,7 @@ window.addEventListener('pageshow', (e) => {
   if (e.persisted) {
     setSubmitting(false);
     render();
+    checkPendingOrder({ cancelled: false });
   }
 });
 
@@ -1626,9 +1875,9 @@ function renderRecs() {
     .map(
       (p) => `
       <article class="rec">
-        <a class="rec__media" href="${esc(p.url)}" style="--g:${esc(p.gradient)}" tabindex="-1" aria-hidden="true">
+        <a class="rec__media" href="${esc(p.url)}" style="--g:${esc(p.gradient || `radial-gradient(120% 120% at 50% 0%, ${p.accent || '#ff2fa8'} 0%, #14040f 70%)`)}" tabindex="-1" aria-hidden="true">
           <span class="rec__badges">${p.badge ? `<span class="badge">${esc(p.badge)}</span>` : ''}${p.adult ? '<span class="badge badge--18">18+</span>' : ''}</span>
-          <img src="${esc(p.image)}" alt="" width="1000" height="691" loading="lazy" decoding="async">
+          <img src="${esc(p.image)}" alt="" width="240" height="240" loading="lazy" decoding="async">
         </a>
         <div class="rec__body">
           <h4 class="rec__name"><a href="${esc(p.url)}">${esc(p.name)}</a></h4>
@@ -1647,7 +1896,7 @@ function renderRecs() {
    Peamine renderdus
    ========================================================================= */
 function render() {
-  const t = Cart.totals();
+  const t = currentTotals();
   const has = t.lines.length > 0;
   el.form.hidden = !has;
   el.empty.hidden = has;
@@ -1664,6 +1913,7 @@ function render() {
     return;
   }
   renderLines(t);
+  renderStock();
   renderBundle();
   el.free.innerHTML = freeShippingHTML(t);
   renderCode(t);
@@ -1685,14 +1935,105 @@ document.addEventListener('click', (e) => {
 });
 
 /* =========================================================================
+   Pooleli makse: /ostukorv?katkestatud=1&t=TOKEN (Stripe'i „tagasi“) või
+   brauseri tagasinupp makselehelt → GET /api/tellimus → „Jätka makset“
+   ========================================================================= */
+const TIME_FMT = new Intl.DateTimeFormat('et-EE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Tallinn' });
+
+function setBanner(kind, html) {
+  el.banner.hidden = false;
+  el.banner.dataset.kind = kind;
+  $('[data-banner-body]', el.banner).innerHTML = html;
+}
+
+/** Lubame jätkata ainult Stripe'i makselehele või oma test-Stripe'i (mock) lehele. */
+function safeResumeUrl(raw) {
+  try {
+    const u = new URL(raw, location.origin);
+    if (u.origin === location.origin && u.pathname.startsWith('/__mock-stripe/')) return u.href;
+    if (u.protocol === 'https:' && /(^|\.)stripe\.com$/.test(u.hostname)) return u.href;
+  } catch {
+    /* vigane */
+  }
+  return null;
+}
+
+let pendingCheck = 0;
+async function checkPendingOrder({ cancelled, token: given } = {}) {
+  const last = store.get(LAST_ORDER_KEY);
+  const token = given || last?.token || '';
+  if (!TOKEN_RE.test(token)) {
+    if (cancelled) setBanner('cancel', '<p><strong>Makse katkestati</strong> — sinu ostukorv on alles. Kontrolli andmed üle ja vajuta uuesti „Maksa“.</p>');
+    return;
+  }
+  // Ilma katkestamise märgita (nt tagasinupp) kontrolli ainult värsket tellimust.
+  if (!cancelled && (!last || last.token !== token || Date.now() - (last.at || 0) > 2 * 60 * 60 * 1000)) return;
+  if (cancelled) setBanner('cancel', '<p><strong>Makse katkestati</strong> — sinu ostukorv on alles. Kontrollime tellimuse olekut…</p>');
+  const run = ++pendingCheck;
+  let data = null;
+  try {
+    const res = await fetch(`/api/tellimus?t=${encodeURIComponent(token)}`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+    data = res.ok ? await res.json().catch(() => null) : null;
+  } catch {
+    data = null;
+  }
+  if (run !== pendingCheck) return;
+  if (data && (data.paid || data.paymentStatus === 'processing')) {
+    if (cancelled) {
+      location.replace(`/aitah?t=${encodeURIComponent(token)}`);
+      return;
+    }
+    setBanner(
+      'ok',
+      `<p><strong>Tellimus ${esc(data.number)} on ${data.paid ? 'makstud' : 'vastu võetud'}.</strong> <a href="/aitah?t=${encodeURIComponent(token)}">Vaata tellimuse kinnitust</a></p>`,
+    );
+    return;
+  }
+  const resume = data?.resumeUrl ? safeResumeUrl(data.resumeUrl) : null;
+  if (data && data.paymentStatus === 'pending' && resume) {
+    const until = data.resumeExpiresAt ? new Date(data.resumeExpiresAt) : null;
+    const time = until && !Number.isNaN(until.getTime()) ? TIME_FMT.format(until) : '';
+    setBanner(
+      'resume',
+      `<div class="co-banner__text">
+        <p class="co-banner__title"><strong>Makse jäi pooleli</strong></p>
+        <p>Tellimus <strong>${esc(data.number)}</strong> (${formatEur(Number(data.totals?.totalCents) || 0)}) ootab makset${time ? ` — makseleht on avatud kuni kella <strong>${esc(time)}</strong>` : ''}. Sinu ostukorv on samuti alles: kui soovid midagi muuta, muuda ja maksa uuesti.</p>
+      </div>
+      <a class="btn btn--primary co-banner__cta" href="${esc(resume)}" data-resume>Jätka makset ${SVG.arrow}</a>`,
+    );
+    return;
+  }
+  if (!cancelled) return;
+  const why =
+    data?.paymentStatus === 'expired'
+      ? 'Makseaeg sai läbi'
+      : data?.paymentStatus === 'failed'
+        ? 'Makse ei õnnestunud'
+        : 'Makse katkestati';
+  setBanner('cancel', `<p><strong>${why}</strong> — sinu ostukorv on alles. Kontrolli andmed üle ja vajuta uuesti „Maksa“.</p>`);
+}
+
+el.banner.addEventListener('click', (e) => {
+  if (e.target.closest('[data-close-banner]')) el.banner.hidden = true;
+});
+
+/* =========================================================================
    Käivitus
    ========================================================================= */
 (function init() {
   const params = new URLSearchParams(location.search);
-  if (params.get('katkestatud') === '1') {
-    el.banner.hidden = false;
-    $('[data-close-banner]').addEventListener('click', () => (el.banner.hidden = true));
+  const cancelled = params.get('katkestatud') === '1';
+  const token = params.get('t') || '';
+  // Salajane tellimuse tunnus ei jää aadressiribale (jagamine, ajalugu); see on sessionStorage'is olemas.
+  if (params.has('t')) {
+    if (TOKEN_RE.test(token)) {
+      const last = store.get(LAST_ORDER_KEY);
+      if (!last || last.token !== token) store.set(LAST_ORDER_KEY, { token, at: Date.now() });
+    }
+    params.delete('t');
+    history.replaceState(null, '', `${location.pathname}${params.toString() ? `?${params}` : ''}${location.hash}`);
   }
+  checkPendingOrder({ cancelled, token: TOKEN_RE.test(token) ? token : '' });
   const kood = params.get('kood');
   if (kood) {
     if (Cart.applyCode(kood)) {

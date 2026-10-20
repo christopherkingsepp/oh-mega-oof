@@ -22,7 +22,8 @@ import { buildSessionParams, ensureCoupon, forgetCoupon, resolveOrigin } from '.
 import { resolveStripe, defaultStripeFactory } from './_lib/stripe-client.mjs';
 import { getDb } from './_lib/db.mjs';
 import { checkAvailability, shortageMessage, createOrder, attachCheckoutSession, markFailed, toIso } from './_lib/orders.mjs';
-import { findCachedLocker } from './_lib/lockers.mjs';
+import { findCachedLocker, readLockerCache } from './_lib/lockers.mjs';
+import { SHIPPING } from '../../public/assets/js/catalog.js';
 import { enabledCarriers, enabledCarrierNames } from './_lib/config.mjs';
 
 export const MAX_BODY_BYTES = 20 * 1024;
@@ -134,11 +135,24 @@ export function createHandler({
     }
 
     // 6) Tellimus andmebaasi. Kui automaat on vedaja nimekirjas, kasutame sealt ametlikke andmeid.
+    //    Kui vedaja nimekiri ON olemas, aga valitud ID-d seal pole (automaat suleti, brauseri vana
+    //    nimekiri või võltsitud päring), siis tellimust ei looda: muidu jõuaks haldusesse
+    //    „ametliku“ ID-ga automaat, mida tegelikult pole (käsitsi sisestuse hoiatust ei näidataks).
     let row;
     try {
       let locker = null;
       if (!order.shipping.manual && order.shipping.lockerId) {
         locker = await findCachedLocker(db, order.shipping.carrier, order.shipping.lockerId).catch(() => null);
+        if (!locker) {
+          const cache = await readLockerCache(db, order.shipping.carrier).catch(() => null);
+          if (cache?.lockers?.length) {
+            logger.warn?.(`[checkout] ${order.shipping.carrier}: automaati ${order.shipping.lockerId} pole nimekirjas — palun kliendil uuesti valida.`);
+            return json(400, {
+              error: `Valitud pakiautomaati ei leitud ${SHIPPING.carriers[order.shipping.carrier].name} automaatide nimekirjast (võib-olla on see suletud). Vali automaat uuesti.`,
+              field: 'shipping.lockerId',
+            });
+          }
+        }
       }
       row = await createOrder(db, order, { locker });
     } catch (err) {

@@ -93,6 +93,11 @@ body[data-product='mida-viiu'] .pdp-grad-text {
   opacity: 0.5;
 }
 .pdp-crumbs a {
+  /* puuteala ≥ 44px ilma, et rida kõrgemaks läheks */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-block: -13px;
   color: var(--muted);
   transition: color 0.2s;
 }
@@ -2265,6 +2270,25 @@ body[data-product='oled-semu'],
 body[data-product='vigur'] {
   --card-ar: 1074 / 693;
 }
+/* Galerii pildid täidavad slaidi täpselt: protsentkõrgus ei lahene grid-lahtris ja pilt
+   kasvas varem laiuse järgi ruuduks (tootepilt lõikus üleval ja all ära). */
+.pdp-slide--image img {
+  position: absolute;
+  inset: 0;
+}
+/* 16:9 kaanepilt (karp eest ja tagant): kogu pilt nähtav, et karbid servades ei lõiku */
+.pdp-slide--wide {
+  padding: 6% 5%;
+}
+.pdp-slide--wide img {
+  position: static;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 14px;
+  box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
 /* Ruudukujuline läbipaistev tootepilt galeriis */
 .pdp-slide--product img {
   width: 100%;
@@ -2307,7 +2331,7 @@ body[data-product='vigur'] {
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
 }
 .pdp-upsell__contents {
-  font-size: 0.82rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--acc-soft);
 }
@@ -2509,10 +2533,24 @@ body[data-product='vigur'] {
   .pdp-thumbs {
     gap: 8px;
   }
+  /* Kitsal ekraanil kompaktne nupp (ikoon + „3D“), et see ei kataks pöörleva karbi ülaosa */
   .pdp-stage__3d {
     min-height: 44px;
+    min-width: 44px;
     padding: 8px 12px 8px 10px;
-    font-size: 0.68rem;
+    font-size: 0.8rem;
+    gap: 6px;
+  }
+  .pdp-stage__3d span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .pdp-stage__3d::after {
+    content: '3D';
   }
   .pdp-price__note,
   .xcard__tag {
@@ -2546,4 +2584,21 @@ body[data-product='vigur'] {
   .deck-card.is-center:not(.is-flipped) .deck-card__inner {
     animation: none !important;
   }
+}
+
+/* ---------- Loetavus: sisutekst vähemalt 15 px ---------- */
+.pdp-note,
+.pdp-sum__plus {
+  font-size: 0.9375rem;
+}
+
+/* kogusevälja puuteala ≥ 44px */
+.pdp-qty input {
+  min-width: 44px;
+}
+/* ristmüügikaardi nimi-link: puuteala ≥ 44px ilma paigutust muutmata */
+.xcard__name a {
+  display: inline-block;
+  padding-block: 12px;
+  margin-block: -12px;
 }

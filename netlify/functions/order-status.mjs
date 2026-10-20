@@ -17,11 +17,20 @@
 import { json } from './_lib/http.mjs';
 import { getDb } from './_lib/db.mjs';
 import { getOrderByToken, publicOrderView, TOKEN_RE } from './_lib/orders.mjs';
-import { applySessionState } from './_lib/payments.mjs';
+import { applySessionState, ensurePaidSideEffects } from './_lib/payments.mjs';
+import { adminEmail } from './_lib/config.mjs';
 import { resolveStripe, defaultStripeFactory } from './_lib/stripe-client.mjs';
 import { createMailer } from './_lib/mail.mjs';
 
 const SESSION_RE = /^cs_(test|live)_[A-Za-z0-9]{8,200}$/;
+/** Olekud, mille korral pooleli jäänud kinnituskirja/laoseisu muutust korratakse (tagastatud tellimusel mitte). */
+const RETRY_STATES = ['paid', 'partially_refunded'];
+/** Kordame ainult värskete maksete puhul (nt hiljem lisatud ADMIN_EMAIL ei saada vanade tellimuste teavitusi). */
+const RETRY_WINDOW_MS = 24 * 60 * 60 * 1000;
+const sideEffectsPending = (o, env, nowMs) =>
+  Boolean(o.paid_at) &&
+  nowMs - new Date(o.paid_at).getTime() < RETRY_WINDOW_MS &&
+  (!o.inventory_applied_at || !o.confirmation_sent_at || Boolean(adminEmail(env) && !o.admin_notified_at));
 const PRIVATE = { 'X-Robots-Tag': 'noindex, nofollow', 'Referrer-Policy': 'no-referrer' };
 
 /**
@@ -75,6 +84,18 @@ export function createHandler({ env = process.env, logger = console, getDb: getD
           // Stripe ei vasta → näitame viimast teadaolevat olekut (webhook parandab hiljem).
           logger.warn(`[tellimus] ${order.number}: Stripe'i oleku kontroll ebaõnnestus: ${err?.message || err}`);
         }
+      }
+    }
+
+    // Makstud, aga webhookis jäi kõrvalmõju pooleli (nt e-posti teenus vastas korraks veaga ja
+    // valvur vabastati). Kaardimakse puhul Stripe sama tellimuse kohta rohkem sündmusi ei saada,
+    // seega proovime siin (kinnitusleht laeb seda kohe pärast makset) uuesti. Valvurid
+    // (claimOrderFlag, laoliikumiste unikaalsus) tagavad, et midagi ei tehta topelt.
+    if (!synced && RETRY_STATES.includes(order.payment_status) && sideEffectsPending(order, env, now())) {
+      try {
+        order = await ensurePaidSideEffects(db, order, { mailer: mail, env, logger });
+      } catch (err) {
+        logger.warn(`[tellimus] ${order.number}: kõrvalmõjude kordus ebaõnnestus: ${err?.message || err}`);
       }
     }
 

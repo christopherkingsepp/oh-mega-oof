@@ -3167,3 +3167,31 @@
     width: 100%;
   }
 }
+
+/* ---------- Loetavus: sisutekst vähemalt 15 px (kassa ja tellimuse kinnitus) ---------- */
+.co-card__sub,
+.co-secure,
+.co-return-note p,
+.ty-step p,
+.ty-receipt__date,
+.ty-withdraw p,
+.ty-help,
+.ty-ship__addr {
+  font-size: 0.9375rem;
+}
+/* vormi vihjed ja abitekstid: vähemalt 14 px */
+.lk__hint,
+.co-line__contents,
+.co-sum-line__contents {
+  font-size: 0.875rem;
+}
+/* soovituskaardi nimi-link: puuteala ≥ 44px ilma paigutust muutmata */
+.rec__name a {
+  display: inline-block;
+  padding-block: 12px;
+  margin-block: -12px;
+}
+/* lisamüügi lühike nimi-link (nt „Vigur“): puuteala laius ≥ 44px */
+.co-mini__name a {
+  min-width: 44px;
+}

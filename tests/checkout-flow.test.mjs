@@ -99,6 +99,27 @@ test('checkout: automaadi ametlikud andmed võetakse nimekirjast (kliendi saadet
   assert.doesNotMatch(JSON.stringify(params), /Võltsnimi|kuskil/);
 });
 
+test('checkout: automaadi ID-d pole vedaja nimekirjas → 400 shipping.lockerId, tellimust ega makselehte ei teki', async () => {
+  const db = await freshDb();
+  await writeLockerCache(db, 'omniva', [{ id: '96331', name: 'Tallinna Kristiine keskuse pakiautomaat', city: 'Tallinn', address: 'Endla tn 45', postalCode: '96331' }]);
+  const { handler, stripe } = setup();
+  const { res, data } = await call(handler, postJson(validBody({ shipping: { lockerId: '99999', lockerName: 'Olematu automaat', lockerAddress: 'Kuskil 1' } })));
+  assert.equal(res.status, 400);
+  assert.equal(data.field, 'shipping.lockerId');
+  assert.match(data.error, /Omniva automaatide nimekirjast/);
+  assert.equal(stripe.calls.sessions.length, 0);
+  assert.equal((await db.query('SELECT count(*)::int AS n FROM orders'))[0].n, 0);
+
+  // Käsitsi sisestus (manual) on endiselt lubatud — haldus näeb seda käsitsi sisestatuna (locker_id puudub).
+  const manual = await call(handler, postJson(validBody({ shipping: { lockerId: '', lockerName: 'Rakvere Põhjakeskus', lockerAddress: '', manual: true } })));
+  assert.equal(manual.res.status, 200);
+  assert.equal((await getOrderByToken(db, manual.data.token)).locker_id, null);
+
+  // Selle vedaja nimekirja pole üldse puhvris (nt allikas maas) → ei saa kontrollida, tellimus luuakse.
+  const smart = await call(handler, postJson(validBody({ shipping: { carrier: 'smartpost', lockerId: '111', lockerName: 'Viimsi Prisma', lockerAddress: 'Sõpruse tee 15' } })));
+  assert.equal(smart.res.status, 200);
+});
+
 test('checkout: tarnehind tuleb valitud vedaja hinnast; alla 30 € lisandub tarne', async () => {
   await freshDb();
   const { handler, stripe } = setup();

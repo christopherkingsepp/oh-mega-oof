@@ -1997,7 +1997,7 @@
   justify-items: center;
   margin-top: 0.12em;
   font-family: var(--font-display);
-  font-size: clamp(2.3rem, 8.4vw, 8rem);
+  font-size: clamp(2.3rem, 7vw, 6rem);
   font-weight: 900;
   line-height: 0.92;
   letter-spacing: -0.045em;
@@ -2082,6 +2082,10 @@
   color: var(--pink-soft);
 }
 @media (max-width: 599px) {
+  /* telefonis pole viimase plokiga nii suurt tühja vahet jaluse ees */
+  .final {
+    padding-block: 72px 64px;
+  }
   .final__ctas {
     width: 100%;
   }

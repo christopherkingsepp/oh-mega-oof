@@ -190,7 +190,8 @@ export function mountPreviewDeck(root, opts = {}) {
     root.style.setProperty('--pvd-g', info.gradient);
     root.dataset.type = c.type;
     codeEl.textContent = info.code;
-    nameEl.textContent = info.name;
+    // SH = „Oled semu?“ stiilis kategooria MIDA V!!!U sees (mitte eraldi mäng Oled Semu?)
+    nameEl.textContent = c.type === 'sh' ? `„${info.name}“ stiilis` : info.name;
     if (c.bonus && BONUS_INFO[c.bonus]) {
       bonusEl.hidden = false;
       bonusEl.textContent = BONUS_INFO[c.bonus].label;

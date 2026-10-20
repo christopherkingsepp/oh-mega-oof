@@ -33,6 +33,11 @@
   opacity: 0.5;
 }
 .cat-crumbs a {
+  /* puuteala ≥ 44px ilma, et rida kõrgemaks läheks */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-block: -13px;
   color: var(--muted);
 }
 .cat-crumbs a:hover,
@@ -366,6 +371,10 @@
 .cat-bundle__items a {
   position: relative;
   z-index: 1;
+  /* puuteala ≥ 44px ilma paigutust muutmata */
+  display: inline-block;
+  padding-block: 10px;
+  margin-block: -10px;
   font-weight: 700;
   color: var(--text);
   text-decoration: underline;

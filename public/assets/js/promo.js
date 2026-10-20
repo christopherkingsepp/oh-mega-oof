@@ -28,7 +28,7 @@ const SCROLL_TRIGGER = 0.3; // 30% lehest
 const REMIND_AFTER = 3 * 24 * 60 * 60 * 1000; // pärast 3 päeva näita teaserit uuesti
 const AUTO_TUCK_SCREENS = 1.5; /**
  * Lehe võtmeelemendid, mida nurgakaart ei tohi katta: avalehe hind ja tellimisnupud,
- * tootelehe nimi, hind, ostuplokk, galerii noolenupud ja pisipildid.
+ * tootelehe nimi, hind, ostuplokk, galerii noolenupud, pisipildid ja kõik ostukorvi lisamise nupud.
  * Teised lehed saavad lisada [data-promo-avoid].
  */
 const AVOID = [
@@ -42,6 +42,8 @@ const AVOID = [
   '.pdp-qty',
   '.pdp-thumbs',
   '.pdp-stage__nav',
+  // kõik „Lisa ostukorvi“ nupud (avalehe, kataloogi ja ristmüügi kaardid, komplektid)
+  '[data-add-to-cart]',
   '[data-promo-avoid]',
 ].join(',');
 

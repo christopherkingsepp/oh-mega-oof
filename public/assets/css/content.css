@@ -1954,7 +1954,7 @@
 .wd-info p {
   margin-top: 8px;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
   line-height: 1.55;
 }
 .wd-info__note {
@@ -2027,4 +2027,24 @@
 }
 .model-form {
   scroll-margin-top: calc(var(--header-h) + 24px);
+}
+
+/* ---------- Loetavus: sisutekst vähemalt 15 px (õiguslehed, taganemine) ---------- */
+.tldr-card p,
+.legal-table td,
+.wd-steps p,
+.wd-info__note,
+.model-form__note {
+  font-size: 0.9375rem;
+}
+/* vormi vihjed ja märkused: vähemalt 14 px */
+.wd-hint,
+.wd-submit__note {
+  font-size: 0.875rem;
+}
+/* andmeloendi e-posti link: puuteala ≥ 44px ilma paigutust muutmata */
+.data-list dd > a {
+  display: inline-block;
+  padding-block: 11px;
+  margin-block: -11px;
 }

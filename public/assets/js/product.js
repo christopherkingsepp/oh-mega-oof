@@ -34,7 +34,7 @@ const samplePair = (game, id, label) => {
   return { kind: 'pair', back: c.back, front: c.front, alt: c.alt, label, size: CARD_SAMPLE_SIZE };
 };
 const boxImage = () => ({ kind: 'image', src: P.box, alt: `${P.name} mängukarp`, label: 'Tootepilt', w: 900, h: 900, contain: true });
-const cover = (alt) => ({ kind: 'image', src: P.cover, alt, label: 'Karp eest ja tagant', w: 1600, h: 900 });
+const cover = (alt) => ({ kind: 'image', src: P.cover, alt, label: 'Karp eest ja tagant', w: 1600, h: 900, wide: true });
 
 const GALLERY = {
   'mida-viiu': () => [
@@ -138,7 +138,7 @@ function slideHTML(s, i, n) {
   const a = `role="group" aria-roledescription="slaid" aria-label="${i + 1} / ${n}: ${esc(s.label)}"`;
   if (s.kind === 'box') return `<div class="pdp-slide pdp-slide--box" ${a}><div class="pdp-slide__box" data-box></div></div>`;
   if (s.kind === 'image')
-    return `<div class="pdp-slide pdp-slide--image${s.contain ? ' pdp-slide--product' : ''}" ${a}><img src="${esc(s.src)}" alt="${esc(s.alt)}" width="${s.w}" height="${s.h}" loading="lazy" decoding="async" draggable="false"></div>`;
+    return `<div class="pdp-slide pdp-slide--image${s.contain ? ' pdp-slide--product' : ''}${s.wide ? ' pdp-slide--wide' : ''}" ${a}><img src="${esc(s.src)}" alt="${esc(s.alt)}" width="${s.w}" height="${s.h}" loading="lazy" decoding="async" draggable="false"></div>`;
   const { width: w, height: h } = s.size;
   return `<div class="pdp-slide pdp-slide--pair" ${a}><div class="pdp-pair" style="--pair-ar:${w} / ${h}">
       <img class="pdp-pair__back" src="${esc(s.back)}" alt="" width="${w}" height="${h}" loading="lazy" decoding="async" draggable="false">

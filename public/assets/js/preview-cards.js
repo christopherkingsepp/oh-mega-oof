@@ -136,6 +136,11 @@ export function drawRound(size = 10, previousIds = null, random = Math.random) {
     const round = deck.slice(0, n);
     const same = prev && prev.size === n && round.every((c) => prev.has(c.id));
     // n === 19 korral on hulk paratamatult sama; muidu proovi uuesti (kordus on väga ebatõenäoline)
-    if (!same || n === PREVIEW_CARDS.length || attempt > 20) return round;
+    if (!same || n === PREVIEW_CARDS.length) return round;
+    if (attempt > 20) {
+      // Garantii ka rikutud juhuarvugeneraatori korral: vaheta üks kaart eelmisest voorust puuduva vastu.
+      round[n - 1] = PREVIEW_CARDS.find((c) => !prev.has(c.id));
+      return round;
+    }
   }
 }

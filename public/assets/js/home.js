@@ -207,7 +207,10 @@ function renderGames() {
 function initPeek() {
   const legend = $('[data-pvd-legend]');
   if (legend) legend.innerHTML = legendHTML({ tag: 'h3' });
-  $$('[data-shot-rule]').forEach((el) => (el.textContent = SHOT_RULE));
+  // Reeglikaardi tekst räägib kolmest põhikaardist; pealkiri ütleb „4 tüüpi“ — nimeta ka ÄGE-boonuskaardid,
+  // et tekstid ei läheks vastuollu.
+  const rule = SHOT_RULE.replace('kolme sorti kaarte: SH, OT ja SHOT.', 'kolme sorti põhikaarte (SH, OT ja SHOT) ning lisaks ÄGE-boonuskaardid.');
+  $$('[data-shot-rule]').forEach((el) => (el.textContent = rule));
   initPreviewDecks();
 }
 

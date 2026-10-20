@@ -1645,9 +1645,11 @@ function markServerField(field, msg) {
     return focusField(Cart.code() ? $('[data-remove-code]') : el.codeInput);
   }
   if (key === 'cart') return focusField($('#h-ostukorv'));
-  if (key === 'carrier') {
-    // Vedaja pole (enam) lubatud — värskenda nimekiri ja lase uuesti valida.
+  if (key === 'carrier' || field === 'shipping.lockerId') {
+    // Vedaja pole (enam) lubatud või valitud automaati pole enam nimekirjas —
+    // värskenda nimekiri ja lase uuesti valida.
     state.locker = null;
+    persist();
     try {
       sessionStorage.removeItem(LOCKER_KEY);
     } catch {

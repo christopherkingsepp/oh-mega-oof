@@ -180,3 +180,40 @@ test('tellimus: makstud tellimus näitab täitmise olekut', async () => {
   assert.equal(data.fulfillmentStatusLabel, 'Teel pakiautomaati');
   assert.equal(data.trackingCode, 'CC123456789EE');
 });
+
+test('tellimus: makstud, aga webhooki kinnituskiri ebaõnnestus → kinnitusleht proovib kirja uuesti (üks kord)', async () => {
+  const db = await freshDb();
+  const o = await order(db);
+  await markPaid(db, o.id, { paymentIntentId: 'pi_kordus', amountPaid: o.total_cents, at: new Date(), sessionId: o.sessionId });
+  // Webhook: laoseis tehtud, kirjad jäid saatmata (valvurid vabastatud).
+  await db.query('UPDATE orders SET inventory_applied_at = now(), confirmation_sent_at = NULL, admin_notified_at = NULL WHERE id = $1', [o.id]);
+  const { handler, mailer } = setup();
+  mailer.fail = true;
+  const r1 = await call(handler, req(`?t=${o.public_token}`));
+  assert.equal(r1.res.status, 200);
+  assert.equal(r1.data.paymentStatus, 'paid');
+  assert.equal((await getOrderById(db, o.id)).confirmation_sent_at, null, 'ebaõnnestunud katse vabastab valvuri');
+  mailer.fail = false;
+  await call(handler, req(`?t=${o.public_token}`));
+  await call(handler, req(`?t=${o.public_token}`));
+  const row = await getOrderById(db, o.id);
+  assert.ok(row.confirmation_sent_at && row.admin_notified_at);
+  assert.deepEqual(mailer.sent.map((m) => m.to), ['mari@example.ee', 'omanik@example.ee'], 'täpselt üks kliendi kiri ja üks teavitus');
+  // laoseisu ei vähendata uuesti
+  assert.equal((await db.query('SELECT count(*)::int AS n FROM inventory_movements WHERE order_id = $1', [o.id]))[0].n, 0);
+});
+
+test('tellimus: vana makse (üle 24 h) või tagastatud tellimus → kirju tagantjärele ei saadeta', async () => {
+  const db = await freshDb();
+  const o = await order(db);
+  await markPaid(db, o.id, { paymentIntentId: 'pi_vana', amountPaid: o.total_cents, at: new Date(Date.now() - 2 * 24 * 3600 * 1000), sessionId: o.sessionId });
+  await db.query('UPDATE orders SET inventory_applied_at = now(), confirmation_sent_at = now(), admin_notified_at = NULL WHERE id = $1', [o.id]);
+  const { handler, mailer } = setup();
+  await call(handler, req(`?t=${o.public_token}`));
+  assert.equal(mailer.sent.length, 0);
+  const o2 = await order(db);
+  await markPaid(db, o2.id, { paymentIntentId: 'pi_tagast', amountPaid: o2.total_cents, at: new Date(), sessionId: o2.sessionId });
+  await db.query("UPDATE orders SET payment_status = 'refunded', refunded_cents = total_cents, inventory_applied_at = now() WHERE id = $1", [o2.id]);
+  await call(handler, req(`?t=${o2.public_token}`));
+  assert.equal(mailer.sent.length, 0);
+});

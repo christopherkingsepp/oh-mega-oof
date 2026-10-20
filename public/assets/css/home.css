@@ -937,6 +937,14 @@
   color: var(--muted);
 }
 
+/* Laual on legend kitsas veerus: valem üles, tekst täislaiuses alla (muidu jääb tekstile ~140px) */
+@media (min-width: 1024px) {
+  .shot-rule {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 18px 20px;
+  }
+}
 @media (max-width: 1023px) {
   .peek__grid {
     grid-template-columns: minmax(0, 1fr);
@@ -1711,7 +1719,7 @@
   text-shadow: 0 0 18px rgba(255, 138, 28, 0.5);
 }
 .warning__fine {
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
   color: var(--muted);
 }
 

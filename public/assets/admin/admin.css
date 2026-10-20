@@ -1895,3 +1895,25 @@ input[type='date'].adm-input {
     background: none;
   }
 }
+
+/* Puutealad vähemalt 44px (puuteseadmetel) */
+@media (hover: none) and (pointer: coarse) {
+  .adm-nav__link,
+  .adm-brand,
+  .adm-btn--sm,
+  .adm-seg__btn,
+  .adm-icon-btn,
+  .adm-password__toggle,
+  .adm-skip,
+  .adm-chart__table > summary {
+    min-height: 44px;
+  }
+  .adm-icon-btn {
+    min-width: 44px;
+  }
+  .adm-login__foot a,
+  .adm-link-arrow {
+    display: inline-block;
+    padding-block: 12px;
+  }
+}

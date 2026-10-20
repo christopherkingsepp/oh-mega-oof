@@ -481,20 +481,10 @@ body.is-locked .promo-dock {
 .promo-dock {
   transition: transform 0.45s var(--ease-out), translate 0.45s var(--ease-out), bottom 0.45s var(--ease-out), opacity 0.3s, visibility 0.3s;
 }
-/* Tootelehe kleepuv „pill“ (desktop, all keskel) — tõsta kaart selle kohale, kui need võiksid kattuda */
-@media (min-width: 901px) and (max-width: 1279px) {
-  body.has-buybar .promo-dock {
-    --dock-bottom: 104px;
-  }
-}
 @media (max-width: 900px), (max-height: 500px) {
   .promo-dock {
     --dock-bottom: 14px;
     left: max(12px, env(safe-area-inset-left, 0px));
-  }
-  /* Mobiili kleepuv osturiba (~76px + turvaala) */
-  body.has-buybar .promo-dock {
-    --dock-bottom: 90px;
   }
 }
 

@@ -64,7 +64,7 @@ async function main() {
   const secret = randomBytes(48).toString('base64url');
 
   console.log(`
-Lisa need Netlify keskkonnamuutujatesse (Site configuration → Environment variables),
+Lisa need Netlify keskkonnamuutujatesse (Project configuration / vanemas vaates Site configuration → Environment variables),
 märgi need salajaseks (Secret) ja tee seejärel uus deploy:
 
 ADMIN_PASSWORD_HASH=${hash}

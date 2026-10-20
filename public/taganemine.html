@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="et">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Taganemine — 14-päevane taganemisõigus | ÄGE</title>
+  <meta name="description" content="Mõtlesid ümber? 14 päeva jooksul pärast paki kättesaamist võid ÄGE e-poe ostust taganeda ilma põhjust esitamata. Täida taganemisavaldus veebis ja saad kohe kinnituse.">
+  <meta name="theme-color" content="#07030a">
+  <link rel="icon" type="image/png" href="/assets/img/brand/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/img/brand/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ÄGE">
+  <meta property="og:title" content="Taganemine | ÄGE">
+  <meta property="og:description" content="14-päevane taganemisõigus: täida avaldus veebis ja saad kohe viitenumbri ning kinnituse e-postile.">
+  <!-- TODO: kui domeen on teada, tee og:image absoluutseks ja lisa og:url -->
+  <meta property="og:image" content="/assets/img/brand/og-image.jpg">
+  <meta property="og:locale" content="et_EE">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800;900&display=swap">
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/content.css">
+  <link rel="stylesheet" href="/assets/css/overlays.css">
+  <script type="module" src="/assets/js/main.js"></script>
+  <script type="module" src="/assets/js/taganemine.js"></script>
+</head>
+<body class="page-withdraw">
+  <div data-site-header></div>
+  <main id="main">
+    <section class="page-hero grain wd-hero" aria-labelledby="page-title">
+      <div class="bg-blobs" aria-hidden="true">
+        <span style="--x:-16%;--y:-50%;--s:50vw;--c:rgba(255,20,160,.45);--d:18s"></span>
+        <span style="--x:64%;--y:-30%;--s:40vw;--c:rgba(61,255,168,.14);--d:22s;--dx:-5vw"></span>
+      </div>
+      <div class="container page-hero__inner">
+        <nav class="crumbs" aria-label="Asukoht">
+          <a href="/">Avaleht</a><span aria-hidden="true">/</span><span aria-current="page">Taganemine</span>
+        </nav>
+        <span class="eyebrow">14 päeva meelemuutuseks</span>
+        <h1 id="page-title">Taganemine</h1>
+        <p class="lead">Mõtlesid ümber? 14 päeva jooksul pärast paki kättesaamist võid lepingust taganeda <strong>ilma põhjust esitamata</strong>. Täida allolev vorm — saad kohe viitenumbri ja kinnituse e-postile.</p>
+      </div>
+    </section>
+
+    <div class="wd">
+      <div class="container wd__grid">
+        <!-- ================= Vorm ================= -->
+        <div class="wd-card" data-wd-card>
+          <form class="wd-form" data-wd-form novalidate aria-labelledby="wd-form-title" data-promo-avoid>
+            <header class="wd-form__head">
+              <h2 id="wd-form-title">Taganemisavaldus</h2>
+              <p>Tärniga <span class="wd-req" aria-hidden="true">*</span> väljad on kohustuslikud.</p>
+            </header>
+
+            <div class="wd-alert" data-wd-alert role="alert" hidden></div>
+
+            <div class="wd-row">
+              <div class="field" data-field="name">
+                <label for="wd-name">Ees- ja perekonnanimi <span class="wd-req" aria-hidden="true">*</span></label>
+                <input class="input" id="wd-name" name="name" type="text" autocomplete="name" maxlength="100" required aria-describedby="wd-name-error" placeholder="Mari Maasikas">
+                <p class="field-error" id="wd-name-error" aria-live="polite"></p>
+              </div>
+              <div class="field" data-field="email">
+                <label for="wd-email">E-post <span class="wd-req" aria-hidden="true">*</span></label>
+                <input class="input" id="wd-email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="254" required aria-describedby="wd-email-hint wd-email-error" placeholder="mari@email.ee" spellcheck="false" autocapitalize="off">
+                <p class="wd-hint" id="wd-email-hint">Sinna saadame avalduse kinnituse.</p>
+                <p class="field-error" id="wd-email-error" aria-live="polite"></p>
+              </div>
+            </div>
+
+            <div class="wd-row">
+              <div class="field" data-field="orderNumber">
+                <label for="wd-order">Tellimuse number <span class="wd-req" aria-hidden="true">*</span></label>
+                <input class="input wd-mono" id="wd-order" name="orderNumber" type="text" autocomplete="off" maxlength="20" required aria-describedby="wd-order-hint wd-order-error" placeholder="AGE-1001" autocapitalize="characters" spellcheck="false">
+                <p class="wd-hint" id="wd-order-hint">Leiad selle tellimuse kinnituskirjast.</p>
+                <p class="field-error" id="wd-order-error" aria-live="polite"></p>
+              </div>
+              <div class="field" data-field="receivedDate">
+                <label for="wd-date">Kauba kättesaamise kuupäev</label>
+                <input class="input" id="wd-date" name="receivedDate" type="date" min="2024-01-01" aria-describedby="wd-date-hint wd-date-error">
+                <p class="wd-hint" id="wd-date-hint">Päev, mil võtsid paki automaadist. Kui ei mäleta, jäta tühjaks.</p>
+                <p class="field-error" id="wd-date-error" aria-live="polite"></p>
+              </div>
+            </div>
+
+            <fieldset class="wd-items" data-field="items" aria-describedby="wd-items-hint wd-items-error">
+              <legend class="label">Tagastatavad tooted</legend>
+              <p class="wd-hint" id="wd-items-hint">Vali kogu tellimus või ainult need mängud, millest taganed.</p>
+              <div class="wd-items__grid" data-wd-items></div>
+              <p class="field-error" id="wd-items-error" aria-live="polite"></p>
+            </fieldset>
+
+            <div class="field" data-field="message">
+              <label for="wd-message">Lisainfo <span class="wd-opt">(valikuline)</span></label>
+              <textarea class="textarea input wd-textarea" id="wd-message" name="message" rows="4" maxlength="2000" aria-describedby="wd-message-hint wd-message-error" placeholder="Nt mitu tükki tagastad või kuidas sinuga kõige parem ühendust võtta."></textarea>
+              <p class="wd-hint wd-hint--row" id="wd-message-hint"><span>Põhjust ei pea märkima.</span><span class="wd-count" data-wd-count aria-hidden="true">0 / 2000</span></p>
+              <p class="field-error" id="wd-message-error" aria-live="polite"></p>
+            </div>
+
+            <div class="wd-confirm" data-field="confirm">
+              <label class="check">
+                <input type="checkbox" id="wd-confirm" name="confirm" required aria-describedby="wd-confirm-error">
+                <span>Teatan, et <strong>taganen</strong> ülal nimetatud kaupade müügilepingust. <span class="wd-req" aria-hidden="true">*</span></span>
+              </label>
+              <p class="field-error" id="wd-confirm-error" aria-live="polite"></p>
+            </div>
+
+            <div class="wd-submit">
+              <button class="btn btn--primary btn--lg wd-submit__btn" type="submit" data-wd-submit>
+                <span class="wd-spinner" aria-hidden="true"></span>
+                <span data-wd-submit-label>Esita taganemisavaldus</span>
+              </button>
+              <p class="wd-submit__note">Avalduse esitamisega nõustud, et töötleme sinu andmeid avalduse menetlemiseks (vt <a href="/privaatsus#andmed">privaatsuspoliitika</a>).</p>
+            </div>
+          </form>
+
+          <!-- Kinnitus (201) -->
+          <section class="wd-done" data-wd-done hidden aria-labelledby="wd-done-title">
+            <span class="wd-done__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+            <p class="eyebrow">Avaldus on kätte saadud</p>
+            <h2 id="wd-done-title" tabindex="-1">Aitäh, saime sinu avalduse kätte!</h2>
+            <div class="wd-ref">
+              <span class="wd-ref__label">Viitenumber</span>
+              <strong class="wd-ref__code" data-wd-ref>TAG-XXXXXX</strong>
+              <button class="btn btn--ghost btn--sm wd-ref__copy" type="button" data-wd-copy>Kopeeri</button>
+            </div>
+            <dl class="wd-done__meta">
+              <div><dt>Kätte saadud</dt><dd data-wd-when></dd></div>
+              <div><dt>Tellimus</dt><dd data-wd-order></dd></div>
+              <div><dt>Kinnitus</dt><dd data-wd-mail></dd></div>
+            </dl>
+            <ol class="wd-done__next" role="list">
+              <li><strong>Saadame tagastamise juhised</strong> e-postiga (kuhu ja kuidas pakk saata).</li>
+              <li><strong>Saada kaup tagasi 14 päeva jooksul</strong> pärast avalduse esitamist. Tagastamise otsekulu kannad sina.</li>
+              <li><strong>Tagastame raha 14 päeva jooksul</strong> avalduse saamisest (sh algne tarnekulu), kuid võime oodata, kuni kaup on meieni jõudnud.</li>
+            </ol>
+            <div class="wd-done__actions">
+              <a class="btn btn--primary btn--lg" href="/">Avalehele</a>
+              <a class="btn btn--ghost btn--lg" href="/tingimused#taganemine">Taganemise tingimused</a>
+            </div>
+          </section>
+        </div>
+
+        <!-- ================= Selgitus ================= -->
+        <aside class="wd-aside" aria-labelledby="wd-how-title">
+          <div class="wd-info">
+            <h2 id="wd-how-title">Kuidas see käib?</h2>
+            <ol class="wd-steps" role="list">
+              <li>
+                <span class="wd-steps__n" aria-hidden="true">1</span>
+                <div><strong>Teata 14 päeva jooksul</strong><p>Taganemistähtaeg on 14 päeva alates päevast, mil võtsid paki automaadist. Piisab, kui saadad avalduse enne tähtaja lõppu.</p></div>
+              </li>
+              <li>
+                <span class="wd-steps__n" aria-hidden="true">2</span>
+                <div><strong>Saada kaup tagasi</strong><p>Hiljemalt 14 päeva jooksul pärast avaldust. Tagastamise otsese kulu kannad sina; juhised saadame e-postiga.</p></div>
+              </li>
+              <li>
+                <span class="wd-steps__n" aria-hidden="true">3</span>
+                <div><strong>Saad raha tagasi</strong><p>Hiljemalt 14 päeva jooksul avalduse saamisest, sh algne tavatarne. Võime oodata, kuni kaup on meieni jõudnud.</p></div>
+              </li>
+            </ol>
+            <p class="wd-info__note">Võid mängu kontrollida nagu poes — avada karbi ja kaardid üle vaadata. Kui mängu on mängitud ja kaardid on kulunud või puudu, võime arvestada kauba väärtuse vähenemist.</p>
+          </div>
+          <div class="wd-info wd-info--alt">
+            <h2>Eelistad e-kirja?</h2>
+            <p>Kirjuta aadressile <a href="mailto:aarmiselt@gmail.com" data-site-href="email" data-site-text="email">aarmiselt@gmail.com</a> ning lisa tellimuse number, oma nimi ja tooted, millest taganed. Võid kasutada ka <a href="/tingimused#tuupvorm">taganemisavalduse tüüpvormi</a>.</p>
+          </div>
+          <div class="wd-info wd-info--alt">
+            <h2>Mäng on vigane või katki?</h2>
+            <p>See ei ole taganemine — kirjuta meile ja lisa foto. Asendame vigase või kahjustatud mängu tasuta (seadusjärgsed õigused kehtivad 2 aastat). <a href="/tingimused#puudus">Loe lähemalt</a></p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+  <div data-site-footer></div>
+</body>
+</html>

@@ -1,0 +1,651 @@
+/* =========================================================================
+   ÄGE — kataloog (/kataloog). Sõltub base.css tokenitest.
+   ========================================================================= */
+
+/* ---------- Päis ---------- */
+.cat-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding-block: clamp(20px, 3vw, 40px) clamp(20px, 3vw, 36px);
+}
+.cat-hero .bg-blobs {
+  z-index: -1;
+}
+.cat-hero__inner {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+}
+.cat-crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 0 4px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--faint);
+}
+.cat-crumbs li + li::before {
+  content: '/';
+  margin: 0 10px;
+  opacity: 0.5;
+}
+.cat-crumbs a {
+  color: var(--muted);
+}
+.cat-crumbs a:hover,
+.cat-crumbs [aria-current] {
+  color: var(--text);
+}
+.cat-hero h1 {
+  font-size: clamp(2.3rem, 5.4vw, 4.4rem);
+}
+.cat-hero .lead {
+  max-width: 54ch;
+}
+.cat-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.cat-jump .chip {
+  min-height: 44px;
+  padding-inline: 16px;
+  color: var(--text);
+  transition: border-color 0.25s, background 0.25s;
+}
+.cat-jump .chip b {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 99px;
+  background: var(--pink);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #fff;
+}
+.cat-jump .chip:hover {
+  border-color: var(--pink-soft);
+  background: rgba(255, 47, 168, 0.12);
+}
+
+/* ---------- Sektsioonid ---------- */
+.catalog-page main > .cat-section {
+  padding-block: clamp(28px, 4vw, 56px);
+  scroll-margin-top: calc(var(--header-h) + 8px);
+}
+.cat-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 20px;
+  margin-bottom: clamp(16px, 2.4vw, 28px);
+}
+.cat-section__head h2 {
+  font-size: clamp(1.7rem, 3.2vw, 2.6rem);
+}
+.cat-section__head p {
+  margin: 0;
+}
+
+/* ---------- Mängude kaardid ---------- */
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 1.8vw, 24px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cat-card {
+  --acc: var(--pink);
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  background: #0d040b;
+  scroll-margin-top: calc(var(--header-h) + 12px);
+  transition: border-color 0.35s, box-shadow 0.45s, translate 0.45s var(--ease-out);
+}
+.cat-card:hover {
+  translate: 0 -4px;
+  border-color: color-mix(in srgb, var(--acc) 55%, transparent);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5), 0 0 50px color-mix(in srgb, var(--acc) 20%, transparent);
+}
+.cat-card.is-target,
+.cat-bundle.is-target {
+  border-color: var(--pink-soft);
+  box-shadow: 0 0 0 2px var(--pink), var(--glow);
+}
+.cat-card__media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 0.86;
+  overflow: hidden;
+  padding: 6% 8% 2%;
+}
+.cat-card--mida .cat-card__media {
+  background: radial-gradient(70% 70% at 50% 40%, rgba(255, 47, 168, 0.7), transparent 72%),
+    radial-gradient(45% 50% at 90% 95%, rgba(184, 0, 122, 0.5), transparent 70%), #0b0108;
+}
+.cat-card--semu .cat-card__media {
+  background: radial-gradient(65% 65% at 50% 45%, rgba(111, 123, 255, 0.6), transparent 72%),
+    radial-gradient(50% 60% at 85% 100%, rgba(197, 107, 224, 0.45), transparent 70%), #07051a;
+}
+.cat-card--vigur .cat-card__media {
+  background: radial-gradient(65% 65% at 50% 45%, rgba(255, 0, 180, 0.55), transparent 72%),
+    radial-gradient(50% 60% at 15% 100%, rgba(232, 18, 63, 0.5), transparent 70%), #14020a;
+}
+.cat-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 22px 30px rgba(0, 0, 0, 0.55));
+  transition: scale 0.6s var(--ease-out);
+}
+.cat-card:hover .cat-card__img {
+  scale: 1.04;
+}
+.cat-card__badges {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: flex;
+  gap: 6px;
+}
+.cat-card__body {
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  align-content: start;
+  gap: 8px;
+  padding: clamp(16px, 2vw, 24px);
+}
+.cat-card__name {
+  font-size: clamp(1.3rem, 2vw, 1.7rem);
+}
+.cat-card__name a::after {
+  /* kogu kaart on tootelehe link (nupud jäävad eraldi klikitavaks) */
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.cat-card__name a:focus-visible {
+  outline: none;
+}
+.cat-card:has(.cat-card__name a:focus-visible) {
+  outline: 2px solid var(--pink-hot);
+  outline-offset: 3px;
+}
+.cat-card__tagline {
+  margin: 0;
+  font-family: var(--font-condensed);
+  font-size: 1.1rem;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--acc) 65%, #fff);
+}
+.cat-card__short {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.cat-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cat-card__facts li {
+  padding: 5px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.cat-card__buy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.cat-card__price {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 1.9vw, 1.7rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.cat-card__add {
+  justify-self: end;
+  min-height: 46px;
+}
+.cat-add__short {
+  display: none;
+}
+.cat-card__more {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 6px;
+  min-height: 44px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+.cat-card__more .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--pink-soft);
+  transition: translate 0.25s var(--ease-spring);
+}
+.cat-card__more:hover {
+  color: var(--text);
+}
+.cat-card__more:hover .icon {
+  translate: 4px 0;
+}
+
+/* ---------- Komplektid ---------- */
+.cat-section--bundles {
+  background: radial-gradient(60% 50% at 50% 55%, rgba(255, 47, 168, 0.09), transparent 70%);
+}
+.cat-bundles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 1.8vw, 24px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cat-bundle {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+  align-items: center;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line-strong);
+  background: radial-gradient(90% 70% at 20% 30%, rgba(10, 75, 181, 0.4), transparent 65%),
+    radial-gradient(80% 70% at 80% 80%, rgba(255, 0, 180, 0.28), transparent 65%), #0d040b;
+  scroll-margin-top: calc(var(--header-h) + 12px);
+  transition: border-color 0.35s, box-shadow 0.45s;
+}
+.cat-bundle--all {
+  background: radial-gradient(80% 90% at 20% 40%, rgba(255, 47, 168, 0.38), transparent 62%),
+    radial-gradient(60% 80% at 100% 100%, rgba(139, 44, 255, 0.24), transparent 60%), linear-gradient(135deg, #1e0619, #0a0208);
+}
+.cat-bundle:hover {
+  border-color: var(--pink-soft);
+}
+.cat-bundle__media {
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  padding: clamp(10px, 1.6vw, 22px);
+}
+.cat-bundle__img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  filter: drop-shadow(0 24px 34px rgba(0, 0, 0, 0.55));
+  transition: transform 0.7s var(--ease-out);
+}
+.cat-bundle:hover .cat-bundle__img {
+  transform: translateY(-6px) scale(1.03);
+}
+.cat-bundle__body {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  padding: clamp(18px, 2.2vw, 28px) clamp(18px, 2.2vw, 28px) clamp(18px, 2.2vw, 28px) 0;
+}
+.cat-bundle__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.cat-bundle__name {
+  font-size: clamp(1.35rem, 2.2vw, 1.9rem);
+}
+.cat-bundle__contents {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.4;
+  color: var(--pink-soft);
+}
+.cat-bundle__contents > span:first-child {
+  font-weight: 600;
+  color: var(--muted);
+}
+.cat-bundle__items {
+  display: grid;
+  gap: 2px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cat-bundle__items li {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+.cat-bundle__items img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+.cat-bundle__items a {
+  position: relative;
+  z-index: 1;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s;
+}
+.cat-bundle__items a:hover {
+  text-decoration-color: var(--pink-soft);
+}
+.cat-bundle__items span {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cat-bundle__calc {
+  display: grid;
+  gap: 4px;
+  margin: 2px 0 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.25);
+}
+.cat-bundle__calc > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cat-bundle__calc dt {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.cat-bundle__calc dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cat-bundle__calc s {
+  color: var(--faint);
+  font-weight: 700;
+}
+.cat-bundle__now dt {
+  color: var(--text);
+  font-weight: 800;
+}
+.cat-bundle__now dd {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.2vw, 1.9rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+.cat-bundle__save dt,
+.cat-bundle__save dd {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--ok);
+}
+.cat-bundle__add {
+  justify-self: stretch;
+  min-height: 50px;
+  margin-top: 2px;
+}
+
+/* ---------- Info ---------- */
+.cat-info__list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cat-info__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.cat-info__list .icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  color: var(--pink-soft);
+}
+.cat-info__list div {
+  display: grid;
+  gap: 4px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.cat-info__list strong {
+  font-size: 0.98rem;
+  color: var(--text);
+}
+.cat-info__list a {
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 47, 168, 0.6);
+  text-underline-offset: 3px;
+}
+.cat-info__age {
+  margin: 14px 0 0;
+  font-size: 0.9375rem;
+  color: var(--faint);
+}
+
+/* ---------- Kohandused ekraani järgi ---------- */
+@media (max-width: 1099px) {
+  .cat-bundles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cat-bundle {
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr);
+  }
+}
+@media (max-width: 899px) {
+  .cat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* MIDA V!!!U üle kogu laiuse, rõhtkaardina */
+  .cat-grid > .cat-card:first-child {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+  .cat-grid > .cat-card:first-child .cat-card__media {
+    aspect-ratio: auto;
+    height: 100%;
+  }
+  .cat-info__list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 699px) {
+  .cat-hero__inner {
+    gap: 10px;
+  }
+  .cat-hero .lead {
+    font-size: 1rem;
+  }
+  .cat-grid {
+    gap: 10px;
+  }
+  .cat-card {
+    border-radius: var(--radius);
+  }
+  .cat-card__badges {
+    top: 10px;
+    left: 10px;
+    gap: 4px;
+  }
+  .cat-card__badges .badge {
+    padding: 4px 8px;
+    font-size: 0.62rem;
+  }
+  .cat-card__body {
+    gap: 6px;
+    padding: 12px 12px 6px;
+  }
+  .cat-card__name {
+    font-size: clamp(1.05rem, 4.8vw, 1.3rem);
+  }
+  .cat-card__tagline,
+  .cat-card__facts {
+    display: none;
+  }
+  .cat-card__short {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 0.9375rem;
+    line-height: 1.45;
+  }
+  .cat-card__buy {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    margin-top: 2px;
+    padding-top: 10px;
+  }
+  .cat-card__price {
+    font-size: 1.3rem;
+  }
+  .cat-card__add {
+    justify-self: stretch;
+    min-height: 44px;
+    padding-inline: 10px;
+  }
+  .cat-card__more {
+    justify-self: center;
+    font-size: 0.875rem;
+  }
+  /* esimene (MIDA V!!!U) kaart rõhtsalt */
+  .cat-grid > .cat-card:first-child {
+    grid-template-columns: minmax(118px, 40%) minmax(0, 1fr);
+  }
+  .cat-grid > .cat-card:first-child .cat-card__media {
+    padding: 10px 0 10px 8px;
+  }
+  .cat-grid > .cat-card:first-child .cat-card__tagline {
+    display: block;
+    font-size: 1rem;
+  }
+  .cat-grid > .cat-card:first-child .cat-card__body {
+    padding: 14px 14px 6px 10px;
+  }
+  .cat-grid > .cat-card:first-child .cat-card__short {
+    -webkit-line-clamp: 3;
+  }
+
+  .cat-bundle {
+    grid-template-columns: 112px minmax(0, 1fr);
+    grid-template-areas:
+      'media badges'
+      'media name'
+      'media contents'
+      'items items'
+      'calc  calc'
+      'add   add';
+    align-items: start;
+    column-gap: 12px;
+    padding: 14px;
+    border-radius: var(--radius);
+  }
+  .cat-bundle__media {
+    grid-area: media;
+    padding: 0;
+  }
+  .cat-bundle__body {
+    display: contents;
+  }
+  .cat-bundle__badges {
+    grid-area: badges;
+    margin-bottom: 6px;
+  }
+  .cat-bundle__badges .badge {
+    padding: 4px 8px;
+    font-size: 0.62rem;
+  }
+  .cat-bundle__name {
+    grid-area: name;
+    margin-bottom: 6px;
+    font-size: clamp(1.15rem, 5.4vw, 1.4rem);
+  }
+  .cat-bundle__contents {
+    grid-area: contents;
+    font-size: 0.9375rem;
+  }
+  .cat-bundle__items {
+    grid-area: items;
+    margin-top: 12px;
+  }
+  .cat-bundle__calc {
+    grid-area: calc;
+    margin-top: 10px;
+  }
+  .cat-bundle__add {
+    grid-area: add;
+    margin-top: 12px;
+  }
+}
+@media (max-width: 699px) {
+  /* kahe veeruga kaartidel lühem nupusilt (aria-label jääb täispikk) */
+  .cat-grid > .cat-card:not(:first-child) .cat-add__long {
+    display: none;
+  }
+  .cat-grid > .cat-card:not(:first-child) .cat-add__short {
+    display: inline;
+  }
+}
+@media (max-width: 379px) {
+  .cat-grid > .cat-card:not(:first-child) .cat-card__add .icon {
+    display: none;
+  }
+}

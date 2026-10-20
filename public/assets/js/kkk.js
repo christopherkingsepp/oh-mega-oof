@@ -350,6 +350,10 @@ function openFromHash() {
   if (el?.matches('details.faq-item')) {
     toggleItem(el, true, { animate: false });
     requestAnimationFrame(() => el.scrollIntoView({ block: 'start', behavior: 'auto' }));
+  } else if (el?.matches('details')) {
+    // nt tingimuste taganemisavalduse tüüpvorm (#tuupvorm)
+    el.open = true;
+    requestAnimationFrame(() => el.scrollIntoView({ block: 'start', behavior: 'auto' }));
   }
 }
 

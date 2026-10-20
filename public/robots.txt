@@ -4,6 +4,9 @@ Allow: /
 Disallow: /__forms
 Disallow: /aitah
 Disallow: /ostukorv
+Disallow: /admin
+Disallow: /api/
+Disallow: /__mock-stripe/
 
 # TODO: kui domeen on teada, eemalda järgmise rea eest „# “ ja pane sinna päris aadress
 # (sama aadress ka sitemap.xml-i ja assets/js/site.js → SITE.url). Seni ei viita me

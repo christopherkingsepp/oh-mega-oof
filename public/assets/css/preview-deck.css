@@ -11,6 +11,7 @@
   position: relative;
   container-type: inline-size;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   width: 100%;
   max-width: 620px;
@@ -476,6 +477,13 @@
   margin: 2px 0 0;
   font-size: 1.05rem;
 }
+.pvd-legend__sub {
+  font-family: var(--font-body);
+  font-size: 0.82em;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--muted);
+}
 .pvd-legend__text {
   margin: 0;
   font-size: 0.95rem;
@@ -498,13 +506,56 @@
   .pvd__name {
     font-size: 0.92rem;
   }
+}
+
+/* Telefonis: legend on rõhtne libistatav rida (vähem kõrgust, järgmine kaart piilub servast) */
+@media (max-width: 699px) {
+  .pvd-legend {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: min(80vw, 320px);
+    gap: 10px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter);
+    margin-inline: calc(var(--gutter) * -1);
+    padding: 4px var(--gutter) 10px;
+    scrollbar-width: none;
+  }
+  .pvd-legend::-webkit-scrollbar {
+    display: none;
+  }
   .pvd-legend__item {
-    grid-template-columns: 64px minmax(0, 1fr);
-    gap: 12px;
-    padding: 12px;
+    scroll-snap-align: start;
+    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-areas:
+      'img  meta'
+      'img  name'
+      'text text';
+    align-items: end;
+    gap: 4px 12px;
+    padding: 14px;
   }
   .pvd-legend__back {
-    width: 64px;
+    grid-area: img;
+    width: 72px;
+  }
+  .pvd-legend__body {
+    display: contents;
+  }
+  .pvd-legend__meta {
+    grid-area: meta;
+  }
+  .pvd-legend__name {
+    grid-area: name;
+    align-self: start;
+    margin: 0;
+    font-size: 1rem;
+  }
+  .pvd-legend__text {
+    grid-area: text;
+    margin-top: 8px;
   }
 }
 

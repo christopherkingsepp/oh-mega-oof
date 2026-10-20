@@ -957,12 +957,21 @@ main {
   }
 }
 .cart-line > img,
-.thumb-stack img {
+.cart-line__img {
   width: 76px;
-  height: 56px;
-  object-fit: cover;
-  border-radius: 10px;
+  height: 76px;
+  object-fit: contain;
+  padding: 2px;
+  border-radius: 12px;
   border: 1px solid var(--line);
+  background: radial-gradient(70% 70% at 50% 45%, rgba(255, 47, 168, 0.16), transparent 75%), rgba(255, 255, 255, 0.03);
+}
+.cart-line__contents {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--pink-soft);
 }
 .cart-line__name {
   font-weight: 800;
@@ -990,19 +999,6 @@ main {
 .qty button[disabled] {
   opacity: 0.35;
   cursor: not-allowed;
-}
-/* Komplektide pisipilt: kuhjatud karbid */
-.thumb-stack {
-  position: relative;
-  display: block;
-  width: 76px;
-  height: 56px;
-}
-.thumb-stack img {
-  position: absolute;
-  inset: 0;
-  transform: translate(calc((var(--i) - (var(--n) - 1) / 2) * 7px), calc(var(--i) * -3px)) rotate(calc((var(--i) - (var(--n) - 1) / 2) * 6deg)) scale(0.86);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
 }
 .free-ship {
   display: grid;
@@ -1121,9 +1117,9 @@ main {
 }
 .toast img {
   width: 44px;
-  height: 32px;
-  object-fit: cover;
-  border-radius: 6px;
+  height: 44px;
+  flex: none;
+  object-fit: contain;
 }
 .toast a {
   margin: -12px -8px -12px auto;
@@ -1235,6 +1231,38 @@ main {
   }
   .cart-drawer__foot .free-ship {
     display: none;
+  }
+}
+
+/* ---------- Telefon: kompaktsem rütm ja pealkirjad (360–599px) ----------
+   Mitte kogu lehe skaleerimine: ainult pealkirjad ja sektsioonide vahed, sisutekst jääb ≥ 15px. */
+@media (max-width: 599px) {
+  h1,
+  .h1 {
+    font-size: clamp(2.05rem, 9.4vw, 2.6rem);
+  }
+  h2,
+  .h2 {
+    font-size: clamp(1.6rem, 7.4vw, 2rem);
+    line-height: 1.06;
+  }
+  h3,
+  .h3 {
+    font-size: clamp(1.08rem, 4.6vw, 1.25rem);
+  }
+  .lead {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+  .section {
+    padding-block: 48px;
+  }
+  .section--tight {
+    padding-block: 36px;
+  }
+  .section-head {
+    gap: 12px;
+    margin-bottom: 24px;
   }
 }
 

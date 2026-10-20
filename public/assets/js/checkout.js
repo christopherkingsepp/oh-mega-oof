@@ -1237,7 +1237,7 @@ const V = {
   },
   email(v) {
     const s = String(v || '').trim();
-    if (!s) return 'Sisesta e-posti aadress — sinna tuleb kviitung.';
+    if (!s) return 'Sisesta e-posti aadress — sinna saadame tellimuse kinnituse.';
     if (!isValidEmail(s)) return emailProblem(s);
     return '';
   },

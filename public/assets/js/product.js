@@ -2,222 +2,114 @@
 // Leht määrab toote atribuudiga <body data-product="mida-viiu|oled-semu|vigur">.
 //
 // Siin on: galerii (3D karp + pildid, swipe, pisipildid), kogusevalija, „Osta kohe“,
-// kleepuv osturiba, 3D-mudeli modaal (Pacdora), lohistatav kaardipakk (kaardid pööravad),
-// ristmüügi kaardid, „lendab ostukorvi“ animatsioon ja JSON-LD täisaadressid.
-import { PRODUCTS, formatEur, toCents, MAX_QTY_PER_ITEM } from './catalog.js';
+// 3D-mudeli modaal (Pacdora), MIDA V!!!U eelvaade (preview-deck.js), Oled Semu? ja Viguri
+// päris kaartide pakk (card-samples.js, kaardid pööravad), ristmüügi kaardid,
+// „lendab ostukorvi“ animatsioon ja JSON-LD täisaadressid.
+import { PRODUCTS, formatEur, toCents, MAX_QTY_PER_ITEM, productContents } from './catalog.js';
 import { Cart } from './cart.js';
 import { SITE } from './site.js';
 import { ICONS, trapFocus, initReveal, esc } from './layout.js';
 import { mountBox } from './box3d.js';
+import { previewCard, CARD_SIZE, SHOT_RULE } from './preview-cards.js';
+import { CARD_SAMPLES, CARD_SAMPLE_SIZE } from './card-samples.js';
+import { initPreviewDecks, legendHTML } from './preview-deck.js';
 
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
 const PID = document.body.dataset.product;
 const P = PRODUCTS[PID];
-const card = (n) => `/assets/img/cards/${n}.webp`;
 const eur = (price) => formatEur(toCents(price));
-
-/* =========================================================================
-   HTML-kaardid (Oled Semu? ja Vigur — neil pole kaardipilte)
-   Mõõdud skaleeruvad konteineri järgi (cqw), nii et sama märgistus töötab
-   pisipildis, galeriis ja kaardipakis.
-   ========================================================================= */
-const dots = (n) => Array.from({ length: 5 }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
-
-const HC = {
-  semuBack: () =>
-    `<span class="hcard hcard--semu-back"><span class="hcard__in">
-      <img class="hcard__brand" src="/assets/img/brand/age-logo-pink.webp" alt="" width="161" height="112" loading="lazy" draggable="false">
-      <span class="hcard__semu"><span>Oled</span><span>Semu<b>?</b></span></span>
-      <span class="hcard__label">Seltskonna kaardimäng</span>
-    </span></span>`,
-  semuQ: (pts, q) =>
-    `<span class="hcard hcard--semu"><span class="hcard__in">
-      <span class="hcard__label">„Oled Semu?“</span>
-      <span class="hcard__text">${esc(q)}</span>
-      <span class="hcard__level" aria-hidden="true">${dots(pts / 100)}</span>
-    </span><span class="hcard__pts" aria-hidden="true">${pts}<small>p</small></span></span>`,
-  semuBonus: (letter) =>
-    `<span class="hcard hcard--bonus"><span class="hcard__in">
-      <span class="hcard__label">Boonuskaart</span>
-      <span class="hcard__letter">${esc(letter)}</span>
-      <span class="hcard__small">Kogu kokku ÄGE ja varasta teistelt punkte!</span>
-    </span></span>`,
-  vigurBack: () =>
-    `<span class="hcard hcard--vigur-back"><span class="hcard__bgword" aria-hidden="true">Vigur Vigur Vigur Vigur</span><span class="hcard__in">
-      <img class="hcard__brand" src="/assets/img/brand/age-logo-pink.webp" alt="" width="161" height="112" loading="lazy" draggable="false">
-      <span class="hcard__vigur">Vigur</span>
-      <span class="hcard__label">Olukorrakaart</span>
-    </span></span>`,
-  vigurSit: (text) =>
-    `<span class="hcard hcard--vigur"><span class="hcard__in">
-      <span class="hcard__label">Olukord</span>
-      <span class="hcard__serif">${esc(text)}</span>
-      <span class="hcard__small">Räägi nii, et sind usutakse.</span>
-    </span></span>`,
-  shhBack: () =>
-    `<span class="hcard hcard--shh-back"><span class="hcard__in">
-      <span class="hcard__label">Tegevuskaart</span>
-      <span class="hcard__shh">Shh…</span>
-      <span class="hcard__small">Ära näita kellelegi</span>
-    </span></span>`,
-  shhFront: (truth) =>
-    `<span class="hcard hcard--shh ${truth ? 'hcard--truth' : 'hcard--lie'}"><span class="hcard__in">
-      <span class="hcard__label">Shh…</span>
-      <span class="hcard__text">${truth ? 'Räägi tõtt' : 'Valeta'}</span>
-      <span class="hcard__small">${truth ? 'Iga sõna peab olema päriselt juhtunud.' : 'Mõtle välja nii hea lugu, et keegi ei kahtle.'}</span>
-    </span></span>`,
-};
-
-const imgFace = (src, alt = '') =>
-  `<img src="${src}" alt="${esc(alt)}" width="760" height="509" loading="lazy" decoding="async" draggable="false">`;
 
 /* =========================================================================
    Toodete sisu: 3D karp, galerii, kaardipakk
    ========================================================================= */
-const BOX = {
-  'mida-viiu': { theme: 'mida', title: 'MIDA V!!!U', tagline: 'Rohkem kui kaardimäng', facts: ['85 kaarti', '50+ shotti', '18+'] },
-  'oled-semu': { theme: 'semu', title: 'OLED SEMU?', tagline: 'Seltskonna kaardimäng', facts: ['75 küsimust', '5 raskusastet', '7 boonuskaarti'] },
-  vigur: { theme: 'vigur', title: 'VIGUR', tagline: 'Seltskonna kaardimäng', facts: ['50 olukorda', '32 „Shh“-kaarti', 'Bluffi!'] },
+const THEME = { 'mida-viiu': 'mida', 'oled-semu': 'semu', vigur: 'vigur' };
+
+/** Kaardipaar galeriisse: tagakülg + esikülg (päris kaardipildid). */
+const midaPair = (id, label) => {
+  const c = previewCard(id);
+  return { kind: 'pair', back: c.back, front: c.img, alt: c.alt, label, size: CARD_SIZE };
 };
+const samplePair = (game, id, label) => {
+  const c = CARD_SAMPLES[game].find((x) => x.id === id);
+  return { kind: 'pair', back: c.back, front: c.front, alt: c.alt, label, size: CARD_SAMPLE_SIZE };
+};
+const boxImage = () => ({ kind: 'image', src: P.box, alt: `${P.name} mängukarp`, label: 'Tootepilt', w: 900, h: 900, contain: true });
+const cover = (alt) => ({ kind: 'image', src: P.cover, alt, label: 'Karp eest ja tagant', w: 1600, h: 900 });
 
 const GALLERY = {
-  'mida-viiu': [
+  'mida-viiu': () => [
     { kind: 'box', label: '3D-karp' },
-    { kind: 'image', src: '/assets/img/games/mida-viiu-cover.webp', alt: 'MIDA V!!!U kaanepilt: neoonroosa logo mustal taustal', label: 'Kaanepilt' },
-    { kind: 'pair', back: card('back-sh'), front: card('sh-vangi'), alt: 'SH-kaart: „Mille eest ma vangi läheksin? (Parim vastus saab kaardi)“', label: 'SH-kaardid' },
-    { kind: 'pair', back: card('back-ot'), front: card('ot-kaob-ara'), alt: 'OT-kaart: „Kes kaob ära õhtu jooksul?“', label: 'OT-kaardid' },
-    { kind: 'pair', back: card('back-shot'), front: card('shot-telefon'), alt: 'SHOT-kaart: „Anna oma telefon viieks minutiks teiste kasutusse“', label: 'SHOT-kaardid' },
-    { kind: 'pair', back: card('back-age'), front: card('age-pealekas'), alt: 'ÄGE boonuskaart: „Pealekas läinud kolmeks ringiks“', label: 'ÄGE boonuskaardid' },
-    { kind: 'pair', back: card('reeglid-1'), front: card('reeglid-2'), alt: 'Reeglikaardid: SHOT – tõde/tegu või joo, ÄGE – väljapääsu pole, ja vastutustundliku mängimise hoiatus', label: 'Reeglikaardid' },
+    boxImage(),
+    cover('MIDA V!!!U mängukarp eest ja tagant'),
+    midaPair('sh-vangi', 'SH-kaardid'),
+    midaPair('ot-kaob-ara', 'OT-kaardid'),
+    midaPair('shot-telefon', 'SHOT-kaardid'),
+    midaPair('age-pealekas', 'Boonuskaardid'),
   ],
-  'oled-semu': [
+  'oled-semu': () => [
     { kind: 'box', label: '3D-karp' },
-    { kind: 'image', src: '/assets/img/games/oled-semu-cover.webp', alt: 'Oled Semu? kaanepilt: roosa-lilla logo sinakaslillal taustal', label: 'Kaanepilt' },
-    { kind: 'hpair', back: HC.semuBack(), front: HC.semuQ(300, 'Mis on mu unistuste töökoht?'), alt: 'Küsimuskaart (300 punkti): „Mis on mu unistuste töökoht?“', label: 'Küsimuskaardid' },
-    { kind: 'hpair', back: HC.semuQ(100, 'Mis oli mu esimese lemmiklooma nimi?'), front: HC.semuBonus('Ä'), alt: 'Boonuskaart tähega Ä: kogu kokku ÄGE ja varasta punkte', label: 'Boonuskaardid' },
+    boxImage(),
+    cover('Oled Semu? mängukarp eest ja tagant'),
+    samplePair('oled-semu', 'a300-kohting', 'Küsimuskaardid'),
+    samplePair('oled-semu', 'g500-president', 'Küsimuskaardid 500 punkti'),
+    samplePair('oled-semu', 'boonus1-pikem', 'Boonuskaardid'),
   ],
-  vigur: [
+  vigur: () => [
     { kind: 'box', label: '3D-karp' },
-    { kind: 'image', src: '/assets/img/games/vigur-cover.webp', alt: 'Vigur kaanepilt: helendav VIGUR-logo roosal-punasel taustal', label: 'Kaanepilt' },
-    { kind: 'hpair', back: HC.vigurBack(), front: HC.vigurSit('Mu kõige hullem reis'), alt: 'Olukorrakaart: „Mu kõige hullem reis“', label: 'Olukorrakaardid' },
-    { kind: 'hpair', back: HC.shhBack(), front: HC.shhFront(false), alt: '„Shh“-tegevuskaart: „Valeta“', label: '„Shh“-kaardid' },
+    boxImage(),
+    cover('Vigur mängukarp eest ja tagant'),
+    samplePair('vigur', 'olukord-parim-spikker', 'Olukorrakaardid'),
+    samplePair('vigur', 'shh-valeta', 'Shh-kaardid'),
   ],
 };
 
-const MIDA_TYPES = {
-  sh: { label: 'SH · „Oled Semu?“', back: 'back-sh' },
-  ot: { label: 'OT · Kõige tõenäolisemalt', back: 'back-ot' },
-  shot: { label: 'SHOT · Tõde/tegu või joo', back: 'back-shot' },
-  age: { label: 'ÄGE · Boonuskaart', back: 'back-age' },
-  ullatus: { label: 'Üllatus!', back: 'back-sh' },
-};
-const MIDA_CARDS = [
-  ['sh', 'sh-go-to-jook', 'Minu go to alkoholiga jook?'],
-  ['ot', 'ot-friikim', 'Kes siit grupist on kõige friikim?'],
-  ['shot', 'shot-kusib-mida', 'Seltskond küsib sinult ükskõik mida'],
-  ['sh', 'sh-vangi', 'Mille eest ma vangi läheksin? (Parim vastus saab kaardi)'],
-  ['age', 'age-koik-peale-sinu', 'Kõik peale sinu joovad!'],
-  ['ot', 'ot-kaob-ara', 'Kes kaob ära õhtu jooksul?'],
-  ['shot', 'shot-telefon', 'Anna oma telefon viieks minutiks teiste kasutusse'],
-  ['ullatus', 'ullatus-koik-joovad', 'Üllatus! Kõik joovad!'],
-  ['sh', 'sh-suurim-viga', 'Mu suurim viga täis peaga?'],
-  ['ot', 'ot-korgijook', 'Kes kõige tõenäolisemalt korgijooki annab?'],
-  ['age', 'age-kahele-teo', 'Saad kahele inimesele teo öelda'],
-  ['shot', 'shot-korv', 'Kõige piinlikum inimene, kellelt olen korvi saanud?'],
-  ['sh', 'sh-first-kiss', 'Mu first kiss?'],
-  ['ot', 'ot-kaotab-asjad', 'Kes kaotaks täis peaga kõik oma asjad ära?'],
-  ['age', 'age-pealekas', 'Pealekas läinud kolmeks ringiks'],
-  ['shot', 'shot-seltskond-teo', 'Seltskond ütleb sulle teo'],
-  ['sh', 'sh-esimene-jooming', 'Milline nägi välja mu esimene jooming?'],
-  ['ot', 'ot-kaklus', 'Kes satub kaklustesse?'],
-  ['age', 'age-grupp-valib', 'Grupp valib, kellele ja mida sa kirjutad'],
-  ['sh', 'sh-varastanud', 'Kas ma olen kunagi midagi varastanud?'],
-  ['age', 'age-paased-shotist', 'Pääsed järgmisest shotist'],
-];
-
-const SEMU_CARDS = [
-  { pts: 100, q: 'Mis on mu lemmiktoit?' },
-  { pts: 200, q: 'Mis oli mu esimese lemmiklooma nimi?' },
-  { bonus: 'Ä' },
-  { pts: 300, q: 'Mis on mu unistuste töökoht?' },
-  { pts: 400, q: 'Millist superjõudu ma kõige rohkem tahaksin?' },
-  { pts: 200, q: 'Kuhu ma kõige rohkem reisida tahaksin?' },
-  { pts: 500, q: 'Mis on mu kõige suurem hirm?' },
-  { bonus: 'G' },
-  { pts: 300, q: 'Millise kuulsusega ma kõige meelsamini õhtust sööksin?' },
-  { pts: 100, q: 'Mis on mu lemmikvärv?' },
-  { pts: 400, q: 'Mis on mu salajane anne?' },
-  { bonus: 'E' },
-  { pts: 500, q: 'Mis oli mu lapsepõlve kõige suurem pahandus?' },
-];
-
-const VIGUR_CARDS = [
-  { sit: 'Minu lemmikmälestus kooliajast' },
-  { shh: true },
-  { sit: 'Kõige piinlikum hetk peol' },
-  { shh: false },
-  { sit: 'Mu kõige hullem reis' },
-  { sit: 'Kõige kummalisem asi, mida olen söönud' },
-  { shh: false },
-  { sit: 'Kord, kui jäin millegagi vahele' },
-  { shh: true },
-  { sit: 'Mu kõige veidram unenägu' },
-  { sit: 'Kõige julgem asi, mida olen teinud' },
-  { shh: false },
-];
+/** Oled Semu? ja Viguri kaardipakk päris kaardipiltidest (card-samples.js). */
+const sampleFace = (src, alt = '') =>
+  `<img src="${esc(src)}" alt="${esc(alt)}" width="${CARD_SAMPLE_SIZE.width}" height="${CARD_SAMPLE_SIZE.height}" loading="lazy" decoding="async" draggable="false">`;
 
 function buildDeck() {
-  if (PID === 'mida-viiu') {
-    return {
-      start: 3,
-      labels: Object.fromEntries(Object.entries(MIDA_TYPES).map(([k, v]) => [k, v.label])),
-      chips: [
-        ['sh', 'SH'],
-        ['ot', 'OT'],
-        ['shot', 'SHOT'],
-        ['age', 'ÄGE'],
-        ['ullatus', 'Üllatus!'],
-      ],
-      cards: MIDA_CARDS.map(([type, file, text]) => ({
-        type,
-        aria: `${MIDA_TYPES[type].label}: ${text}`,
-        back: imgFace(card(MIDA_TYPES[type].back)),
-        front: imgFace(card(file), text),
-      })),
-    };
-  }
+  const list = CARD_SAMPLES[PID];
+  if (!list) return null;
   if (PID === 'oled-semu') {
+    // järjekord: punktid kasvavad, boonuskaardid vahele
+    const order = ['g100-ananassid', 'a200-kelleks', 'boonus1-pikem', 'a300-kohting', 'e400-narvi', 'boonus3-lyhem', 'g500-president'];
+    const cards = order.map((id) => list.find((c) => c.id === id)).filter(Boolean);
     return {
-      start: 3,
-      labels: { 100: '100 punkti · soojendus', 200: '200 punkti', 300: '300 punkti', 400: '400 punkti', 500: '500 punkti · ainult päris semudele', bonus: 'Boonuskaart' },
+      start: 1,
+      labels: { 100: '100 punkti', 200: '200 punkti', 300: '300 punkti', 400: '400 punkti', 500: '500 punkti', boonus: 'Boonuskaart' },
       chips: [
         ['100', '100'],
         ['200', '200'],
         ['300', '300'],
         ['400', '400'],
         ['500', '500'],
-        ['bonus', 'Boonus'],
+        ['boonus', 'Boonus'],
       ],
-      cards: SEMU_CARDS.map((c) =>
-        c.bonus
-          ? { type: 'bonus', aria: `Boonuskaart, täht ${c.bonus}: kogu kokku ÄGE ja varasta punkte`, back: HC.semuBack(), front: HC.semuBonus(c.bonus) }
-          : { type: String(c.pts), aria: `${c.pts} punkti: ${c.q}`, back: HC.semuBack(), front: HC.semuQ(c.pts, c.q) },
-      ),
+      cards: cards.map((c) => ({
+        type: c.kind === 'boonus' ? 'boonus' : String(c.points),
+        label: c.meta,
+        aria: `${c.meta}: ${c.text}`,
+        back: sampleFace(c.back),
+        front: sampleFace(c.front, c.alt),
+      })),
     };
   }
+  const order = ['olukord-eelmine-synnipaev', 'shh-raagi-tott', 'olukord-parim-spikker', 'olukord-raha-kogusin', 'shh-valeta', 'olukord-lemmikmanguasi'];
+  const cards = order.map((id) => list.find((c) => c.id === id)).filter(Boolean);
   return {
-    start: 3,
-    labels: { sit: 'Olukorrakaart', truth: '„Shh“-kaart · Räägi tõtt', lie: '„Shh“-kaart · Valeta' },
+    start: 1,
+    labels: { olukord: 'Olukorrakaart', tott: 'Shh-kaart · Räägi tõtt!', vale: 'Shh-kaart · Valeta!' },
     chips: [
-      ['sit', 'Olukorrad'],
-      ['truth', 'Räägi tõtt'],
-      ['lie', 'Valeta'],
+      ['olukord', 'Olukorrad'],
+      ['tott', 'Räägi tõtt!'],
+      ['vale', 'Valeta!'],
     ],
-    cards: VIGUR_CARDS.map((c) =>
-      c.sit
-        ? { type: 'sit', aria: `Olukorrakaart: ${c.sit}`, back: HC.vigurBack(), front: HC.vigurSit(c.sit) }
-        : { type: c.shh ? 'truth' : 'lie', aria: `„Shh“-kaart: ${c.shh ? 'Räägi tõtt' : 'Valeta'}`, back: HC.shhBack(), front: HC.shhFront(c.shh) },
-    ),
+    cards: cards.map((c) => ({
+      type: c.kind === 'olukord' ? 'olukord' : c.id === 'shh-valeta' ? 'vale' : 'tott',
+      aria: `${c.meta}: ${c.text}`,
+      back: sampleFace(c.back),
+      front: sampleFace(c.front, c.alt),
+    })),
   };
 }
 
@@ -246,30 +138,26 @@ function slideHTML(s, i, n) {
   const a = `role="group" aria-roledescription="slaid" aria-label="${i + 1} / ${n}: ${esc(s.label)}"`;
   if (s.kind === 'box') return `<div class="pdp-slide pdp-slide--box" ${a}><div class="pdp-slide__box" data-box></div></div>`;
   if (s.kind === 'image')
-    return `<div class="pdp-slide pdp-slide--image" ${a}><img src="${s.src}" alt="${esc(s.alt)}" width="1600" height="900" loading="lazy" decoding="async" draggable="false"></div>`;
-  if (s.kind === 'pair')
-    return `<div class="pdp-slide pdp-slide--pair" ${a}><div class="pdp-pair">
-      <img class="pdp-pair__back" src="${s.back}" alt="" width="760" height="509" loading="lazy" decoding="async" draggable="false">
-      <img class="pdp-pair__front" src="${s.front}" alt="${esc(s.alt)}" width="760" height="509" loading="lazy" decoding="async" draggable="false">
-    </div></div>`;
-  return `<div class="pdp-slide pdp-slide--pair" ${a}><div class="pdp-pair">
-      <span class="pdp-pair__back" aria-hidden="true">${s.back}</span>
-      <span class="pdp-pair__front" role="img" aria-label="${esc(s.alt)}">${s.front}</span>
+    return `<div class="pdp-slide pdp-slide--image${s.contain ? ' pdp-slide--product' : ''}" ${a}><img src="${esc(s.src)}" alt="${esc(s.alt)}" width="${s.w}" height="${s.h}" loading="lazy" decoding="async" draggable="false"></div>`;
+  const { width: w, height: h } = s.size;
+  return `<div class="pdp-slide pdp-slide--pair" ${a}><div class="pdp-pair" style="--pair-ar:${w} / ${h}">
+      <img class="pdp-pair__back" src="${esc(s.back)}" alt="" width="${w}" height="${h}" loading="lazy" decoding="async" draggable="false">
+      <img class="pdp-pair__front" src="${esc(s.front)}" alt="${esc(s.alt)}" width="${w}" height="${h}" loading="lazy" decoding="async" draggable="false">
     </div></div>`;
 }
 
 function thumbHTML(s, i) {
   let inner;
-  if (s.kind === 'box') inner = `<img src="${P.image}" alt="" width="1000" height="691" decoding="async"><span class="pdp-thumb__tag">3D</span>`;
-  else if (s.kind === 'image') inner = `<img src="${s.src}" alt="" width="1600" height="900" loading="lazy" decoding="async">`;
-  else if (s.kind === 'pair') inner = `<img src="${s.front}" alt="" width="760" height="509" loading="lazy" decoding="async">`;
-  else inner = `<span class="pdp-thumb__card" aria-hidden="true">${s.front}</span>`;
+  if (s.kind === 'box') inner = `<img class="pdp-thumb__contain" src="${esc(P.image)}" alt="" width="240" height="240" decoding="async"><span class="pdp-thumb__tag">3D</span>`;
+  else if (s.kind === 'image')
+    inner = `<img${s.contain ? ' class="pdp-thumb__contain"' : ''} src="${esc(s.contain ? P.image : s.src)}" alt="" width="${s.contain ? 240 : s.w}" height="${s.contain ? 240 : s.h}" loading="lazy" decoding="async">`;
+  else inner = `<img class="pdp-thumb__card" src="${esc(s.front)}" alt="" width="${s.size.width}" height="${s.size.height}" loading="lazy" decoding="async">`;
   return `<button class="pdp-thumb" type="button" data-thumb="${i}" aria-label="Näita: ${esc(s.label)}"${i === 0 ? ' aria-current="true"' : ''}>${inner}</button>`;
 }
 
 function initGallery() {
   const root = document.querySelector('[data-gallery]');
-  const slides = GALLERY[PID];
+  const slides = GALLERY[PID]?.();
   if (!root || !slides) return;
   const stage = root.querySelector('.pdp-stage');
   const track = root.querySelector('[data-track]');
@@ -342,26 +230,22 @@ function initGallery() {
   // Hoia aktiivne slaid paigas, kui akna suurus muutub.
   new ResizeObserver(() => track.scrollTo({ left: cur * track.clientWidth, behavior: 'auto' })).observe(track);
 
-  // 3D karp
+  // 3D karp (püstine: elemendi kõrgus = 2.144 × laius)
   const boxEl = track.querySelector('[data-box]');
-  const cfg = BOX[PID];
-  if (boxEl && cfg) {
+  if (boxEl && P.faces) {
     const slide = boxEl.parentElement;
     const size = () => {
       const w = slide.clientWidth;
       const h = slide.clientHeight;
-      // karbi elemendi kõrgus ≈ 0.97 × laius, lisaks vihje ja hõljumise varu
-      const bw = Math.max(160, Math.min(w * 0.68, (h * 0.74) / 0.97, 460));
+      const bw = Math.max(90, Math.min(w * 0.44, (h * 0.9) / 2.144, 300));
       boxEl.style.setProperty('--w', `${Math.round(bw)}px`);
     };
     size();
     new ResizeObserver(size).observe(slide);
     mountBox(boxEl, {
-      front: P.image,
-      theme: cfg.theme,
-      title: cfg.title,
-      tagline: cfg.tagline,
-      facts: cfg.facts,
+      faces: P.faces,
+      dims: P.dims,
+      theme: THEME[PID],
       speed: 16,
       startAngle: -26,
       hint: 'Lohista, et keerutada',
@@ -379,7 +263,6 @@ function initBuy() {
   const minus = document.querySelector('[data-qty-step="-1"]');
   const plus = document.querySelector('[data-qty-step="1"]');
   const totalEls = document.querySelectorAll('[data-qty-total]');
-  const barPrice = document.querySelector('[data-buybar-price]');
   const clamp = (v) => Math.max(1, Math.min(MAX_QTY_PER_ITEM, parseInt(v, 10) || 1));
 
   const sync = () => {
@@ -392,7 +275,6 @@ function initBuy() {
       const strong = el.querySelector('strong');
       if (strong) strong.textContent = total;
     });
-    if (barPrice) barPrice.textContent = q > 1 ? `${q} × ${eur(P.price)}` : eur(P.price);
   };
   const set = (v) => {
     input.value = String(clamp(v));
@@ -423,64 +305,6 @@ function initBuy() {
 }
 
 /* =========================================================================
-   Kleepuv osturiba (mobiilis allservas, desktopis hõljuv pill)
-   ========================================================================= */
-function initBuybar() {
-  const bar = document.querySelector('[data-buybar]');
-  const cta = document.querySelector('[data-main-cta]');
-  if (!bar || !cta) return;
-  const mobile = window.matchMedia('(max-width: 900px)');
-  let ctaVisible = true;
-  let ctaAbove = false;
-  let footerVisible = false;
-  let shown = null;
-
-  const update = () => {
-    // Desktopis hõljub riba pillina sisu kohal. Jaluse juures peidame selle, et see
-    // ei kataks vanusehoiatust ega jaluse linke (mobiilis jätab jalus riba jaoks ruumi).
-    const show = !ctaVisible && (ctaAbove || (mobile.matches && window.scrollY > 260)) && (mobile.matches || !footerVisible);
-    if (show === shown) return;
-    shown = show;
-    bar.classList.toggle('is-visible', show);
-    bar.inert = !show;
-    bar.setAttribute('aria-hidden', String(!show));
-    document.body.classList.toggle('has-buybar', show);
-  };
-  new IntersectionObserver(
-    ([en]) => {
-      ctaVisible = en.isIntersecting;
-      ctaAbove = !en.isIntersecting && en.boundingClientRect.top < 0;
-      update();
-    },
-    { threshold: 0 },
-  ).observe(cta);
-  const footer = document.querySelector('.site-footer');
-  if (footer) {
-    new IntersectionObserver(
-      ([en]) => {
-        footerVisible = en.isIntersecting;
-        update();
-      },
-      { rootMargin: '0px 0px -24px 0px' },
-    ).observe(footer);
-  }
-  let raf = 0;
-  window.addEventListener(
-    'scroll',
-    () => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        update();
-      });
-    },
-    { passive: true },
-  );
-  mobile.addEventListener?.('change', update);
-  bar.inert = true;
-}
-
-/* =========================================================================
    „Lendab ostukorvi“ animatsioon
    ========================================================================= */
 function initFlyToCart() {
@@ -493,13 +317,13 @@ function initFlyToCart() {
     const a = button.getBoundingClientRect();
     const b = target.getBoundingClientRect();
     if (!a.width || !b.width) return;
-    const w = 84;
+    const w = 96;
     const el = document.createElement('img');
     el.src = p.image;
     el.alt = '';
     el.className = 'pdp-fly';
     el.style.left = `${a.left + a.width / 2 - w / 2}px`;
-    el.style.top = `${a.top + a.height / 2 - (w * 0.69) / 2}px`;
+    el.style.top = `${a.top + a.height / 2 - w / 2}px`;
     el.style.width = `${w}px`;
     document.body.appendChild(el);
     const dx = b.left + b.width / 2 - (a.left + a.width / 2);
@@ -610,6 +434,7 @@ function initDeck() {
   const root = document.querySelector('[data-deck]');
   if (!root) return;
   const deck = buildDeck();
+  if (!deck) return;
   const stage = root.querySelector('[data-deck-stage]');
   const labelEl = root.querySelector('[data-deck-label]');
   const countEl = root.querySelector('[data-deck-count]');
@@ -678,7 +503,7 @@ function initDeck() {
       el.tabIndex = k === i ? 0 : -1;
     });
     const c = data[i];
-    labelEl.textContent = deck.labels[c.type] || '';
+    labelEl.textContent = c.label || deck.labels[c.type] || '';
     countEl.textContent = `${i + 1} / ${n}`;
     chipEls.forEach((ch) => ch.setAttribute('aria-pressed', String(ch.dataset.t === c.type)));
   }
@@ -874,7 +699,7 @@ const BLUFF = [
   { q: 'ÄGE müüs 2024/25. õppeaastal üle 200 mängu.', truth: true, a: 'Üle 200 ÄGE mängu leidis 2024/25. õppeaastal oma seltskonna.' },
   { q: 'Viguri pakis on 500 olukorrakaarti.', truth: false, a: 'Olukorrakaarte on 50 ja lisaks 32 salajast „Shh“-tegevuskaarti.' },
   { q: 'ÄGE võitis JA Eesti auhinna „Sotsiaalmeedia täht“.', truth: true, a: 'Auhind tuli õpilasfirmade laadalt Rocca al Mares.' },
-  { q: 'Vigurit saab mängida ainult kahekesi.', truth: false, a: 'Mängijaid on vaja vähemalt kolm — ja mida rohkem, seda raskem on valetajat tabada.' },
+  { q: 'Vigurit saab mängida kuni 10 mängijaga.', truth: true, a: 'Reeglite järgi mängib Vigurit kuni 10 inimest — mida rohkem jutustajaid, seda raskem on valetajat tabada.' },
 ];
 
 function initBluff() {
@@ -953,21 +778,21 @@ function initBluff() {
 function xcardHTML(p) {
   const bundle = Array.isArray(p.includes);
   const full = bundle ? p.includes.reduce((s, id) => s + toCents(PRODUCTS[id].price), 0) : 0;
-  const media = bundle
-    ? `<span class="xcard__stack" data-n="${p.includes.length}">${p.includes
-        .map((id) => `<img src="${PRODUCTS[id].image}" alt="" width="1000" height="691" loading="lazy" decoding="async">`)
-        .join('')}</span>`
-    : `<img class="xcard__img" src="${p.image}" alt="" width="1000" height="691" loading="lazy" decoding="async">`;
+  const url = bundle ? `/kataloog#${p.id}` : p.url;
+  const media = `<img class="xcard__img" src="${esc(p.box || p.image)}" alt="" width="900" height="900" loading="lazy" decoding="async">`;
   const badges = [p.badge ? `<span class="badge">${esc(p.badge)}</span>` : '', p.adult ? '<span class="badge badge--18">18+</span>' : ''].join('');
+  const contents = bundle
+    ? productContents(p.id)
+        .map((c) => `${c.qty}× ${c.name}`)
+        .join(', ')
+    : p.tagline;
   return `<article class="xcard${bundle ? ' xcard--bundle' : ''}" style="--xgrad:${esc(p.gradient)};--xacc:${esc(p.accent)}" data-reveal>
-    <a class="xcard__media" href="${p.url}" tabindex="-1" aria-hidden="true">${media}<span class="xcard__badges">${badges}</span>${
-      bundle ? `<span class="xcard__save">Säästad ${formatEur(full - toCents(p.price))}</span>` : ''
-    }</a>
+    <a class="xcard__media" href="${url}" tabindex="-1" aria-hidden="true">${media}<span class="xcard__badges">${badges}</span></a>
     <div class="xcard__body">
-      <h3 class="xcard__name"><a href="${p.url}">${esc(p.name)}</a></h3>
-      <p class="xcard__tag">${esc(bundle && !p.name.includes('+') ? p.includes.map((id) => PRODUCTS[id].name).join(' + ') : p.tagline)}</p>
+      <h3 class="xcard__name"><a href="${url}">${esc(p.name)}</a></h3>
+      <p class="xcard__tag">${esc(contents)}</p>
       <div class="xcard__foot">
-        <p class="xcard__price"><strong>${formatEur(toCents(p.price))}</strong>${bundle ? `<s aria-label="Tavahind">${formatEur(full)}</s>` : ''}</p>
+        <p class="xcard__price"><strong>${formatEur(toCents(p.price))}</strong>${bundle ? `<span class="xcard__was">Eraldi ostes <s>${formatEur(full)}</s></span>` : ''}</p>
         <button class="btn btn--sm ${bundle ? 'btn--primary' : 'btn--ghost'} xcard__add" type="button" data-add-to-cart="${p.id}" aria-label="Lisa ostukorvi: ${esc(p.name)}">${ICONS.cart}<span>Lisa</span></button>
       </div>
     </div>
@@ -996,15 +821,24 @@ function absolutizeJsonLd() {
   });
 }
 
+/* =========================================================================
+   MIDA V!!!U: eelvaade (preview-deck.js) ja kaarditüüpide legend
+   ========================================================================= */
+function initPreview() {
+  document.querySelectorAll('[data-pvd-legend]').forEach((el) => (el.innerHTML = legendHTML({ tag: 'h3' })));
+  document.querySelectorAll('[data-shot-rule]').forEach((el) => (el.textContent = SHOT_RULE));
+  initPreviewDecks();
+}
+
 /* ---------- Käivitus ---------- */
 if (P) {
   renderPrices();
   initGallery();
   initBuy();
-  initBuybar();
   initFlyToCart();
   initModelModal();
   initDeck();
+  initPreview();
   initBluff();
   initCrossSell();
   absolutizeJsonLd();

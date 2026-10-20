@@ -59,8 +59,8 @@ export const PRODUCTS = {
     dims: { w: 1, h: 1.543, d: 0.601 },
     accent: '#6f7bff',
     gradient: 'linear-gradient(100deg, #0a4bb5 0%, #c56be0 100%)',
-    short: '75 küsimust viies raskusastmes, 7 boonuskaarti ja punktivargus. Mäng, mis näitab, kes on päriselt semu.',
-    facts: ['85 kaarti', '75 küsimust', '7 boonuskaarti', '12+'],
+    short: '75 küsimust viiel punktitasemel ja 7 boonuskaarti. Küsid enda kohta, sõbrad vastavad — mäng, mis näitab, kes on päriselt semu.',
+    facts: ['85 kaarti', '75 küsimust', 'Kuni 10 mängijat', '12+'],
   },
   vigur: {
     id: 'vigur',
@@ -85,8 +85,8 @@ export const PRODUCTS = {
     dims: { w: 1, h: 1.543, d: 0.601 },
     accent: '#ff1f6b',
     gradient: 'linear-gradient(100deg, #ff00b4 0%, #e8123f 100%)',
-    short: '50 olukorrakaarti ja 32 „Shh“-tegevuskaarti. Bluffi, naera ja arva ära, kes valetab.',
-    facts: ['82 kaarti', '50 olukorda', '32 tegevuskaarti', '12+'],
+    short: '50 olukorrakaarti ja 32 „Shh“-kaarti. Räägi oma elust üks äge lugu — tõsi või vale — ja vaata, kas sõbrad tabavad su ära.',
+    facts: ['82 kaarti', '50 olukorda', 'Kuni 10 mängijat', '12+'],
   },
   'komplekt-semu-vigur': {
     id: 'komplekt-semu-vigur',
@@ -95,7 +95,7 @@ export const PRODUCTS = {
     price: 20.0,
     badge: 'KOMPLEKT',
     adult: false,
-    url: '/#mangud',
+    url: '/kataloog#komplekt-semu-vigur',
     // komplekti pilt: mõlemad karbid koos (image 240x240, box 900x900, imagePng 480x480)
     image: '/assets/img/games/komplekt-semu-vigur-sm.webp',
     box: '/assets/img/games/komplekt-semu-vigur.webp',
@@ -103,8 +103,8 @@ export const PRODUCTS = {
     includes: ['oled-semu', 'vigur'],
     accent: '#a35cff',
     gradient: 'linear-gradient(100deg, #0a4bb5 0%, #ff00b4 100%)',
-    short: 'Mõlemad klassikud koos. Säästad 5,90 €.',
-    facts: ['2 mängu', 'Säästad 5,90 €'],
+    short: 'Mõlemad klassikud ühes komplektis — soodsam kui eraldi ostes.',
+    facts: ['2 mängu', '1× Oled Semu?', '1× Vigur'],
   },
   'komplekt-koik': {
     id: 'komplekt-koik',
@@ -113,7 +113,7 @@ export const PRODUCTS = {
     price: 33.0,
     badge: 'PARIM DIIL',
     adult: true,
-    url: '/#komplekt',
+    url: '/kataloog#komplekt-koik',
     // komplekti pilt: kõik kolm karpi koos (image 240x240, box 900x900, imagePng 480x480)
     image: '/assets/img/games/komplekt-koik-sm.webp',
     box: '/assets/img/games/komplekt-koik.webp',
@@ -121,8 +121,8 @@ export const PRODUCTS = {
     includes: ['mida-viiu', 'oled-semu', 'vigur'],
     accent: '#ff2fa8',
     gradient: 'linear-gradient(100deg, #0a4bb5 0%, #ff2fa8 55%, #e8123f 100%)',
-    short: 'MIDA V!!!U + Oled Semu? + Vigur. Säästad 10,40 €.',
-    facts: ['3 mängu', 'Säästad 10,40 €'],
+    short: 'MIDA V!!!U + Oled Semu? + Vigur — kõik kolm mängu soodsamalt kui eraldi ostes.',
+    facts: ['3 mängu', '1× MIDA V!!!U', '1× Oled Semu?', '1× Vigur'],
   },
 };
 

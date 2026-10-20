@@ -36,13 +36,13 @@ body[data-product='vigur'] {
   --blob-b: rgba(232, 18, 63, 0.55);
   --blob-c: rgba(255, 110, 60, 0.25);
 }
-body[data-product='oled-semu'] :is(main, .pdp-buybar, .pdp-model) .btn--primary,
-body[data-product='vigur'] :is(main, .pdp-buybar, .pdp-model) .btn--primary {
+body[data-product='oled-semu'] :is(main, .pdp-model) .btn--primary,
+body[data-product='vigur'] :is(main, .pdp-model) .btn--primary {
   --btn-bg: var(--theme-grad);
   box-shadow: 0 0 24px rgba(var(--acc-rgb), 0.5), 0 0 64px rgba(var(--acc-rgb), 0.22);
 }
-body[data-product='oled-semu'] :is(main, .pdp-buybar) .btn--primary:hover,
-body[data-product='vigur'] :is(main, .pdp-buybar) .btn--primary:hover {
+body[data-product='oled-semu'] :is(main) .btn--primary:hover,
+body[data-product='vigur'] :is(main) .btn--primary:hover {
   box-shadow: 0 0 34px rgba(var(--acc-rgb), 0.75), 0 0 90px rgba(var(--acc-rgb), 0.3);
 }
 body[data-product] main .eyebrow {
@@ -60,10 +60,6 @@ body[data-product='mida-viiu'] .pdp-grad-text {
   text-shadow: var(--glow-text);
 }
 
-/* Toast tõuseb osturiba kohale, kui riba on nähtav */
-body.has-buybar .toast-region {
-  bottom: calc(var(--buybar-h, 76px) + 14px + env(safe-area-inset-bottom));
-}
 
 /* =========================================================================
    Ülaosa
@@ -201,7 +197,7 @@ body.has-buybar .toast-region {
 .pdp-pair {
   position: relative;
   width: 76%;
-  aspect-ratio: 760 / 509;
+  aspect-ratio: var(--pair-ar, 1074 / 720);
 }
 .pdp-pair > * {
   position: absolute;
@@ -378,15 +374,6 @@ body.has-buybar .toast-region {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-.pdp-thumb__card {
-  position: absolute;
-  inset: 12% 8%;
-  display: grid;
-  place-items: center;
-}
-.pdp-thumb__card .hcard {
-  border-radius: 6px;
 }
 .pdp-thumb__tag {
   position: absolute;
@@ -815,123 +802,6 @@ body.has-buybar .toast-region {
   color: var(--text);
 }
 
-/* =========================================================================
-   Kleepuv osturiba
-   ========================================================================= */
-.pdp-buybar {
-  --buybar-h: 76px;
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 60;
-  padding: 10px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-  background: rgba(10, 3, 9, 0.88);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border-top: 1px solid var(--line-strong);
-  box-shadow: 0 -20px 50px rgba(0, 0, 0, 0.45);
-  transform: translateY(110%);
-  visibility: hidden;
-  transition: transform 0.45s var(--ease-out), visibility 0s linear 0.45s;
-}
-.pdp-buybar.is-visible {
-  transform: none;
-  visibility: visible;
-  transition: transform 0.5s var(--ease-out), visibility 0s;
-}
-body.is-locked .pdp-buybar {
-  transform: translateY(110%);
-  visibility: hidden;
-}
-.pdp-buybar__inner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  max-width: var(--container);
-  margin-inline: auto;
-}
-.pdp-buybar__inner img {
-  flex: none;
-  width: 58px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-}
-.pdp-buybar__info {
-  flex: 1;
-  min-width: 0;
-  display: grid;
-  line-height: 1.25;
-}
-.pdp-buybar__info strong {
-  font-family: var(--font-display);
-  font-size: 0.86rem;
-  font-weight: 800;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.pdp-buybar__info span {
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-.pdp-buybar__btn {
-  flex: none;
-  min-height: 46px;
-}
-@media (max-width: 420px) {
-  .pdp-buybar__inner {
-    gap: 10px;
-  }
-  .pdp-buybar__inner img {
-    width: 48px;
-    height: 34px;
-  }
-  .pdp-buybar__btn {
-    padding-inline: 16px;
-  }
-  .pdp-buybar__btn .icon {
-    display: none;
-  }
-}
-@media (min-width: 901px) {
-  .pdp-buybar {
-    left: 50%;
-    right: auto;
-    bottom: 22px;
-    width: min(560px, calc(100vw - 40px));
-    padding: 8px 8px 8px 10px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-pill);
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6), 0 0 40px rgba(var(--acc-rgb), 0.2);
-    transform: translate(-50%, 160%);
-  }
-  .pdp-buybar.is-visible {
-    transform: translate(-50%, 0);
-  }
-  body.is-locked .pdp-buybar {
-    transform: translate(-50%, 160%);
-  }
-  .pdp-buybar__inner img {
-    border-radius: 50%;
-    width: 46px;
-    height: 46px;
-  }
-  body.has-buybar .toast-region {
-    bottom: 104px;
-  }
-}
-@media (max-width: 900px) {
-  /* jäta jaluse alla ruumi, et osturiba midagi ei kataks */
-  body[data-product] .site-footer {
-    padding-bottom: calc(32px + 76px + env(safe-area-inset-bottom));
-  }
-}
-
 /* Lendav karp ostukorvi */
 .pdp-fly {
   position: fixed;
@@ -1017,8 +887,7 @@ body.is-locked .pdp-buybar {
   perspective: 900px;
   margin-bottom: 6px;
 }
-.pdp-type__visual > img,
-.pdp-type__visual > .hcard {
+.pdp-type__visual > img {
   display: block;
   width: 100%;
   border-radius: var(--card-r);
@@ -1038,6 +907,7 @@ body.is-locked .pdp-buybar {
   font-size: 0.9rem;
 }
 .pdp-type__count span {
+  padding-top: 0.12em;
   font-family: var(--font-condensed);
   font-size: clamp(3rem, 5vw, 4.2rem);
   line-height: 0.85;
@@ -1231,7 +1101,7 @@ body.is-locked .pdp-buybar {
   position: relative;
   isolation: isolate;
   z-index: 0;
-  height: calc(var(--cw) / 1.493 * 1.62);
+  height: calc(var(--cw) / 1.52 * 1.62);
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
@@ -1246,7 +1116,7 @@ body.is-locked .pdp-buybar {
   left: 50%;
   top: 6%;
   width: var(--cw);
-  aspect-ratio: 760 / 509;
+  aspect-ratio: var(--card-ar, 1074 / 720);
   margin-left: calc(var(--cw) / -2);
   padding: 0;
   border: 0;
@@ -1446,213 +1316,6 @@ body.is-locked .pdp-buybar {
   .pdp-deck__bar {
     gap: 10px;
   }
-}
-
-/* =========================================================================
-   HTML-kaardid (Oled Semu?, Vigur)
-   ========================================================================= */
-.hcard {
-  position: relative;
-  display: block;
-  width: 100%;
-  aspect-ratio: 760 / 509;
-  container-type: inline-size;
-  overflow: hidden;
-  border-radius: var(--card-r);
-  color: #fff;
-  text-align: center;
-  isolation: isolate;
-  user-select: none;
-}
-.deck-card__face > .hcard,
-.pdp-pair > * > .hcard {
-  height: 100%;
-  border-radius: 0;
-}
-.hcard__in {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  justify-items: center;
-  align-items: center;
-  padding: 7cqw 9cqw 6.5cqw;
-  gap: 2cqw;
-}
-.hcard__label {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 2.9cqw;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  opacity: 0.95;
-}
-.hcard__text {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 5.6cqw;
-  line-height: 1.18;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-  text-wrap: balance;
-}
-.hcard__small {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 2.6cqw;
-  letter-spacing: 0.04em;
-  opacity: 0.85;
-  text-wrap: balance;
-}
-.hcard__brand {
-  width: 13cqw;
-  height: auto;
-}
-.hcard__level {
-  display: flex;
-  gap: 1.4cqw;
-}
-.hcard__level i {
-  width: 2.2cqw;
-  height: 2.2cqw;
-  border-radius: 50%;
-  border: 0.35cqw solid rgba(255, 255, 255, 0.8);
-}
-.hcard__level i.on {
-  background: #fff;
-  box-shadow: 0 0 2cqw rgba(255, 255, 255, 0.8);
-}
-.hcard__pts {
-  position: absolute;
-  right: 4.5cqw;
-  bottom: 3cqw;
-  font-family: var(--font-condensed);
-  font-size: 7cqw;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.95);
-}
-.hcard__pts small {
-  font-size: 0.5em;
-  margin-left: 0.1em;
-}
-.hcard--semu {
-  background: linear-gradient(100deg, #0a4bb5 0%, #c56be0 100%);
-}
-.hcard--semu-back {
-  background: radial-gradient(60% 80% at 80% 10%, rgba(255, 98, 182, 0.35), transparent 60%), linear-gradient(100deg, #0a4bb5 0%, #6f5ad8 50%, #c56be0 100%);
-}
-.hcard--semu-back .hcard__in {
-  padding-block: 6cqw;
-}
-.hcard__semu {
-  display: grid;
-  justify-items: center;
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 11cqw;
-  line-height: 0.86;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
-}
-.hcard__semu span:first-child {
-  color: #ff62b6;
-  text-shadow: 0.6cqw 0.6cqw 0 #a98bff;
-  transform: translateX(-6cqw);
-}
-.hcard__semu span:last-child {
-  color: #fbd2ff;
-  text-shadow: 0.6cqw 0.6cqw 0 #8a63e0;
-  transform: translateX(5cqw);
-}
-.hcard__semu b {
-  color: #ff62b6;
-}
-.hcard--bonus {
-  background: linear-gradient(135deg, #00ffa3 0%, #ff00c8 50%, #3b00ff 100%);
-}
-.hcard__letter {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 22cqw;
-  line-height: 0.8;
-  text-shadow: 0 0 5cqw rgba(255, 255, 255, 0.5);
-}
-.hcard--vigur {
-  background: linear-gradient(100deg, #ff00b4 0%, #e8123f 100%);
-}
-.hcard__serif {
-  font-family: var(--serif);
-  font-weight: 700;
-  font-size: 6.8cqw;
-  line-height: 1.1;
-  text-wrap: balance;
-  text-shadow: 0 0 3cqw rgba(255, 210, 240, 0.55);
-}
-.hcard--vigur-back {
-  background: linear-gradient(100deg, #ff00b4 0%, #e8123f 100%);
-}
-.hcard--vigur-back .hcard__brand {
-  filter: brightness(0) invert(1) drop-shadow(0 0 1.2cqw rgba(255, 200, 235, 0.9));
-  opacity: 0.92;
-}
-.hcard__bgword {
-  position: absolute;
-  inset: -40% -30%;
-  z-index: -1;
-  display: grid;
-  place-items: center;
-  font-family: var(--serif);
-  font-weight: 800;
-  font-size: 30cqw;
-  line-height: 0.9;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.07);
-  transform: rotate(-32deg);
-  word-break: break-all;
-  text-align: center;
-}
-.hcard__vigur {
-  font-family: var(--serif);
-  font-weight: 800;
-  font-size: 14cqw;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: #ffe1f2;
-  text-shadow: 0 0 1.2cqw rgba(255, 220, 240, 0.9), 0 0 5cqw rgba(255, 120, 200, 0.85);
-}
-.hcard--shh-back {
-  background: radial-gradient(70% 90% at 20% 15%, rgba(255, 40, 110, 0.45), transparent 60%), radial-gradient(60% 80% at 90% 95%, rgba(255, 0, 180, 0.35), transparent 60%), #12020a;
-}
-.hcard__shh {
-  font-family: var(--serif);
-  font-style: italic;
-  font-weight: 700;
-  font-size: 17cqw;
-  line-height: 1;
-  color: #ffc4e3;
-  text-shadow: 0 0 1.5cqw rgba(255, 200, 230, 0.9), 0 0 6cqw rgba(255, 40, 140, 0.9);
-}
-.hcard--truth {
-  background: linear-gradient(160deg, #ffffff 0%, #ffe6f3 100%);
-  color: #c4004f;
-}
-.hcard--lie {
-  background: radial-gradient(70% 90% at 50% 50%, rgba(255, 30, 90, 0.25), transparent 70%), #0d0207;
-  color: #ff3d7f;
-}
-.hcard--lie .hcard__text {
-  text-shadow: 0 0 1.5cqw rgba(255, 61, 127, 0.9), 0 0 5cqw rgba(255, 0, 80, 0.6);
-}
-.hcard--shh .hcard__text {
-  font-size: 9cqw;
-}
-.hcard--shh .hcard__label {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 4.4cqw;
-  letter-spacing: 0.02em;
-  text-transform: none;
 }
 
 /* ---------- Kuidas mängida ---------- */
@@ -1964,16 +1627,6 @@ body.is-locked .pdp-buybar {
 /* Oled Semu: Ä + G + E */
 .pdp-equation__row--letters {
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.15fr);
-}
-.pdp-equation__row--letters .hcard {
-  border-radius: var(--card-r);
-  box-shadow: 0 16px 30px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08);
-}
-.pdp-equation__row--letters .hcard:nth-of-type(odd) {
-  transform: rotate(-4deg);
-}
-.pdp-equation__row--letters .hcard:nth-of-type(even) {
-  transform: rotate(4deg);
 }
 .pdp-equation__win {
   font-family: var(--font-condensed);
@@ -2352,54 +2005,20 @@ body.is-locked .pdp-buybar {
 }
 .xcard__img {
   position: relative;
-  width: 70%;
-  height: auto;
-  border-radius: 6px;
-  box-shadow: 0 24px 40px -14px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.1);
-  transform: rotate(-4deg);
+  width: auto;
+  height: 96%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.55));
   transition: transform 0.6s var(--ease-spring);
 }
 .xcard:hover .xcard__img {
-  transform: rotate(0) scale(1.06) translateY(-4px);
+  transform: scale(1.05) translateY(-4px);
 }
-.xcard__stack {
-  position: relative;
-  display: block;
-  width: 78%;
-  aspect-ratio: 1.6;
-}
-.xcard__stack img {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 64%;
-  height: auto;
-  border-radius: 5px;
-  box-shadow: 0 18px 30px -10px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.1);
-  transform: translate(calc(-50% + var(--o) * 36%), calc(-50% + var(--o) * var(--o) * 7%)) rotate(calc(var(--o) * 9deg));
-  transition: transform 0.6s var(--ease-spring);
-}
-.xcard__stack[data-n='3'] img:nth-child(1) {
-  --o: 0;
-  z-index: 3;
-  top: 46%;
-}
-.xcard__stack[data-n='3'] img:nth-child(2) {
-  --o: -1;
-  z-index: 1;
-}
-.xcard__stack[data-n='3'] img:nth-child(3) {
-  --o: 1;
-  z-index: 2;
-}
-.xcard__stack[data-n='2'] img:nth-child(1) {
-  --o: -0.55;
-}
-.xcard__stack[data-n='2'] img:nth-child(2) {
-  --o: 0.55;
-}
-.xcard:hover .xcard__stack img {
-  transform: translate(calc(-50% + var(--o) * 46%), calc(-50% + var(--o) * var(--o) * 4%)) rotate(calc(var(--o) * 13deg));
+.xcard__was {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--faint);
 }
 .xcard__badges {
   position: absolute;
@@ -2459,21 +2078,6 @@ body.is-locked .pdp-buybar {
 .xcard__add .icon {
   width: 17px;
   height: 17px;
-}
-.xcard__save {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  z-index: 1;
-  padding: 6px 11px;
-  border-radius: var(--radius-pill);
-  background: var(--ok);
-  color: #04140c;
-  font-family: var(--font-display);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  box-shadow: 0 0 16px rgba(61, 255, 168, 0.5);
 }
 @container (max-width: 300px) {
   .xcard__price {
@@ -2654,22 +2258,280 @@ body.is-locked .pdp-buybar {
   }
 }
 
-/* Telefon rõhtpaigutuses: osturiba kompaktsemaks, et see ei võtaks 40% ekraanist */
-@media (max-height: 500px) and (orientation: landscape) and (max-width: 900px) {
-  .pdp-buybar {
-    --buybar-h: 56px;
-    padding-top: 6px;
-    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+/* =========================================================================
+   v2: päris pildid, eelvaade, märkused ja telefonivaade
+   ========================================================================= */
+body[data-product='oled-semu'],
+body[data-product='vigur'] {
+  --card-ar: 1074 / 693;
+}
+/* Ruudukujuline läbipaistev tootepilt galeriis */
+.pdp-slide--product img {
+  width: 100%;
+  height: 100%;
+  padding: 4%;
+  object-fit: contain;
+  filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.55));
+}
+/* Kaardipildid on alfaga ümarate nurkadega — vari tuleb pildi kujust */
+.pdp-pair > img {
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+  object-fit: contain;
+  filter: drop-shadow(0 24px 30px rgba(0, 0, 0, 0.7));
+}
+.pdp-thumb > img.pdp-thumb__contain {
+  padding: 4px;
+  object-fit: contain;
+}
+.pdp-thumb > img.pdp-thumb__card {
+  padding: 14% 10%;
+  object-fit: contain;
+}
+.pdp-fly {
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 16px rgba(var(--acc-rgb), 0.6));
+}
+
+/* Komplektipakkumine: üks komplektipilt */
+.pdp-upsell__img {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+}
+.pdp-upsell__contents {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--acc-soft);
+}
+
+/* Värvitoonide märkus ostukasti juures */
+.pdp-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.pdp-note .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  color: var(--acc-soft);
+}
+.pdp-note a {
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: rgba(var(--acc-rgb), 0.6);
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+/* MIDA V!!!U kaarditüübid (legend preview-deck.css-ist) */
+.pdp-legend {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 18px);
+}
+.pdp-legend .pvd-legend__item {
+  padding: clamp(14px, 1.8vw, 20px);
+  border-radius: var(--radius-lg);
+}
+.pdp-legend-note,
+.pdp-steps-note {
+  max-width: 70ch;
+  margin: clamp(14px, 2vw, 22px) auto 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  text-align: center;
+  color: var(--muted);
+}
+.pdp-legend-note strong {
+  color: var(--acc-soft);
+}
+.pdp-legend-note a {
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pdp-steps-note {
+  margin-top: 16px;
+}
+.pdp-preview {
+  max-width: 580px;
+  margin-inline: auto;
+}
+
+/* Kaarditüübi visuaal: tagakülg + esikülg */
+.pdp-type__visual--pair {
+  position: relative;
+  aspect-ratio: 1074 / 693;
+  margin: 4% 6% 10%;
+}
+.pdp-type__visual--pair > img {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.65));
+}
+.pdp-type__visual--pair > img:first-child {
+  transform: translate(-8%, -8%) rotate(-7deg) scale(0.92);
+  filter: brightness(0.8) drop-shadow(0 16px 22px rgba(0, 0, 0, 0.65));
+}
+.pdp-type__visual--pair > img:last-child {
+  transform: translate(6%, 8%) rotate(4deg);
+}
+.pdp-type:hover .pdp-type__visual--pair > img:first-child {
+  transform: translate(-10%, -10%) rotate(-10deg) scale(0.92);
+}
+.pdp-type:hover .pdp-type__visual--pair > img:last-child {
+  transform: translate(8%, 10%) rotate(2deg) scale(1.03);
+}
+.pdp-type__visual > img {
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.65));
+}
+
+/* Oled Semu? punktitasemed: päris kaartide värvid */
+.pdp-levels li[style*='--lg']::before {
+  background: var(--lg);
+  opacity: 1;
+  box-shadow: 0 0 calc(var(--l) * 5px) rgba(255, 255, 255, 0.12);
+}
+
+/* Oled Semu? Ä + G + E: kaardi tagakülg püsti (pilt on 90° pööratud) */
+.pdp-equation__row--letters {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.5fr);
+}
+.pdp-letter {
+  position: relative;
+  display: block;
+  aspect-ratio: 693 / 1074;
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.6));
+}
+.pdp-letter img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 154.98%;
+  max-width: none;
+  height: auto;
+  border-radius: 0;
+  box-shadow: none;
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+.pdp-equation__row--letters .pdp-letter:nth-of-type(odd) {
+  transform: rotate(-4deg);
+}
+.pdp-equation__row--letters .pdp-letter:nth-of-type(even) {
+  transform: rotate(4deg);
+}
+.pdp-equation__row--letters img:nth-of-type(n) {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+.pdp-equation__win {
+  display: grid;
+  gap: 4px;
+  hyphens: manual;
+}
+.pdp-equation__win small {
+  font-family: var(--font-body);
+  font-size: 0.42em;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  -webkit-text-fill-color: currentColor;
+}
+
+/* ---------- Telefon: pilt, nimi, hind ja ostunupp koos ---------- */
+@media (max-width: 900px) {
+  .pdp {
+    padding-bottom: 40px;
   }
-  .pdp-buybar__inner img {
-    width: 44px;
-    height: 30px;
+  .pdp__grid {
+    gap: 18px;
   }
-  .pdp-buybar__btn {
+  .pdp-crumbs ol {
+    margin-bottom: 10px;
+  }
+  .pdp-gallery {
+    gap: 10px;
+  }
+  .pdp-buy {
+    gap: 14px;
+  }
+  /* kirjeldus ja faktid tulevad pärast ostunuppe */
+  .pdp-buy > .pdp-desc,
+  .pdp-buy > .pdp-facts {
+    order: 2;
+  }
+  .pdp-buy > .pdp-upsell,
+  .pdp-buy > .pdp-note,
+  .pdp-buy > .pdp-trust,
+  .pdp-buy > .pdp-proof {
+    order: 3;
+  }
+}
+@media (max-width: 559px) {
+  .pdp-stage {
+    aspect-ratio: 5 / 4;
+  }
+}
+@media (max-width: 400px) {
+  .pdp-stage {
+    aspect-ratio: 4 / 3;
+  }
+}
+@media (max-width: 559px) {
+  .pdp-thumb {
+    flex: 0 0 60px;
+    border-radius: 12px;
+  }
+  .pdp-thumbs {
+    gap: 8px;
+  }
+  .pdp-stage__3d {
     min-height: 44px;
+    padding: 8px 12px 8px 10px;
+    font-size: 0.68rem;
   }
-  body[data-product] .site-footer {
-    padding-bottom: calc(32px + 56px + env(safe-area-inset-bottom));
+  .pdp-price__note,
+  .xcard__tag {
+    font-size: 0.9375rem;
+  }
+  .pdp-legend {
+    grid-template-columns: none;
+  }
+  .pdp-title--logo img {
+    width: min(58vw, 240px);
+    margin: -10px 0 -12px -10px;
+  }
+  .pdp-type__visual--pair {
+    margin: 6% 8% 10%;
+  }
+  .pdp-type h3 {
+    font-size: clamp(1rem, 4.6vw, 1.2rem);
+    overflow-wrap: anywhere;
+    hyphens: auto;
   }
 }
 

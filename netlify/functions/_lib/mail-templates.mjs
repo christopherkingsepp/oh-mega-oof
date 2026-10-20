@@ -190,7 +190,7 @@ const lockerLines = (order) =>
 export function orderConfirmationEmail(order, { siteUrl }) {
   const name = firstName(order.customer_name);
   const orderUrl = `${siteUrl}/aitah?t=${encodeURIComponent(order.public_token)}`;
-  const withdrawalUrl = `${siteUrl}/taganemine`;
+  const withdrawalUrl = `${siteUrl}/taganemine?tellimus=${encodeURIComponent(order.number || '')}`;
   const termsUrl = `${siteUrl}/tingimused`;
   const adult = (order.items || []).some((i) => (i.includes || []).some((c) => c.id === 'mida-viiu') || i.id === 'mida-viiu');
   const subject = `Tellimus ${order.number} on makstud — aitäh!`;

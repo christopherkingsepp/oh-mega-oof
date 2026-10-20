@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Privaatsuspoliitika | ÄGE</title>
-  <meta name="description" content="Kuidas ÄGE sinu isikuandmeid kogub, kasutab ja kaitseb: tellimuse andmed, uudiskiri, maksed Stripe'i kaudu, brauseri mälu ja sinu õigused.">
+  <meta name="description" content="Kuidas ÄGE sinu isikuandmeid kogub, kasutab ja kaitseb: tellimuse andmed, maksed Stripe'i kaudu, tellimuste andmebaas, e-kirjad, taganemisavaldused, brauseri mälu ja sinu õigused.">
   <meta name="theme-color" content="#07030a">
   <link rel="icon" type="image/png" href="/assets/img/brand/favicon.png">
   <link rel="apple-touch-icon" href="/assets/img/brand/apple-touch-icon.png">
@@ -40,7 +40,7 @@
         <h1 id="page-title">Privaatsus&shy;poliitika</h1>
         <p class="lead">Sinu andmed on sinu omad. Siin on kirjas, milliseid andmeid me kogume, miks me seda teeme, kellega neid jagame — ja mida me nendega kindlasti <strong>ei tee</strong>.</p>
         <div class="page-hero__meta">
-          <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Viimati uuendatud 13.10.2026</span>
+          <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Viimati uuendatud 20.10.2026</span>
           <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Lugemisaeg ~6 min</span>
         </div>
 
@@ -115,7 +115,14 @@
               <li>nimi, e-posti aadress ja telefoninumber;</li>
               <li>valitud vedaja ja pakiautomaat;</li>
               <li>tellitud tooted, summa, kasutatud sooduskood ja tellimuse aeg;</li>
-              <li>kinnitus, et nõustusid müügitingimustega ja (MIDA V!!!U puhul) oled vähemalt 18-aastane.</li>
+              <li>kinnitus, et nõustusid müügitingimustega ja (MIDA V!!!U puhul) oled vähemalt 18-aastane;</li>
+              <li>makse olek ja Stripe'i viited (makse ja makselehe tunnused, mitte kaardiandmed) ning paki täitmise olek ja jälgimiskood.</li>
+            </ul>
+            <p>Tellimuse kinnituskirjas on <strong>salajase tunnusega link tellimuse kinnituslehele</strong> (<code>/aitah?t=…</code>). Lehel näed tellimuse olekut, tooteid, summat ja pakiautomaati; isikuandmetest näidatakse seal ainult sinu eesnime ja osaliselt peidetud e-posti aadressi. Ära jaga seda linki teistega.</p>
+            <h3>Kui esitad taganemisavalduse</h3>
+            <ul>
+              <li>nimi, e-posti aadress, tellimuse number, kauba kättesaamise kuupäev, tagastatavad tooted ja sinu lisatud selgitus;</li>
+              <li>avalduse saamise aeg ja viitenumber (nt TAG-XXXXXX).</li>
             </ul>
             <h3>Kui liitud uudiskirjaga (−15% soodushüpik)</h3>
             <ul>
@@ -138,6 +145,8 @@
                 </thead>
                 <tbody>
                   <tr><td data-label="Eesmärk">Tellimuse vastuvõtmine, maksmine ja tarne</td><td data-label="Andmed">tellimuse ja kontaktandmed</td><td data-label="Õiguslik alus">lepingu täitmine (GDPR art 6 lg 1 p b)</td></tr>
+                  <tr><td data-label="Eesmärk">Tellimuse kinnituse ja olekuteadete saatmine e-postiga</td><td data-label="Andmed">nimi, e-post, tellimuse andmed</td><td data-label="Õiguslik alus">lepingu täitmine (art 6 lg 1 p b)</td></tr>
+                  <tr><td data-label="Eesmärk">Taganemisavalduse menetlemine ja raha tagastamine</td><td data-label="Andmed">avalduse andmed, tellimuse ja makse andmed</td><td data-label="Õiguslik alus">juriidiline kohustus ja lepingu täitmine (art 6 lg 1 p c ja b)</td></tr>
                   <tr><td data-label="Eesmärk">Klienditeenindus ja pretensioonid</td><td data-label="Andmed">kontaktandmed, kirjavahetus</td><td data-label="Õiguslik alus">lepingu täitmine ja õigustatud huvi (art 6 lg 1 p b ja f)</td></tr>
                   <tr><td data-label="Eesmärk">Raamatupidamine</td><td data-label="Andmed">tellimuse ja makse andmed</td><td data-label="Õiguslik alus">juriidiline kohustus (art 6 lg 1 p c)</td></tr>
                   <tr><td data-label="Eesmärk">Uudiskiri ja sooduspakkumised</td><td data-label="Andmed">e-posti aadress</td><td data-label="Õiguslik alus">sinu nõusolek (art 6 lg 1 p a)</td></tr>
@@ -150,20 +159,24 @@
 
           <section id="edastamine" aria-labelledby="p-4">
             <h2 id="p-4"><span class="num">04</span>Kellele andmeid edastame?</h2>
-            <p>Jagame andmeid ainult nendega, kes aitavad meil sinu tellimust täita, ja ainult nii palju, kui on vaja:</p>
+            <p>Jagame andmeid ainult nendega, kes aitavad meil sinu tellimust täita, ja ainult nii palju, kui on vaja. Volitatud töötlejad töötlevad andmeid ainult meie juhiste järgi ja lepingu alusel:</p>
             <ul>
-              <li><strong>Stripe</strong> — maksete töötlemine;</li>
-              <li><strong>Netlify</strong> — veebilehe majutus ja uudiskirjaga liitumise vormi andmete hoidmine;</li>
-              <li><strong>pakiautomaatide operaatorid</strong> (Omniva, SmartPost, DPD) — nimi, telefoninumber ja e-post paki kohaletoimetamiseks;</li>
+              <li><strong>Stripe</strong> — maksete töötlemine ja pettuste ennetamine; Stripe näeb tellimuse summat, tooteid, sinu e-posti ja makseandmeid;</li>
+              <li><strong>Netlify</strong> — veebilehe ja serverifunktsioonide majutus ning uudiskirjaga liitumise vormi andmete hoidmine;</li>
+              <li><strong>Netlify DB / Neon</strong> — tellimuste ja taganemisavalduste andmebaas (Postgres): tellimuse, kontakt-, tarne- ja makse olekuandmed;</li>
+              <li><strong>Resend</strong> — tehingukirjade saatmine: tellimuse kinnitus, taganemisavalduse kättesaamise kinnitus ja teavitused poe omanikule;</li>
+              <li><strong>pakiautomaatide operaatorid</strong> (Omniva, SmartPosti, DPD) — nimi, telefoninumber ja e-post paki kohaletoimetamiseks; automaatide nimekirja laadimisel me sinu andmeid neile ei saada;</li>
               <li>vajadusel <strong>raamatupidaja</strong> ja <strong>riigiasutused</strong>, kui seadus seda nõuab.</li>
             </ul>
-            <p>Osa teenusepakkujaid (nt Stripe ja Netlify) võib andmeid töödelda ka väljaspool Euroopa Majanduspiirkonda. Sellisel juhul kasutatakse isikuandmete kaitse üldmäärusele vastavaid kaitsemeetmeid, näiteks Euroopa Komisjoni lepingu tüüptingimusi või EL-i ja USA andmekaitseraamistikku.</p>
+            <p>Osa teenusepakkujaid (nt Stripe, Netlify, Neon ja Resend) võib andmeid töödelda ka väljaspool Euroopa Majanduspiirkonda. Sellisel juhul kasutatakse isikuandmete kaitse üldmäärusele vastavaid kaitsemeetmeid, näiteks Euroopa Komisjoni lepingu tüüptingimusi või EL-i ja USA andmekaitseraamistikku.</p>
           </section>
 
           <section id="sailitamine" aria-labelledby="p-5">
             <h2 id="p-5"><span class="num">05</span>Kui kaua andmeid säilitame?</h2>
             <ul>
-              <li>Tellimuse ja raamatupidamisega seotud andmeid säilitame <strong>7 aastat</strong>, nagu nõuab raamatupidamise seadus.</li>
+              <li>Tellimuse ja raamatupidamisega seotud andmeid (tellimused tellimuste andmebaasis, makse olekud ja tellimuse kinnitused) säilitame <strong>7 aastat</strong> alates majandusaasta lõpust, nagu nõuab raamatupidamise seadus.</li>
+              <li>Taganemisavaldusi ja nendega seotud kirjavahetust säilitame tellimuse andmetega sama kaua (raha tagastamine on raamatupidamislik toiming), kuid mitte kauem, kui on vajalik võimalike nõuete lahendamiseks.</li>
+              <li>Saadetud e-kirjade tehnilisi logisid hoiab Resend oma tingimuste järgi piiratud aja.</li>
               <li>Uudiskirja e-posti aadressi säilitame <strong>kuni loobud</strong> uudiskirjast või võtad nõusoleku tagasi.</li>
               <li>Kirjavahetust säilitame seni, kuni see on vajalik sinu küsimuse lahendamiseks ja võimalike nõuete aegumiseni.</li>
             </ul>
@@ -192,7 +205,8 @@
               <li><code>age_discount_v1</code> — sisestatud sooduskood;</li>
               <li><code>age_agegate_ok</code> — märge, et kinnitasid oma vanust (18+);</li>
               <li><code>age_promo_seen</code> ja <code>age_promo_email</code> — soodushüpiku olek ja e-post, millega liitusid (et me ei näitaks hüpikut asjata uuesti ja saaksime e-posti kassas eeltäita);</li>
-              <li>kassa vormi mustand ja viimase tellimuse kokkuvõte — hoitakse ainult selle vahelehe mälus ja need kustuvad vahelehe sulgemisel.</li>
+              <li>kassa vormi mustand, viimati laaditud pakiautomaatide nimekiri ja viimase tellimuse number koos kinnituslehe tunnusega (et saaksid pooleli jäänud makset jätkata) — hoitakse ainult selle vahelehe mälus ja need kustuvad vahelehe sulgemisel;</li>
+              <li><code>age_orders_done_v1</code> — märge, et makstud tellimuse järel on ostukorv juba tühjendatud (tellimuse tunnuse lühike algus), et korvi ei tühjendataks uuesti.</li>
             </ul>
             <p>Need andmed saad igal ajal kustutada, tühjendades oma brauseris selle saidi andmed.</p>
             <h3>Kolmandate osapoolte teenused</h3>

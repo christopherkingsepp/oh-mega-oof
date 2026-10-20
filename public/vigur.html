@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Unbounded:wght@500;700;800;900&display=swap">
-  <link rel="preload" as="image" href="/assets/img/games/vigur-box-front.webp">
+  <link rel="preload" as="image" href="/assets/img/games/vigur/front.webp">
   <link rel="stylesheet" href="/assets/css/base.css">
   <link rel="stylesheet" href="/assets/css/box3d.css">
   <link rel="stylesheet" href="/assets/css/product.css">
@@ -32,8 +32,8 @@
     "@context": "https://schema.org",
     "@type": "Product",
     "name": "Vigur",
-    "description": "Seltskonna bluffimäng: 50 olukorrakaarti ja 32 „Shh“-tegevuskaarti (Räägi tõtt / Valeta). Kirjelda olukorda nii, et vasakpoolne mängija usuks sind ja arvaks valesti. 3+ mängijat, 12+.",
-    "image": ["/assets/img/games/vigur-box-front.webp", "/assets/img/games/vigur-cover.webp"],
+    "description": "Seltskonna bluffimäng: 50 olukorrakaarti ja 32 „Shh“-tegevuskaarti (Räägi tõtt / Valeta). Räägi olukorra kohta üks lugu oma elust — tõsi või väljamõeldis — ja vaata, kas vasakpoolne mängija tabab su ära. Kuni 10 mängijat, 12+.",
+    "image": ["/assets/img/games/vigur-box.webp", "/assets/img/games/vigur-cover.webp"],
     "sku": "AGE-VIGUR",
     "category": "Seltskonnamängud",
     "brand": { "@type": "Brand", "name": "ÄGE" },
@@ -54,7 +54,10 @@
       "hasMerchantReturnPolicy": {
         "@type": "MerchantReturnPolicy",
         "applicableCountry": "EE",
-        "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
+        "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+        "merchantReturnDays": 14,
+        "returnMethod": "https://schema.org/ReturnByMail",
+        "returnFees": "https://schema.org/ReturnFeesCustomerResponsibility"
       }
     }
   }
@@ -65,7 +68,7 @@
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Avaleht", "item": "/" },
-      { "@type": "ListItem", "position": 2, "name": "Mängud", "item": "/#mangud" },
+      { "@type": "ListItem", "position": 2, "name": "Kataloog", "item": "/kataloog" },
       { "@type": "ListItem", "position": 3, "name": "Vigur", "item": "/vigur" }
     ]
   }
@@ -86,7 +89,7 @@
         <nav class="pdp-crumbs" aria-label="Asukoht">
           <ol role="list">
             <li><a href="/">Avaleht</a></li>
-            <li><a href="/#mangud">Mängud</a></li>
+            <li><a href="/kataloog">Kataloog</a></li>
             <li aria-current="page">Vigur</li>
           </ol>
         </nav>
@@ -97,7 +100,7 @@
             <div class="pdp-gallery" data-gallery>
               <div class="pdp-stage" data-slide="0" role="region" aria-roledescription="galerii" aria-label="Viguri pildid">
                 <div class="pdp-stage__track" data-track>
-                  <div class="pdp-slide pdp-slide--image"><img src="/assets/img/games/vigur-box-front.webp" alt="Viguri mängukarp" width="1000" height="691"></div>
+                  <div class="pdp-slide pdp-slide--image pdp-slide--product"><img src="/assets/img/games/vigur-box.webp" alt="Vigur mängukarp" width="900" height="900"></div>
                 </div>
                 <p class="pdp-stage__count" aria-hidden="true"><span data-count>1</span> / <span data-total>4</span></p>
                 <button class="pdp-stage__nav pdp-stage__nav--prev" type="button" data-prev aria-label="Eelmine pilt">
@@ -133,8 +136,8 @@
             <ul class="pdp-facts" role="list" aria-label="Lühidalt">
               <li>82 kaarti</li>
               <li>50 olukorda</li>
-              <li>32 tegevuskaarti</li>
-              <li>3+ mängijat</li>
+              <li>32 Shh-kaarti</li>
+              <li>Kuni 10 mängijat</li>
               <li>12+</li>
             </ul>
 
@@ -155,16 +158,19 @@
             </div>
 
             <div class="pdp-upsell">
-              <span class="pdp-upsell__stack" aria-hidden="true">
-                <img src="/assets/img/games/oled-semu-box-front.webp" alt="" width="1000" height="691" loading="lazy">
-                <img src="/assets/img/games/vigur-box-front.webp" alt="" width="1000" height="691" loading="lazy">
-              </span>
+              <img class="pdp-upsell__img" src="/assets/img/games/komplekt-semu-vigur-sm.webp" alt="" width="240" height="240" loading="lazy" decoding="async">
               <span class="pdp-upsell__text">
                 <strong>Võta koos mänguga Oled Semu?</strong>
+                <span class="pdp-upsell__contents">1× Oled Semu?, 1× Vigur</span>
                 <span><span data-price="komplekt-semu-vigur">20,00 €</span> <s data-full-price="komplekt-semu-vigur">25,90 €</s> · säästad <b data-save="komplekt-semu-vigur">5,90 €</b></span>
               </span>
               <button class="btn btn--sm pdp-upsell__btn" type="button" data-add-to-cart="komplekt-semu-vigur" aria-label="Lisa ostukorvi: Oled Semu? + Vigur">Lisa</button>
             </div>
+
+            <p class="pdp-note">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6h.01"/></svg>
+              <span>Kaartide ja pakendi värvitoonid ning väikesed kujundusdetailid võivad veebilehel nähtust veidi erineda (nt trükipartii või ekraani tõttu). Mängu sisu vastab tootekirjeldusele. <a href="/kkk#valimus">Loe lähemalt</a></span>
+            </p>
 
             <ul class="pdp-trust" role="list">
               <li>
@@ -208,28 +214,30 @@
         <div class="section-head section-head--center" data-reveal>
           <span class="eyebrow">Mis karbis on?</span>
           <h2 id="karbis-title">82 kaarti. <span class="pdp-grad-text">Lugematu arv valesid.</span></h2>
-          <p class="lead">Kaks kaardipakki: üks ütleb, millest rääkida, teine — kas tohid tõtt rääkida. Ülejäänu sõltub sinu pokkerinäost.</p>
+          <p class="lead">Kaks kaardipakki: üks ütleb, millest rääkida, teine — kas räägid tõtt või valetad. Ülejäänu sõltub sinu pokkerinäost.</p>
         </div>
 
         <div class="pdp-types pdp-types--2">
           <article class="pdp-type pdp-type--wide" style="--type-grad: var(--grad-vigur); --type-glow: rgba(255, 0, 140, .35)" data-reveal>
-            <div class="pdp-type__visual">
-              <span class="hcard hcard--vigur" role="img" aria-label="Olukorrakaart: Kõige piinlikum hetk peol"><span class="hcard__in"><span class="hcard__label">Olukord</span><span class="hcard__serif">Kõige piinlikum hetk peol</span><span class="hcard__small">Räägi nii, et sind usutakse.</span></span></span>
+            <div class="pdp-type__visual pdp-type__visual--pair">
+              <img src="/assets/img/cards/vigur/back-olukord.webp" alt="" width="1074" height="693" loading="lazy" decoding="async">
+              <img src="/assets/img/cards/vigur/olukord-eelmine-synnipaev.webp" alt="Viguri olukorrakaart: Eelmine sünnipäev" width="1074" height="693" loading="lazy" decoding="async">
             </div>
             <div>
               <p class="pdp-type__count"><span>50</span> kaarti</p>
-              <h3>Olukorrad <small>Sinu lood</small></h3>
-              <p>Igal kaardil on olukord, millest pead rääkima: koolimälestused, peod, reisid ja kõik see, mida keegi teada ei tohiks.</p>
+              <h3>Olukorrad <small>sinu lood</small></h3>
+              <p>Igal kaardil on olukord, mille kohta räägid ühe loo oma elust: „Eelmine sünnipäev“, „Parim spikker, mille olen teinud“, „Esimene asi, milleks raha kogusin“…</p>
             </div>
           </article>
-          <article class="pdp-type pdp-type--wide" style="--type-grad: linear-gradient(135deg, #fff, #ff9ac4); --type-glow: rgba(255, 255, 255, .14); --delay:.08s" data-reveal>
-            <div class="pdp-type__visual">
-              <span class="hcard hcard--shh hcard--truth" role="img" aria-label="„Shh“-tegevuskaart: Räägi tõtt"><span class="hcard__in"><span class="hcard__label">Shh…</span><span class="hcard__text">Räägi tõtt</span><span class="hcard__small">Iga sõna peab olema päriselt juhtunud.</span></span></span>
+          <article class="pdp-type pdp-type--wide" style="--type-grad: linear-gradient(135deg, #b14bff, #ff6ad5); --type-glow: rgba(177, 75, 255, .3); --delay:.08s" data-reveal>
+            <div class="pdp-type__visual pdp-type__visual--pair">
+              <img src="/assets/img/cards/vigur/back-shh.webp" alt="" width="1074" height="693" loading="lazy" decoding="async">
+              <img src="/assets/img/cards/vigur/shh-valeta.webp" alt="Viguri Shh-kaart: Valeta!" width="1074" height="693" loading="lazy" decoding="async">
             </div>
             <div>
               <p class="pdp-type__count"><span>32</span> kaarti</p>
-              <h3>Shh… <small>Räägi tõtt või valeta</small></h3>
-              <p>Salajane tegevuskaart ütleb, kas su lugu peab olema tõsi või puhas väljamõeldis. Keegi teine seda ei näe.</p>
+              <h3>Shh-kaardid <small>„Räägi tõtt!“ või „Valeta!“</small></h3>
+              <p>Salajane kaart ütleb, kas su lugu peab olema tõsi või väljamõeldis. Keegi teine seda ei näe — pärast läheb kaart paki alla.</p>
             </div>
           </article>
         </div>
@@ -275,29 +283,29 @@
         <div class="section-head" data-reveal>
           <span class="eyebrow">Kuidas mängida</span>
           <h2 id="kuidas-title">Hea lugu. <span class="pdp-grad-text">Veel parem vale.</span></h2>
-          <p class="lead">Reeglid mahuvad ühte lausesse: räägi nii, et vasakpoolne naaber usuks sind ja arvaks valesti.</p>
+          <p class="lead">Reeglid mahuvad ühte lausesse: räägi oma lugu nii, et vasakpoolne naaber arvaks valesti.</p>
         </div>
 
         <ol class="pdp-steps" role="list">
           <li class="pdp-step" data-reveal>
             <span class="pdp-step__num" aria-hidden="true">01</span>
-            <h3>Tõmba kaks kaarti</h3>
-            <p>Võta üks olukorrakaart ja salaja üks „Shh“-tegevuskaart. Tegevuskaarti ei näe keegi peale sinu.</p>
+            <h3>Kaks hunnikut</h3>
+            <p>Jaga kaardid värvi järgi kahte hunnikusse: olukorrakaardid ja Shh-kaardid. Shh-kaardid sega hoolega läbi. Mängida saab kuni 10 mängijat.</p>
           </li>
           <li class="pdp-step" style="--delay:.08s" data-reveal>
             <span class="pdp-step__num" aria-hidden="true">02</span>
-            <h3>Tõde või vale?</h3>
-            <p>„Shh“-kaart ütleb, kas pead rääkima päris loo või mõtlema välja täieliku vale.</p>
+            <h3>Räägi üks äge lugu</h3>
+            <p>Võta üks olukorra- ja üks Shh-kaart. Räägi olukorra kohta <b>üks lugu oma elust</b> — tõsi või väljamõeldis, nagu Shh-kaart ütleb.</p>
           </li>
           <li class="pdp-step" style="--delay:.16s" data-reveal>
             <span class="pdp-step__num" aria-hidden="true">03</span>
-            <h3>Räägi oma lugu</h3>
-            <p>Kirjelda olukorda nii veenvalt, et vasakul istuv mängija usuks sind — ja arvaks valesti.</p>
+            <h3>Kolm küsimust</h3>
+            <p>Sinust vasakul istuja võib küsida kolm küsimust ja otsustab siis: tõde või vale? Teised võivad teda aidata.</p>
           </li>
           <li class="pdp-step" style="--delay:.24s" data-reveal>
             <span class="pdp-step__num" aria-hidden="true">04</span>
-            <h3>Kas ta usub?</h3>
-            <p>Vasakpoolne mängija pakub: tõde või vale? Kui ta eksib, said sina temast jagu. Siis on tema kord.</p>
+            <h3>Kaart = punkt</h3>
+            <p>Arvas õigesti — olukorrakaart on tema. Eksis — kaardi saad sina. Shh-kaart läheb paki alla. Võidab kõige rohkem kaarte kogunud mängija.</p>
           </li>
         </ol>
 
@@ -306,7 +314,7 @@
             <div class="pdp-bluff__head">
               <span class="eyebrow">Proovi kohe</span>
               <h3>Tõde või vale?</h3>
-              <p>Neli väidet ÄGE kohta. Osa neist on valed. Kas sa näed meist läbi?</p>
+              <p>Neli väidet ÄGE ja Viguri kohta. Vähemalt üks neist on vale — kas näed meist läbi?</p>
             </div>
             <div class="pdp-bluff__card">
               <div class="pdp-bluff__top">
@@ -320,15 +328,15 @@
           </div>
 
           <aside class="pdp-tip pdp-tip--stack" data-reveal>
-            <span class="pdp-tip__big" aria-hidden="true">90/10</span>
+            <span class="pdp-tip__big" aria-hidden="true">3?</span>
             <div>
-              <span class="eyebrow">Võidunipp</span>
-              <h3>Parim vale on peaaegu tõsi.</h3>
-              <p>Ehita oma vale päris mälestusele ja lisa üks väljamõeldud detail. Või vastupidi: räägi tõtt nii uskumatult, et keegi ei usu. <strong>Pokkerinägu on poolik võit.</strong></p>
+              <span class="eyebrow">Reeglikaardilt</span>
+              <h3>Ära muuda ainult pisidetaili.</h3>
+              <p>Kui valetad, mõtle välja peaaegu terve lugu — ühe väikese detaili muutmine ei loe. Kui sul pole olukorra kohta ühtegi mälestust, pead valetama. <strong>Lisavariant:</strong> leppige enne kokku, et valesti pakkujale mõtleb grupp välja teo. Vigurit saab mängida ka Oled Semu? küsimustega.</p>
               <ul class="pdp-responsible__chips pdp-tip__chips" role="list">
-                <li>Vaata silma</li>
-                <li>Ära räägi liiga kiiresti</li>
-                <li>Detailid müüvad</li>
+                <li>3 küsimust</li>
+                <li>Pole mälestust? Valeta!</li>
+                <li>1 kaart = 1 punkt</li>
               </ul>
             </div>
           </aside>
@@ -384,7 +392,7 @@
           </details>
           <details>
             <summary>Mitu mängijat on vaja ja mis vanusest?</summary>
-            <div class="pdp-faq__a"><p>Vähemalt kolm mängijat, soovituslik vanus 12+. Vigur sobib sõpradele, perele ja igale seltskonnale, kes armastab head lugu.</p></div>
+            <div class="pdp-faq__a"><p>Reeglite järgi saab mängida kuni 10 mängijat, soovituslik vanus 12+. Vigur sobib sõpradele, perele ja igale seltskonnale, kes armastab head lugu.</p></div>
           </details>
           <details>
             <summary>Kui kiiresti mäng kohale jõuab?</summary>
@@ -392,7 +400,7 @@
           </details>
           <details>
             <summary>Kas mängu saab tagastada?</summary>
-            <div class="pdp-faq__a"><p>Mänge me tagasi ei võta. Kui karp jõuab kohale kahjustatuna või midagi on puudu, kirjuta meile ja vahetame selle kiiresti uue vastu.</p></div>
+            <div class="pdp-faq__a"><p>Jah. Sul on <strong>14-päevane taganemisõigus</strong> alates paki kättesaamisest — põhjust pole vaja öelda. Esita avaldus <a href="/taganemine">taganemise vormiga</a> või kirjuta meile; tagastamise otsekulu kannab ostja. Täpsemalt loe <a href="/tingimused#taganemine">müügitingimustest</a>. Kui pakk jõuab kohale kahjustatuna või midagi on puudu, kirjuta meile ja lahendame selle kiiresti.</p></div>
           </details>
         </div>
       </div>
@@ -412,16 +420,5 @@
 
   <div data-site-footer></div>
 
-  <!-- Kleepuv osturiba -->
-  <div class="pdp-buybar" data-buybar aria-hidden="true">
-    <div class="pdp-buybar__inner">
-      <img src="/assets/img/games/vigur-box-front.webp" alt="" width="1000" height="691" loading="lazy">
-      <p class="pdp-buybar__info"><strong>Vigur</strong><span data-buybar-price>12,95 €</span></p>
-      <button class="btn btn--primary btn--sm pdp-buybar__btn" type="button" data-add-to-cart="vigur" data-qty-source="#qty">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h15l-1.5 9h-12z"/><path d="M6 7 5 3H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
-        <span>Lisa ostukorvi</span>
-      </button>
-    </div>
-  </div>
 </body>
 </html>

@@ -1,6 +1,6 @@
 // Ühine päis, mobiilimenüü, jalus, ostukorvi sahtel, teavitused ja
 // kerimisel ilmumise animatsioon. Iga leht laeb selle main.js kaudu.
-import { PRODUCTS, formatEur, SHIPPING, toCents, MAX_QTY_PER_ITEM } from './catalog.js';
+import { PRODUCTS, formatEur, SHIPPING, toCents, MAX_QTY_PER_ITEM, productContents } from './catalog.js';
 import { Cart } from './cart.js';
 import { SITE } from './site.js';
 
@@ -18,10 +18,11 @@ export const ICONS = {
 };
 
 const NAV = [
+  { href: '/kataloog', label: 'Kataloog' },
   { href: '/mida-viiu', label: 'MIDA V!!!U', isNew: true },
   { href: '/oled-semu', label: 'Oled Semu?' },
   { href: '/vigur', label: 'Vigur' },
-  { href: '/#komplekt', label: 'Komplektid' },
+  { href: '/kataloog#komplektid', label: 'Komplektid' },
   { href: '/kkk', label: 'KKK' },
 ];
 
@@ -142,10 +143,11 @@ function renderFooter() {
         <div>
           <h4>Mängud</h4>
           <ul>
+            <li><a href="/kataloog">Kataloog</a></li>
             <li><a href="/mida-viiu">MIDA V!!!U</a></li>
             <li><a href="/oled-semu">Oled Semu?</a></li>
             <li><a href="/vigur">Vigur</a></li>
-            <li><a href="/#komplekt">Komplektid</a></li>
+            <li><a href="/kataloog#komplektid">Komplektid</a></li>
           </ul>
         </div>
         <div>
@@ -153,6 +155,7 @@ function renderFooter() {
           <ul>
             <li><a href="/kkk">KKK</a></li>
             <li><a href="/kkk#tarne">Tarne</a></li>
+            <li><a href="/taganemine">Taganemine ja tagastamine</a></li>
             <li><a href="/tingimused">Müügitingimused</a></li>
             <li><a href="/privaatsus">Privaatsuspoliitika</a></li>
           </ul>
@@ -275,12 +278,17 @@ export function freeShippingHTML(t) {
   return `<div class="free-ship"><span>${msg}</span><div class="free-ship__bar"><span style="--p:${pct}%"></span></div></div>`;
 }
 
-/** Pisipilt; komplektidel kuvatakse kuhjatud karbid. */
-export function thumbHTML(p, w = 76, h = 56) {
-  if (!p.includes?.length) return `<img src="${p.image}" alt="" width="${w}" height="${h}" loading="lazy">`;
-  return `<span class="thumb-stack" style="--n:${p.includes.length}" aria-hidden="true">${p.includes
-    .map((id, i) => `<img src="${PRODUCTS[id].image}" alt="" width="${w}" height="${h}" loading="lazy" style="--i:${i}">`)
-    .join('')}</span>`;
+/** Pisipilt (ruut, läbipaistev 3/4 karp; komplektidel komplekti oma pilt). */
+export function thumbHTML(p, size = 76) {
+  return `<img class="cart-line__img" src="${esc(p.image)}" alt="" width="${size}" height="${size}" loading="lazy" decoding="async">`;
+}
+
+/** Komplekti sisu tekstina: „1× MIDA V!!!U, 1× Oled Semu?, 1× Vigur“ (tavamängul tühi). */
+export function contentsText(id) {
+  if (!PRODUCTS[id]?.includes?.length) return '';
+  return productContents(id)
+    .map((c) => `${c.qty}× ${c.name}`)
+    .join(', ');
 }
 
 function renderDrawerContents() {
@@ -301,6 +309,7 @@ function renderDrawerContents() {
         ${thumbHTML(p)}
         <div>
           <div class="cart-line__name">${esc(p.name)}</div>
+          ${contentsText(p.id) ? `<div class="cart-line__contents">${esc(contentsText(p.id))}</div>` : ''}
           <div class="cart-line__price">${formatEur(totalCents)}</div>
           <button class="cart-line__remove" type="button" data-remove="${p.id}">Eemalda</button>
         </div>

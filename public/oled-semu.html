@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800;900&display=swap">
-  <link rel="preload" as="image" href="/assets/img/games/oled-semu-box-front.webp">
+  <link rel="preload" as="image" href="/assets/img/games/oled-semu/front.webp">
   <link rel="stylesheet" href="/assets/css/base.css">
   <link rel="stylesheet" href="/assets/css/box3d.css">
   <link rel="stylesheet" href="/assets/css/product.css">
@@ -32,8 +32,8 @@
     "@context": "https://schema.org",
     "@type": "Product",
     "name": "Oled Semu?",
-    "description": "Seltskonna kaardimäng: 75 küsimust viies raskusastmes (100–500 punkti), 7 boonuskaarti ja 3 reeglikaarti. Kogu kokku ÄGE ja varasta teistelt punkte. 3+ mängijat, 12+.",
-    "image": ["/assets/img/games/oled-semu-box-front.webp", "/assets/img/games/oled-semu-cover.webp"],
+    "description": "Seltskonna kaardimäng: 75 küsimust viies raskusastmes (100–500 punkti), 7 boonuskaarti ja 3 reeglikaarti. Kogu kaartidest kokku sõna ÄGE, võta boonuskaart ja võida teiste kaarte. Kuni 10 mängijat, 12+.",
+    "image": ["/assets/img/games/oled-semu-box.webp", "/assets/img/games/oled-semu-cover.webp"],
     "sku": "AGE-OLED-SEMU",
     "category": "Seltskonnamängud",
     "brand": { "@type": "Brand", "name": "ÄGE" },
@@ -54,7 +54,10 @@
       "hasMerchantReturnPolicy": {
         "@type": "MerchantReturnPolicy",
         "applicableCountry": "EE",
-        "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
+        "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+        "merchantReturnDays": 14,
+        "returnMethod": "https://schema.org/ReturnByMail",
+        "returnFees": "https://schema.org/ReturnFeesCustomerResponsibility"
       }
     }
   }
@@ -65,7 +68,7 @@
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Avaleht", "item": "/" },
-      { "@type": "ListItem", "position": 2, "name": "Mängud", "item": "/#mangud" },
+      { "@type": "ListItem", "position": 2, "name": "Kataloog", "item": "/kataloog" },
       { "@type": "ListItem", "position": 3, "name": "Oled Semu?", "item": "/oled-semu" }
     ]
   }
@@ -86,7 +89,7 @@
         <nav class="pdp-crumbs" aria-label="Asukoht">
           <ol role="list">
             <li><a href="/">Avaleht</a></li>
-            <li><a href="/#mangud">Mängud</a></li>
+            <li><a href="/kataloog">Kataloog</a></li>
             <li aria-current="page">Oled Semu?</li>
           </ol>
         </nav>
@@ -97,7 +100,7 @@
             <div class="pdp-gallery" data-gallery>
               <div class="pdp-stage" data-slide="0" role="region" aria-roledescription="galerii" aria-label="Oled Semu? pildid">
                 <div class="pdp-stage__track" data-track>
-                  <div class="pdp-slide pdp-slide--image"><img src="/assets/img/games/oled-semu-box-front.webp" alt="Oled Semu? mängukarp" width="1000" height="691"></div>
+                  <div class="pdp-slide pdp-slide--image pdp-slide--product"><img src="/assets/img/games/oled-semu-box.webp" alt="Oled Semu? mängukarp" width="900" height="900"></div>
                 </div>
                 <p class="pdp-stage__count" aria-hidden="true"><span data-count>1</span> / <span data-total>4</span></p>
                 <button class="pdp-stage__nav pdp-stage__nav--prev" type="button" data-prev aria-label="Eelmine pilt">
@@ -128,13 +131,13 @@
             </div>
             <p class="pdp-price__note">Tarne pakiautomaati 2,99 € · <strong>tasuta alates 30 €</strong></p>
 
-            <p class="pdp-desc">75 küsimust viies raskusastmes, 7 boonuskaarti ja punktivargus. Mäng, mis näitab, <strong>kes on päriselt semu</strong> — ja kes ainult teeskleb.</p>
+            <p class="pdp-desc">75 küsimust viiel punktitasemel ja 7 boonuskaarti. Sina küsid enda kohta, sõbrad vastavad — mäng, mis näitab, <strong>kes on päriselt semu</strong> ja kes ainult teeskleb.</p>
 
             <ul class="pdp-facts" role="list" aria-label="Lühidalt">
               <li>85 kaarti</li>
               <li>75 küsimust</li>
               <li>7 boonuskaarti</li>
-              <li>3+ mängijat</li>
+              <li>Kuni 10 mängijat</li>
               <li>12+</li>
             </ul>
 
@@ -155,16 +158,19 @@
             </div>
 
             <div class="pdp-upsell">
-              <span class="pdp-upsell__stack" aria-hidden="true">
-                <img src="/assets/img/games/vigur-box-front.webp" alt="" width="1000" height="691" loading="lazy">
-                <img src="/assets/img/games/oled-semu-box-front.webp" alt="" width="1000" height="691" loading="lazy">
-              </span>
+              <img class="pdp-upsell__img" src="/assets/img/games/komplekt-semu-vigur-sm.webp" alt="" width="240" height="240" loading="lazy" decoding="async">
               <span class="pdp-upsell__text">
                 <strong>Võta koos Viguriga</strong>
+                <span class="pdp-upsell__contents">1× Oled Semu?, 1× Vigur</span>
                 <span><span data-price="komplekt-semu-vigur">20,00 €</span> <s data-full-price="komplekt-semu-vigur">25,90 €</s> · säästad <b data-save="komplekt-semu-vigur">5,90 €</b></span>
               </span>
               <button class="btn btn--sm pdp-upsell__btn" type="button" data-add-to-cart="komplekt-semu-vigur" aria-label="Lisa ostukorvi: Oled Semu? + Vigur">Lisa</button>
             </div>
+
+            <p class="pdp-note">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6h.01"/></svg>
+              <span>Kaartide ja pakendi värvitoonid ning väikesed kujundusdetailid võivad veebilehel nähtust veidi erineda (nt trükipartii või ekraani tõttu). Mängu sisu vastab tootekirjeldusele. <a href="/kkk#valimus">Loe lähemalt</a></span>
+            </p>
 
             <ul class="pdp-trust" role="list">
               <li>
@@ -197,8 +203,8 @@
     <!-- ================= Jooksev riba ================= -->
     <div class="marquee pdp-marquee" aria-hidden="true">
       <div class="marquee__track">
-        <span>75 küsimust <i class="star">✦</i> 5 raskusastet <i class="star">✦</i> Kes on päris semu? <i class="star">✦</i> Varasta punkte <i class="star">✦</i> Sõpradele ja perele <i class="star">✦</i></span>
-        <span>75 küsimust <i class="star">✦</i> 5 raskusastet <i class="star">✦</i> Kes on päris semu? <i class="star">✦</i> Varasta punkte <i class="star">✦</i> Sõpradele ja perele <i class="star">✦</i></span>
+        <span>75 küsimust <i class="star">✦</i> 5 punktitaset <i class="star">✦</i> Kes on päris semu? <i class="star">✦</i> Kogu kokku ÄGE <i class="star">✦</i> Sõpradele ja perele <i class="star">✦</i></span>
+        <span>75 küsimust <i class="star">✦</i> 5 punktitaset <i class="star">✦</i> Kes on päris semu? <i class="star">✦</i> Kogu kokku ÄGE <i class="star">✦</i> Sõpradele ja perele <i class="star">✦</i></span>
       </div>
     </div>
 
@@ -208,41 +214,37 @@
         <div class="section-head section-head--center" data-reveal>
           <span class="eyebrow">Mis karbis on?</span>
           <h2 id="karbis-title">85 kaarti. <span class="pdp-grad-text">Üks suur küsimus.</span></h2>
-          <p class="lead">Kas sa tead, mis on su parima sõbra unistuste töökoht? Või mis oli tema esimese lemmiklooma nimi? Varsti saad teada.</p>
+          <p class="lead">Kas sa tead, millises riigis su parim sõber unistab elada? Või mis teda inimestes kõige rohkem närvi ajab? Varsti saad teada.</p>
         </div>
 
         <div class="pdp-types pdp-types--3">
           <article class="pdp-type" style="--type-grad: var(--grad-semu); --type-glow: rgba(60, 110, 255, .35)" data-reveal>
-            <div class="pdp-type__visual">
-              <span class="hcard hcard--semu" role="img" aria-label="Näidisküsimus 300 punkti eest: Mis on mu unistuste töökoht?"><span class="hcard__in"><span class="hcard__label">„Oled Semu?“</span><span class="hcard__text">Mis on mu unistuste töökoht?</span><span class="hcard__level" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></span><span class="hcard__pts" aria-hidden="true">300<small>p</small></span></span>
-            </div>
+            <div class="pdp-type__visual"><img src="/assets/img/cards/oled-semu/a300-kohting.webp" alt="Oled Semu? küsimuskaart (Ä, 300 punkti): Kuhu ma viiksin oma kaaslase esimesele kohtingule?" width="1074" height="693" loading="lazy" decoding="async"></div>
             <p class="pdp-type__count"><span>75</span> küsimust</p>
-            <h3>Küsimused <small>5 raskusastet</small></h3>
-            <p>Küsimused käivad küsija enda kohta. 100 punkti omad on soojenduseks, 500 punkti omadele vastavad ainult päris semud.</p>
+            <h3>Küsimuskaardid <small>100–500 punkti</small></h3>
+            <p>Küsimused käivad küsija enda kohta: „Kelleks ma tahtsin väiksena saada?“ Kaardi värv näitab punktisummat — mida rohkem punkte, seda keerulisem küsimus.</p>
           </article>
-          <article class="pdp-type" style="--type-grad: var(--grad-age); --type-glow: rgba(0, 255, 163, .22); --delay:.08s" data-reveal>
-            <div class="pdp-type__visual">
-              <span class="hcard hcard--bonus" role="img" aria-label="Boonuskaart tähega G"><span class="hcard__in"><span class="hcard__label">Boonuskaart</span><span class="hcard__letter">G</span><span class="hcard__small">Kogu kokku ÄGE ja varasta teistelt punkte!</span></span></span>
-            </div>
-            <p class="pdp-type__count"><span>7</span> kaarti</p>
-            <h3>Boonused <small>Kogu kokku ÄGE</small></h3>
-            <p>Pane boonuskaartidest kokku sõna ÄGE ja varasta teistelt punkte. Sõprus on sõprus, aga võit on võit.</p>
+          <article class="pdp-type" style="--type-grad: linear-gradient(135deg, #546ffc, #fd67c5); --type-glow: rgba(169, 106, 225, .3); --delay:.08s" data-reveal>
+            <div class="pdp-type__visual"><img src="/assets/img/cards/oled-semu/back-a200.webp" alt="Oled Semu? küsimuskaardi tagakülg: täht Ä ja 200 punkti" width="1074" height="693" loading="lazy" decoding="async"></div>
+            <p class="pdp-type__count"><span>Ä·G·E</span></p>
+            <h3>Tagakülg <small>täht ja punktid</small></h3>
+            <p>Iga küsimuskaardi tagaküljel on täht Ä, G või E ja punktisumma. Kui saad oma kaartidest kokku sõna ÄGE, avaneb boonuskaart.</p>
           </article>
-          <article class="pdp-type" style="--type-grad: linear-gradient(135deg, #ff62b6, #fbd2ff); --type-glow: rgba(255, 98, 182, .25); --delay:.16s" data-reveal>
-            <div class="pdp-type__visual">
-              <span class="hcard hcard--semu-back" role="img" aria-label="Oled Semu? kaardi tagakülg"><span class="hcard__in"><img class="hcard__brand" src="/assets/img/brand/age-logo-pink.webp" alt="" width="161" height="112" loading="lazy"><span class="hcard__semu"><span>Oled</span><span>Semu<b>?</b></span></span><span class="hcard__label">Seltskonna kaardimäng</span></span></span>
-            </div>
-            <p class="pdp-type__count"><span>3</span> kaarti</p>
-            <h3>Reeglid <small>Kõik on kirjas</small></h3>
-            <p>Reeglid on karbis kaasas. Selgeks saad need kahe minutiga — vaidlused punktide üle kestavad kauem.</p>
+          <article class="pdp-type" style="--type-grad: linear-gradient(135deg, #ff3331, #ff1f6b); --type-glow: rgba(255, 40, 60, .3); --delay:.16s" data-reveal>
+            <div class="pdp-type__visual"><img src="/assets/img/cards/oled-semu/boonus1-pikem.webp" alt="Oled Semu? boonuskaart 1/7: Vasta kõige pikema mängija ühele küsimusele" width="1074" height="693" loading="lazy" decoding="async"></div>
+            <p class="pdp-type__count"><span>7</span> boonuskaarti</p>
+            <h3>Boonuskaardid <small>võida teiste kaarte</small></h3>
+            <p>Boonuskaart ütleb, kelle küsimusele vastad — näiteks kõige pikema mängija omale. Õige vastus toob sulle tema kaardi.</p>
           </article>
         </div>
+
+        <p class="pdp-legend-note" data-reveal><strong>NB!</strong> Oled Semu? on eraldi mäng. MIDA V!!!U pakis on samuti „Oled semu?“ stiilis SH-kaardid, aga need on teised küsimused ja mõeldud 18+ peoks.</p>
 
         <p class="pdp-sum" data-reveal>
           <span class="pdp-sum__eq">75 + 7 + 3</span>
           <span class="pdp-sum__is" aria-hidden="true">=</span>
           <strong>85 kaarti</strong>
-          <span class="pdp-sum__plus">+ hulk naeru ja paar ootamatut avastust</span>
+          <span class="pdp-sum__plus">75 küsimust, 7 boonuskaarti ja 3 reeglikaarti</span>
         </p>
       </div>
     </section>
@@ -253,7 +255,7 @@
         <div class="section-head section-head--center" data-reveal>
           <span class="eyebrow">Proovi kohe</span>
           <h2 id="kaardid-title">Tõmba küsimus. <span class="pdp-grad-text">Kas tead vastust?</span></h2>
-          <p class="lead">Lohista või swaibi pakki ja puuduta keskmist kaarti, et see ümber pöörata. Proovi kohe sõpradega — need on näidisküsimused Oled Semu? stiilis.</p>
+          <p class="lead">Lohista või swaibi pakki ja puuduta keskmist kaarti, et see ümber pöörata. Need on päris kaardid mängust: tagaküljel täht ja punktid, esiküljel küsimus.</p>
         </div>
         <div class="pdp-deck" data-deck role="region" aria-roledescription="karussell" aria-label="Oled Semu? näidiskaardid">
           <div class="pdp-deck__stage" data-deck-stage></div>
@@ -263,7 +265,7 @@
             <button class="icon-btn" type="button" data-deck-next aria-label="Järgmine kaart"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
           </div>
           <div class="pdp-deck__tools">
-            <div class="pdp-deck__chips" data-deck-chips role="group" aria-label="Näita raskusastet"></div>
+            <div class="pdp-deck__chips" data-deck-chips role="group" aria-label="Näita punktitaset"></div>
             <div class="pdp-deck__actions">
               <button class="btn btn--sm btn--ghost" type="button" data-deck-flipall><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.3-6.4L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.3 6.4L3 16"/><path d="M3 21v-5h5"/></svg><span>Pööra kõik</span></button>
               <button class="btn btn--sm btn--ghost" type="button" data-deck-shuffle><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg><span>Sega pakk</span></button>
@@ -279,57 +281,58 @@
         <div class="section-head" data-reveal>
           <span class="eyebrow">Kuidas mängida</span>
           <h2 id="kuidas-title">Lihtne õppida, <span class="pdp-grad-text">raske võita.</span></h2>
-          <p class="lead">Reeglid saad selgeks kahe minutiga. Kui hästi sa oma sõpru tunned, selgub juba esimese ringiga.</p>
+          <p class="lead">Reeglid on lihtsad: küsid enda kohta, teised vastavad. Kui hästi su sõbrad sind tunnevad, selgub juba esimese ringiga.</p>
         </div>
 
         <ol class="pdp-steps" role="list">
           <li class="pdp-step" data-reveal>
             <span class="pdp-step__num" aria-hidden="true">01</span>
-            <h3>Istuge ringi</h3>
-            <p>Segage kaardid ja laduge need raskusastmete kaupa lauale: 100 punkti on soojendus, 500 punkti ainult päris semudele.</p>
+            <h3>Laota hunnikud</h3>
+            <p>Jaga küsimuskaardid punktisummade järgi hunnikutesse (100–500) ja pane boonuskaardid eraldi. Mängida saab kuni 10 mängijat.</p>
           </li>
           <li class="pdp-step" style="--delay:.08s" data-reveal>
             <span class="pdp-step__num" aria-hidden="true">02</span>
-            <h3>Küsimus käib tema kohta</h3>
-            <p>Sinust paremal istuv mängija tõmbab kaardi ja küsib sinult küsimuse <b>enda kohta</b>. Kui hästi sa teda tegelikult tunned?</p>
+            <h3>Küsimus käib sinu kohta</h3>
+            <p>Järgmine mängija ütleb, mitme punkti kaarti ta tahab. Sina võtad selle ja küsid kaardilt küsimuse <b>enda kohta</b> — vastab järgmine mängija.</p>
           </li>
           <li class="pdp-step" style="--delay:.16s" data-reveal>
             <span class="pdp-step__num" aria-hidden="true">03</span>
-            <h3>Vasta õigesti</h3>
-            <p>Õige vastus toob kaardil märgitud punktid. Mida raskem küsimus, seda suurem saak.</p>
+            <h3>Kes teab, saab kaardi</h3>
+            <p>Õige vastus — kaart läheb vastajale. Vale vastus — kaardi saab see, kes kõige kiiremini õigesti vastab. Kui keegi ei tea, läheb kaart paki alla.</p>
           </li>
           <li class="pdp-step" style="--delay:.24s" data-reveal>
             <span class="pdp-step__num" aria-hidden="true">04</span>
-            <h3>Varasta ja võida</h3>
-            <p>Kogu boonuskaartidega kokku sõna <b>ÄGE</b> ja varasta teistelt punkte. Kõige rohkem punkte = kõige suurem semu.</p>
+            <h3>Loe punktid kokku</h3>
+            <p>Lõpus loetakse kaartide punktid kokku ja iga sõna <b>ÄGE</b> annab 100 lisapunkti. Võidab kõige rohkem punkte kogunud mängija.</p>
           </li>
         </ol>
+        <p class="pdp-steps-note" data-reveal>Mida loetakse õigeks vastuseks, lepivad mängijad ise kokku.</p>
 
         <div class="pdp-howto-extra">
           <figure class="pdp-levels" data-reveal>
-            <span class="eyebrow">Viis raskusastet</span>
+            <span class="eyebrow">Viis punktitaset</span>
             <ol role="list">
-              <li style="--l:1"><b>100</b><span>Tuttav</span></li>
-              <li style="--l:2"><b>200</b><span>Sõber</span></li>
-              <li style="--l:3"><b>300</b><span>Hea sõber</span></li>
-              <li style="--l:4"><b>400</b><span>Parim sõber</span></li>
-              <li style="--l:5"><b>500</b><span>Päris semu</span></li>
+              <li style="--l:1;--lg:linear-gradient(180deg, #5adde5, #004bad)"><b>100</b><span>sinine</span></li>
+              <li style="--l:2;--lg:linear-gradient(180deg, #546ffc, #fd67c5)"><b>200</b><span>sinililla</span></li>
+              <li style="--l:3;--lg:linear-gradient(180deg, #0198b0, #7ad859)"><b>300</b><span>roheline</span></li>
+              <li style="--l:4;--lg:linear-gradient(180deg, #ff3331, #ff904d)"><b>400</b><span>oranž</span></li>
+              <li style="--l:5;--lg:linear-gradient(180deg, #fd565a, #8d52fa)"><b>500</b><span>lillakas-roosa</span></li>
             </ol>
-            <figcaption><strong>Mida raskem, seda magusam.</strong> 100 punkti küsimused on soojenduseks, 500 punkti omad paljastavad, kes on päris semu.</figcaption>
+            <figcaption><strong>Värv näitab punkte.</strong> Järgmine mängija valib, mitme punkti küsimusele ta vastata julgeb. Mida rohkem punkte, seda keerulisem küsimus.</figcaption>
           </figure>
 
           <figure class="pdp-equation" data-reveal>
-            <span class="eyebrow">Salanipp</span>
+            <span class="eyebrow">Boonus</span>
             <div class="pdp-equation__row pdp-equation__row--letters" aria-hidden="true">
-              <span class="hcard hcard--bonus"><span class="hcard__in"><span class="hcard__label">Boonus</span><span class="hcard__letter">Ä</span><span class="hcard__small">&nbsp;</span></span></span>
+              <span class="pdp-letter"><img src="/assets/img/cards/oled-semu/back-a200.webp" alt="" width="1074" height="693" loading="lazy" decoding="async"></span>
               <span class="pdp-equation__op">+</span>
-              <span class="hcard hcard--bonus"><span class="hcard__in"><span class="hcard__label">Boonus</span><span class="hcard__letter">G</span><span class="hcard__small">&nbsp;</span></span></span>
+              <span class="pdp-letter"><img src="/assets/img/cards/oled-semu/back-g100.webp" alt="" width="1074" height="693" loading="lazy" decoding="async"></span>
               <span class="pdp-equation__op">+</span>
-              <span class="hcard hcard--bonus"><span class="hcard__in"><span class="hcard__label">Boonus</span><span class="hcard__letter">E</span><span class="hcard__small">&nbsp;</span></span></span>
+              <span class="pdp-letter"><img src="/assets/img/cards/oled-semu/back-e400.webp" alt="" width="1074" height="693" loading="lazy" decoding="async"></span>
               <span class="pdp-equation__op">=</span>
-              <span class="pdp-equation__win">Varasta punkte!</span>
+              <span class="pdp-equation__win">Boonus&shy;kaart<small>+100 p lõpus</small></span>
             </div>
-            <figcaption><strong>Ä + G + E.</strong> Kui sõna ÄGE on boonuskaartidest koos, võid teistelt mängijatelt punkte varastada. Parim hetk on muidugi siis, kui keegi on juba võitu tähistamas.</figcaption>
+            <figcaption><strong>Ä + G + E.</strong> Esimesel seitsmel korral, kui keegi saab kaartidest kokku sõna ÄGE, võib ta võtta boonuskaardi. Kaardil nimetatud mängija valib oma kaartide hulgast küsimuse: õige vastus — kaart on sinu; vale — kaart jääb omanikule ja boonuskaart kaotab kehtivuse.</figcaption>
           </figure>
         </div>
       </div>
@@ -379,11 +382,11 @@
         <div class="pdp-faq" data-reveal>
           <details>
             <summary>Mis vanusele Oled Semu? sobib?</summary>
-            <div class="pdp-faq__a"><p>Soovitame alates 12. eluaastast. Küsimused on sõbralikud ja naljakad, nii et mäng sobib nii sõpradele, klassikaaslastele kui ka kogu perele.</p></div>
+            <div class="pdp-faq__a"><p>Karbil on märge 12+. Küsimused on sõbralikud ja naljakad, nii et mäng sobib nii sõpradele, klassikaaslastele kui ka kogu perele.</p></div>
           </details>
           <details>
             <summary>Mitu mängijat on vaja?</summary>
-            <div class="pdp-faq__a"><p>Vähemalt kolm. Ülempiiri pole — mida suurem seltskond, seda rohkem üllatusi ja seda tihedam punktivõitlus.</p></div>
+            <div class="pdp-faq__a"><p>Reeglite järgi saab mängida kuni 10 mängijat — sobib nii väiksemale sõpruskonnale kui ka suuremale seltskonnale. Mida rohkem mängijaid, seda tihedam on võitlus kaartide pärast.</p></div>
           </details>
           <details>
             <summary>Kui kiiresti mäng kohale jõuab?</summary>
@@ -391,7 +394,7 @@
           </details>
           <details>
             <summary>Kas mängu saab tagastada?</summary>
-            <div class="pdp-faq__a"><p>Mänge me tagasi ei võta. Kui karp jõuab kohale kahjustatuna või midagi on puudu, kirjuta meile ja vahetame selle kiiresti uue vastu.</p></div>
+            <div class="pdp-faq__a"><p>Jah. Sul on <strong>14-päevane taganemisõigus</strong> alates paki kättesaamisest — põhjust pole vaja öelda. Esita avaldus <a href="/taganemine">taganemise vormiga</a> või kirjuta meile; tagastamise otsekulu kannab ostja. Täpsemalt loe <a href="/tingimused#taganemine">müügitingimustest</a>. Kui pakk jõuab kohale kahjustatuna või midagi on puudu, kirjuta meile ja lahendame selle kiiresti.</p></div>
           </details>
         </div>
       </div>
@@ -411,16 +414,5 @@
 
   <div data-site-footer></div>
 
-  <!-- Kleepuv osturiba -->
-  <div class="pdp-buybar" data-buybar aria-hidden="true">
-    <div class="pdp-buybar__inner">
-      <img src="/assets/img/games/oled-semu-box-front.webp" alt="" width="1000" height="691" loading="lazy">
-      <p class="pdp-buybar__info"><strong>Oled Semu?</strong><span data-buybar-price>12,95 €</span></p>
-      <button class="btn btn--primary btn--sm pdp-buybar__btn" type="button" data-add-to-cart="oled-semu" data-qty-source="#qty">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h15l-1.5 9h-12z"/><path d="M6 7 5 3H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
-        <span>Lisa ostukorvi</span>
-      </button>
-    </div>
-  </div>
 </body>
 </html>

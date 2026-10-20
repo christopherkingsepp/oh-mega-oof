@@ -2335,6 +2335,13 @@
 }
 .ty-hero .bg-blobs {
   z-index: -1;
+  /* pehme üleminek kokkuvõttele — mitte terav serv */
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent);
+  mask-image: linear-gradient(180deg, #000 55%, transparent);
+}
+.ty-hero.grain::after {
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent);
+  mask-image: linear-gradient(180deg, #000 55%, transparent);
 }
 .ty-hero__inner {
   position: relative;
@@ -2343,7 +2350,7 @@
   justify-items: center;
   gap: 20px;
 }
-.ty-burst {
+.ty-icon {
   position: relative;
   display: grid;
   place-items: center;
@@ -2351,7 +2358,7 @@
   height: 120px;
   margin-bottom: 8px;
 }
-.ty-burst__core {
+.ty-icon__core {
   position: relative;
   z-index: 2;
   display: grid;
@@ -2363,7 +2370,7 @@
   box-shadow: 0 0 40px rgba(255, 47, 168, 0.85), 0 0 120px rgba(255, 47, 168, 0.45), inset 0 -6px 18px rgba(0, 0, 0, 0.3);
   animation: ty-core-in 0.9s var(--ease-spring) both;
 }
-.ty-burst__core svg {
+.ty-icon__core svg {
   width: 48px;
   height: 48px;
   color: #fff;
@@ -2372,7 +2379,7 @@
   animation: ty-draw 0.6s 0.45s var(--ease-out) forwards;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
 }
-.ty-burst__ring {
+.ty-icon__ring {
   position: absolute;
   inset: 0;
   border-radius: 50%;
@@ -2381,15 +2388,15 @@
   opacity: 0;
   animation: ty-ring 1.6s var(--ease-out) forwards;
 }
-.ty-burst__ring:nth-child(2) {
+.ty-icon__ring:nth-child(2) {
   animation-delay: 0.25s;
   border-color: var(--violet);
 }
-.ty-burst__ring:nth-child(3) {
+.ty-icon__ring:nth-child(3) {
   animation-delay: 0.5s;
   border-color: var(--blue);
 }
-.ty-burst__rays {
+.ty-icon__rays {
   position: absolute;
   inset: -40px;
   border-radius: 50%;
@@ -2484,107 +2491,442 @@
   }
 }
 
+/* Oleku ikoon: ootel (spinner), ebaõnnestus, aegus, info */
+.ty-icon--wait .ty-icon__core,
+.ty-icon--card .ty-icon__core,
+.ty-icon--info .ty-icon__core,
+.ty-icon--fail .ty-icon__core,
+.ty-icon--expired .ty-icon__core {
+  animation: ty-pop 0.6s var(--ease-spring) both;
+}
+.ty-icon--wait .ty-icon__core {
+  width: 72px;
+  height: 72px;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 143, 214, 0.35), rgba(139, 44, 255, 0.25) 60%, rgba(18, 4, 16, 0.9));
+  box-shadow: 0 0 40px rgba(255, 47, 168, 0.35), inset 0 0 18px rgba(255, 143, 214, 0.25);
+}
+.ty-icon__spin {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 143, 214, 0.14);
+  border-top-color: var(--pink-hot);
+  border-right-color: rgba(255, 79, 191, 0.5);
+  filter: drop-shadow(0 0 10px rgba(255, 47, 168, 0.7));
+  animation: ty-spin 0.95s linear infinite;
+}
+.ty-icon--fail .ty-icon__core {
+  background: radial-gradient(circle at 35% 30%, #ff9aa8, var(--danger) 55%, #8a0020);
+  box-shadow: 0 0 40px rgba(255, 90, 110, 0.75), 0 0 110px rgba(255, 90, 110, 0.35), inset 0 -6px 18px rgba(0, 0, 0, 0.3);
+}
+.ty-icon--expired .ty-icon__core {
+  background: radial-gradient(circle at 35% 30%, #ffd59a, var(--orange) 55%, #8a3a00);
+  box-shadow: 0 0 40px rgba(255, 138, 28, 0.7), 0 0 110px rgba(255, 138, 28, 0.3), inset 0 -6px 18px rgba(0, 0, 0, 0.3);
+}
+.ty-icon--info .ty-icon__core,
+.ty-icon--card .ty-icon__core {
+  background: radial-gradient(circle at 35% 30%, #c8a2ff, var(--violet) 55%, #34096e);
+  box-shadow: 0 0 40px rgba(139, 44, 255, 0.7), 0 0 110px rgba(139, 44, 255, 0.3), inset 0 -6px 18px rgba(0, 0, 0, 0.3);
+}
+.ty-icon--fail .ty-icon__core svg,
+.ty-icon--expired .ty-icon__core svg,
+.ty-icon--info .ty-icon__core svg,
+.ty-icon--card .ty-icon__core svg {
+  width: 44px;
+  height: 44px;
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+  animation: none;
+}
+@keyframes ty-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ty-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+.ty-title__sub {
+  display: block;
+  margin-top: 0.4em;
+  font-size: 0.4em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--text);
+}
+.ty-title__sub .ty-party {
+  font-size: 1.1em;
+}
+.ty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 6px;
+  animation: ty-rise 0.9s 0.45s var(--ease-out) both;
+}
+.ty-actions .btn .icon:first-child {
+  margin-right: 2px;
+}
+.ty-poll {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--faint);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+.ty-poll::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pink-hot);
+  box-shadow: 0 0 10px var(--pink);
+  animation: ty-blink 1.4s ease-in-out infinite;
+}
+@keyframes ty-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+.ty-foot {
+  padding-top: 0;
+}
+.ty-share-wrap {
+  padding-top: 0;
+}
+/* Laadimise ajal pole veel midagi muud näidata */
+.ty[data-state='loading'] .ty-foot {
+  display: none;
+}
+
 /* Tellimuse kokkuvõte */
-.ty-order {
-  width: min(560px, 100%);
-  margin-top: 12px;
-  padding: 18px;
+.ty-detail {
+  padding-top: 0;
+}
+.ty-detail__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: clamp(16px, 2.4vw, 28px);
+  align-items: start;
+  max-width: 1040px;
+}
+.ty-receipt,
+.ty-ship,
+.ty-withdraw {
   border-radius: var(--radius-lg);
   border: 1px solid var(--line-strong);
   background: linear-gradient(180deg, rgba(36, 9, 30, 0.85), rgba(14, 4, 12, 0.85));
-  box-shadow: 0 30px 80px -40px rgba(255, 47, 168, 0.5);
-  text-align: left;
-  animation: ty-rise 0.9s 0.5s var(--ease-out) both;
 }
-.ty-order__items {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-  padding-bottom: 14px;
+.ty-receipt {
+  position: relative;
+  padding: clamp(18px, 2.6vw, 30px);
+  box-shadow: 0 30px 80px -40px rgba(255, 47, 168, 0.5);
+}
+.ty-receipt__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding-bottom: 16px;
   border-bottom: 1px dashed var(--line-strong);
 }
-.ty-order__item {
-  display: grid;
-  grid-template-columns: 54px minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: center;
-  font-size: 0.92rem;
-}
-.ty-order__item img {
-  width: 54px;
-  height: auto;
-  aspect-ratio: 1.448;
-  object-fit: cover;
-  border-radius: 7px;
-  border: 1px solid var(--line);
-}
-.ty-order__item .ty-order__stack {
-  width: 54px;
-  height: 37px;
-}
-.ty-order__item .ty-order__stack img {
-  position: absolute;
-  width: 36px;
-  border-radius: 5px;
-  border-color: var(--line-strong);
-  box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.9);
-}
-.ty-order__item strong {
-  font-weight: 800;
-}
-.ty-order__item span {
-  font-variant-numeric: tabular-nums;
-  color: var(--muted);
-}
-.ty-order__meta {
-  display: grid;
-  gap: 10px;
-  margin: 14px 0 0;
-}
-.ty-order__meta div {
-  display: grid;
-  grid-template-columns: 26px minmax(0, 1fr);
-  gap: 10px;
-  align-items: start;
-  font-size: 0.9rem;
-  line-height: 1.4;
-  color: var(--muted);
-}
-.ty-order__meta dt {
-  display: grid;
-  place-items: center;
-  height: 20px;
+.ty-receipt__label,
+.ty-side__title {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   color: var(--pink-soft);
 }
-.ty-order__meta dt svg {
-  width: 18px;
-  height: 18px;
+.ty-receipt__no {
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 3vw, 1.9rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
-.ty-order__meta dd {
+.ty-receipt__date {
+  flex: 1 1 100%;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.ty-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 13px;
+  border-radius: var(--radius-pill);
+  border: 1px solid currentColor;
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.ty-pill::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+.ty-pill--ok {
+  color: var(--ok);
+  background: rgba(61, 255, 168, 0.08);
+}
+.ty-pill--wait {
+  color: #ffd166;
+  background: rgba(255, 209, 102, 0.08);
+}
+.ty-pill--wait::before {
+  animation: ty-blink 1.4s ease-in-out infinite;
+}
+.ty-pill--bad {
+  color: var(--danger);
+  background: rgba(255, 90, 110, 0.08);
+}
+.ty-pill--info {
+  color: #c8a2ff;
+  background: rgba(139, 44, 255, 0.1);
+}
+.ty-lines {
+  display: grid;
   margin: 0;
+}
+.ty-line {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.ty-line__img {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: radial-gradient(closest-side, rgba(255, 47, 168, 0.22), transparent), rgba(255, 255, 255, 0.03);
+  color: var(--pink-soft);
+}
+.ty-line__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.ty-line__img svg {
+  width: 26px;
+  height: 26px;
+}
+.ty-line__info {
   min-width: 0;
+}
+.ty-line__name {
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.25;
   overflow-wrap: anywhere;
 }
-.ty-order__meta strong {
-  color: var(--text);
+.ty-line__inc {
+  margin-top: 3px;
+  color: var(--pink-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.4;
 }
-.ty-order__total {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
+.ty-line__inc span {
+  color: var(--muted);
+  font-weight: 500;
+}
+.ty-line__qty {
+  margin-top: 3px;
+  color: var(--faint);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+.ty-line__total {
   font-family: var(--font-display);
   font-weight: 800;
-}
-.ty-order__items + .ty-order__total {
-  margin-top: 0;
-  border-top: 0;
-}
-.ty-order__total strong {
-  font-size: 1.35rem;
+  font-size: 0.98rem;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ty-sums {
+  display: grid;
+  gap: 9px;
+  margin: 16px 0 0;
+  font-size: 0.94rem;
+}
+.ty-sums dt {
+  color: var(--muted);
+}
+.ty-sums dd {
+  margin: 0;
+  white-space: nowrap;
+}
+.ty-sums .sum-row--discount dt,
+.ty-sums .is-free {
+  color: var(--ok);
+}
+.ty-sums__total {
+  align-items: baseline;
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-strong);
+}
+.ty-sums__total dt {
+  color: var(--text);
+}
+.ty-sums__total dd {
+  font-size: clamp(1.35rem, 3vw, 1.7rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+.ty-sums__refund {
+  color: #c8a2ff;
+}
+.ty-side {
+  display: grid;
+  gap: clamp(14px, 2vw, 20px);
+}
+.ty-ship {
+  padding: clamp(18px, 2.4vw, 26px);
+}
+.ty-ship__locker {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  margin-top: 14px;
+}
+.ty-ship__carrier {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ty-ship__name {
+  margin-top: 4px;
+  font-weight: 800;
+  font-size: 1.02rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.ty-ship__addr {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.ty-ship__meta {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line-strong);
+  font-size: 0.88rem;
+}
+.ty-ship__meta div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ty-ship__meta dt {
+  color: var(--faint);
+}
+.ty-ship__meta dd {
+  margin: 0;
+  min-width: 0;
+  text-align: right;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.ty-ship__meta code {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 0.86rem;
+  color: var(--pink-soft);
+}
+.ty-withdraw {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 14px;
+  padding: clamp(16px, 2.2vw, 22px);
+  border-color: rgba(61, 255, 168, 0.22);
+  background: linear-gradient(180deg, rgba(10, 36, 26, 0.55), rgba(8, 14, 12, 0.7));
+}
+.ty-withdraw__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(61, 255, 168, 0.1);
+  color: var(--ok);
+}
+.ty-withdraw__icon svg {
+  width: 20px;
+  height: 20px;
+}
+.ty-withdraw__title {
+  font-size: 1rem;
+}
+.ty-withdraw p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+.ty-withdraw__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+.ty-withdraw__links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  color: var(--ok);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 900px) {
+  .ty-detail__grid {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 640px;
+  }
+}
+@media (max-width: 420px) {
+  .ty-line {
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+  .ty-line__img {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+  }
+  .ty-actions .btn {
+    width: 100%;
+  }
 }
 
 /* Mis edasi */
@@ -2642,18 +2984,6 @@
 .ty-step__icon svg {
   width: 26px;
   height: 26px;
-}
-/* Ilma tellimuseta (/aitah ilma session_id-ta): peidetud osad */
-.ty-burst[hidden],
-.ty-next[hidden] {
-  display: none;
-}
-.ty-cta.ty-cta--hero {
-  margin-top: 8px;
-  animation: ty-rise 0.9s 0.45s var(--ease-out) both;
-}
-.is-nosession .ty-share {
-  margin-top: clamp(8px, 2vw, 24px);
 }
 .ty-step__when {
   font-family: var(--font-display);
@@ -2777,12 +3107,15 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ty-burst__ring,
-  .ty-burst__rays {
+  .ty-icon__ring,
+  .ty-icon__rays {
     display: none;
   }
-  .ty-burst__core svg {
+  .ty-icon__core svg {
     stroke-dashoffset: 0;
+  }
+  .ty-icon__spin {
+    animation-duration: 2.4s;
   }
 }
 
@@ -2799,4 +3132,38 @@
 /* Kassa väikesed nupud (Vaheta komplektiks, Eemalda, Muuda, + Lisa): puuteala ≥ 44px ka desktopis */
 .co .btn--sm {
   min-height: 44px;
+}
+
+/* Valitud automaadi kaart kitsal ekraanil: hind ja tarneaeg eraldi ridadel (ilma rippuva „·“-ta) */
+@media (max-width: 520px) {
+  .lk-picked__meta {
+    flex-direction: column;
+  }
+  .lk-picked__meta > [aria-hidden='true'] {
+    display: none;
+  }
+}
+
+/* Kassa teade (makse katkestati / jäi pooleli) kitsal ekraanil: tekst täislaiuses, sulgemisnupp nurgas */
+@media (max-width: 520px) {
+  .co-banner {
+    position: relative;
+    align-items: flex-start;
+    padding: 16px;
+  }
+  .co-banner__icon {
+    display: none;
+  }
+  .co-banner__close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
+  .co-banner__title,
+  .co-banner__body > p:first-child {
+    padding-right: 44px;
+  }
+  .co-banner__cta {
+    width: 100%;
+  }
 }

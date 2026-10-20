@@ -35,7 +35,7 @@ export function legendHTML({ tag = 'h3' } = {}) {
         <img class="pvd-legend__back" src="${esc(c.back)}" alt="" width="${CARD_SIZE.width}" height="${CARD_SIZE.height}" loading="lazy" decoding="async">
         <div class="pvd-legend__body">
           <p class="pvd-legend__meta"><span class="pvd-code">${esc(c.code)}</span><span>${c.count} kaarti</span></p>
-          <${tag} class="pvd-legend__name">${esc(c.name)}</${tag}>
+          <${tag} class="pvd-legend__name">${esc(c.name)}${c.id === 'sh' ? ' <span class="pvd-legend__sub">stiilis küsimused</span>' : ''}</${tag}>
           <p class="pvd-legend__text">${esc(c.description)}</p>
         </div>
       </li>`,
@@ -198,7 +198,7 @@ export function mountPreviewDeck(root, opts = {}) {
     } else {
       bonusEl.hidden = true;
     }
-    descEl.textContent = c.bonus && BONUS_INFO[c.bonus] ? `${info.short} ${BONUS_INFO[c.bonus].description}` : info.short;
+    descEl.textContent = c.bonus && BONUS_INFO[c.bonus] ? `Wildcard: ${BONUS_INFO[c.bonus].description}` : info.short;
     backEl.innerHTML = imgTag(c.back, 'pvd__img');
     frontEl.innerHTML = imgTag(c.img, 'pvd__img', c.alt);
     // uus kaart tuleb pakist alati tagakülg üleval
@@ -388,7 +388,7 @@ export function mountPreviewDeck(root, opts = {}) {
   });
 
   render();
-  return {
+  const api = {
     next: () => go(1),
     prev: () => go(-1),
     shuffle,
@@ -399,6 +399,8 @@ export function mountPreviewDeck(root, opts = {}) {
       return index;
     },
   };
+  root.pvd = api; // testimiseks ja silumiseks
+  return api;
 }
 
 /** Paigaldab kõik [data-preview-deck] elemendid lehel. */

@@ -44,7 +44,7 @@ test('kinnituste kordus: üle 7 päeva vanu ja maksmata tellimusi ei puudutata; 
   const res = await retryPendingConfirmations({ env: {}, getDb: async () => db, mailer, logger: silentLogger() });
   assert.equal(res.checked, 0);
   assert.equal(mailer.sent.length, 0);
-  assert.equal(config.schedule, '@hourly');
+  assert.equal(config.schedule, '@daily');
 });
 
 test('eelvaade: „Sega“ ei anna kunagi täpselt sama 10-st hulka, ka rikutud juhuarvugeneraatoriga', () => {

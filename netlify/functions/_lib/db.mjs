@@ -1,7 +1,7 @@
 // Andmebaasi ühendus ühe liidesega: `await db.query(sql, params) → rows`.
 //
-//  • Tootmine (Netlify): Netlify DB / Neon Postgres. Ühendus tuleb keskkonnamuutujast
-//    NETLIFY_DATABASE_URL (Netlify seab selle ise, kui DB on lisatud) või DATABASE_URL.
+//  • Tootmine (Netlify): Neon Postgres. Ühendus tuleb keskkonnamuutujast DATABASE_URL
+//    (Neoni konsoolist, vt JUHEND.md peatükk 4) või vana Netlify DB beeta NETLIFY_DATABASE_URL.
 //    Kasutame HTTP-draiverit (@netlify/neon) — iga päring on eraldi ja atomaarne, seega
 //    olekumuutused tehakse ÜHE SQL-lausega (CTE-d), mitte interaktiivsete tehingutena.
 //  • Kohalik arendus: kui ühenduse URL-i pole, kasutatakse PGlite'i (Postgres WASM-is),
@@ -78,7 +78,7 @@ export async function getDb(env = process.env) {
     if (url) current = await createNeon(url);
     // Netlify funktsioonid jooksevad AWS Lambdas: seal PGlite'i (ajutine kettaruum) EI kasutata.
     else if (env.AWS_LAMBDA_FUNCTION_NAME && !env.NETLIFY_DEV) {
-      const err = new Error('Andmebaas pole seadistatud (NETLIFY_DATABASE_URL puudub).');
+      const err = new Error('Andmebaas pole seadistatud (DATABASE_URL puudub).');
       err.code = 'DB_NOT_CONFIGURED';
       throw err;
     } else current = await createPglite(env.PGLITE_DIR || '.data/pglite');

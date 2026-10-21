@@ -4,8 +4,9 @@
 import { randomInt, randomUUID } from 'node:crypto';
 import { cleanText } from './http.mjs';
 import { isValidEmail } from '../../../public/assets/js/validate.js';
+import { normalizeOrderNumber as normalizeNumber, ORDER_INPUT_MAX } from '../../../public/assets/js/order-number.js';
 
-export const LIMITS = { name: 100, email: 254, orderNumber: 20, items: 500, message: 2000 };
+export const LIMITS = { name: 100, email: 254, orderNumber: ORDER_INPUT_MAX, items: 500, message: 2000 };
 
 // Viide ilma segadust tekitavate märkideta (0/O, 1/I/L).
 const REF_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -42,13 +43,13 @@ function validDate(s) {
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
 }
 
-/** "age 1001", "1001", "AGE1001" → "AGE-1001". Tagastab null, kui ei sobi. */
+/**
+ * "äge 2026 0001", "AGE-2026-1", "2026-0001" → "ÄGE-2026-0001"; "test-age-2026-0001" → "TEST-ÄGE-2026-0001";
+ * vana vorm "age1001" → "AGE-1001". Tagastab null, kui ei sobi (vt public/assets/js/order-number.js).
+ */
 export function normalizeOrderNumber(value) {
-  const s = cleanText(value).toUpperCase().replace(/[\s–—]+/g, '').replace(/^#/, '');
-  if (!s || s.length > LIMITS.orderNumber) return null;
-  if (/^\d{3,10}$/.test(s)) return `AGE-${s}`;
-  const m = s.match(/^AGE-?([A-Z0-9]{3,12})$/);
-  return m ? `AGE-${m[1]}` : null;
+  if (typeof value !== 'string' && typeof value !== 'number') return null;
+  return normalizeNumber(cleanText(value));
 }
 
 const fail = (error, field) => ({ ok: false, error, field });
@@ -71,7 +72,7 @@ export function validateWithdrawal(body, { now = new Date() } = {}) {
   if (!isValidEmail(email)) return fail('Kontrolli e-posti aadressi — sinna saadame avalduse kinnituse.', 'email');
 
   const orderNumber = normalizeOrderNumber(body.orderNumber);
-  if (!orderNumber) return fail('Sisesta tellimuse number (nt AGE-1001). Selle leiad tellimuse kinnituskirjast.', 'orderNumber');
+  if (!orderNumber) return fail('Sisesta tellimuse number (nt ÄGE-2026-0001). Selle leiad tellimuse kinnituskirjast.', 'orderNumber');
 
   let receivedDate = null;
   const rawDate = cleanText(body.receivedDate);
@@ -95,13 +96,14 @@ export function validateWithdrawal(body, { now = new Date() } = {}) {
 
 /**
  * Salvestab avalduse ja tagastab rea (koos unikaalse viitega). Viite kokkupõrke korral proovib uuesti.
+ * Kui klient sisestas tellimuse VANA numbri (AGE-1001), salvestatakse tellimuse praegune number.
  */
 export async function createWithdrawal(db, value) {
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
       const rows = await db.query(
         `INSERT INTO withdrawals (id, reference, customer_name, customer_email, order_number, received_date, items, message)
-         VALUES ($1, $2, $3, $4, $5, $6::date, $7, $8)
+         VALUES ($1, $2, $3, $4, COALESCE((SELECT number FROM orders WHERE legacy_number = $5::text LIMIT 1), $5::text), $6::date, $7, $8)
          RETURNING *, to_char(received_date, 'YYYY-MM-DD') AS received_date_text`,
         [randomUUID(), createWithdrawalReference(), value.name, value.email, value.orderNumber, value.receivedDate, value.items, value.message],
       );

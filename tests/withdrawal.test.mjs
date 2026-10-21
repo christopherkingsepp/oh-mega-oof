@@ -11,7 +11,7 @@ const NOW = new Date('2026-10-19T09:00:00Z');
 const body = (overrides = {}) => ({
   name: 'Mari Maasikas',
   email: 'mari@example.ee',
-  orderNumber: 'AGE-1001',
+  orderNumber: 'ÄGE-2026-0001',
   receivedDate: '2026-10-15',
   items: 'MIDA V!!!U × 1',
   message: 'Kingiks ostetud, aga sõbral juba on.\nAitäh!',
@@ -42,13 +42,20 @@ test('taganemine: viide TAG-XXXXXX ilma segadust tekitavate märkideta', () => {
   }
 });
 
-test('taganemine: tellimuse numbri normaliseerimine', () => {
+test('taganemine: tellimuse numbri normaliseerimine (ÄGE/AGE, väiketähed, tühikud → õige kuju)', () => {
+  for (const input of ['ÄGE-2026-0001', 'AGE-2026-0001', 'äge-2026-0001', 'age 2026 0001', '  ÄGE – 2026 – 0001  ', 'AGE20260001', '#äge-2026-1', '2026-0001', 'A\u0308GE-2026-0001']) {
+    assert.equal(normalizeOrderNumber(input), 'ÄGE-2026-0001', input);
+  }
+  assert.equal(normalizeOrderNumber('test-age-2026-0042'), 'TEST-ÄGE-2026-0042');
+  assert.equal(normalizeOrderNumber('ÄGE-2027-10000'), 'ÄGE-2027-10000', 'üle 9999 → 5 kohta');
+  // Vana vorm jääb tuvastatavaks (vanad tellimused)
   assert.equal(normalizeOrderNumber('AGE-1001'), 'AGE-1001');
   assert.equal(normalizeOrderNumber(' age 1001 '), 'AGE-1001');
-  assert.equal(normalizeOrderNumber('1001'), 'AGE-1001');
   assert.equal(normalizeOrderNumber('#AGE1001'), 'AGE-1001');
   assert.equal(normalizeOrderNumber('AGE-7K3M9Q'), 'AGE-7K3M9Q', 'vana vormi tellimused');
-  for (const bad of ['', 'x', '12', 'AGE-', 'AGE-1001-1001-1001', 'DROP TABLE', null, 5]) assert.equal(normalizeOrderNumber(bad), null, String(bad));
+  for (const bad of ['', 'x', '12', '0001', '1001', 'AGE-', 'ÄGE-2026-0000', 'AGE-1001-1001-1001', 'DROP TABLE', 'x'.repeat(60), null, 5, {}]) {
+    assert.equal(normalizeOrderNumber(bad), null, String(bad));
+  }
 });
 
 test('taganemine: valideerimise vead väljade kaupa', () => {
@@ -73,9 +80,9 @@ test('taganemine: valideerimise vead väljade kaupa', () => {
     assert.ok(r.error.length > 10);
   }
   assert.equal(validateWithdrawal(null).ok, false);
-  const minimal = validateWithdrawal({ name: 'Mari Maasikas', email: 'mari@example.ee', orderNumber: '1001', confirm: true }, { now: NOW });
+  const minimal = validateWithdrawal({ name: 'Mari Maasikas', email: 'mari@example.ee', orderNumber: 'age 2026 1', confirm: true }, { now: NOW });
   assert.equal(minimal.ok, true);
-  assert.deepEqual(minimal.value, { name: 'Mari Maasikas', email: 'mari@example.ee', orderNumber: 'AGE-1001', receivedDate: null, items: '', message: '' });
+  assert.deepEqual(minimal.value, { name: 'Mari Maasikas', email: 'mari@example.ee', orderNumber: 'ÄGE-2026-0001', receivedDate: null, items: '', message: '' });
   const arr = validateWithdrawal(body({ items: ['MIDA V!!!U', ' Vigur '] }), { now: NOW });
   assert.equal(arr.value.items, 'MIDA V!!!U, Vigur');
   assert.equal(tallinnToday(new Date('2026-10-19T22:30:00Z')), '2026-10-20', 'Tallinna kuupäev, mitte UTC');
@@ -93,7 +100,7 @@ test('taganemine: õnnestub → 201 { reference, receivedAt }, rida salvestatud,
 
   const [row] = await db.query('SELECT * FROM withdrawals WHERE reference = $1', [data.reference]);
   assert.equal(row.customer_name, 'Mari Maasikas');
-  assert.equal(row.order_number, 'AGE-1001');
+  assert.equal(row.order_number, 'ÄGE-2026-0001');
   assert.equal(row.message, 'Kingiks ostetud, aga sõbral juba on.\nAitäh!');
   assert.equal(row.status, 'received');
   assert.ok(row.ack_sent_at && row.admin_notified_at);
@@ -108,7 +115,7 @@ test('taganemine: õnnestub → 201 { reference, receivedAt }, rida salvestatud,
   assert.match(ack.text, /Raha tagastame 14 päeva jooksul/);
   assert.equal(admin.to, 'omanik@example.ee');
   assert.equal(admin.replyTo, 'mari@example.ee');
-  assert.match(admin.subject, /Taganemisavaldus TAG-.* — tellimus AGE-1001/);
+  assert.match(admin.subject, /Taganemisavaldus TAG-.* — tellimus ÄGE-2026-0001/);
   assert.match(admin.text, /hiljemalt \d{2}\.\d{2}\.\d{4}/);
 });
 

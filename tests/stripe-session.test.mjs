@@ -141,7 +141,7 @@ test('metadata: ainult stringid, ≤ 500 märki, ≤ 50 võtit, võtmed ≤ 40',
   assert.equal(md.newsletter, 'jah');
   assert.equal(md.age_confirmed, 'jah');
   assert.equal(md.total_cents, String(order.totals.totalCents));
-  assert.match(p.payment_intent_data.description, /^ÄGE tellimus AGE-ABC234: MIDA V!!!U ×2, Vigur ×1$/);
+  assert.match(p.payment_intent_data.description, /^Tellimus AGE-ABC234: MIDA V!!!U ×2, Vigur ×1$/);
   assert.equal(p.payment_intent_data.receipt_email, 'mari@example.ee');
   assert.deepEqual(p.payment_intent_data.shipping.address.country, 'EE');
 });
@@ -244,7 +244,7 @@ test('tunnusega tellimus: tagasisuunamised /aitah?t=… ja /ostukorv?katkestatud
   const p = buildSessionParams(orderOf(), {
     origin: ORIGIN,
     orderId: '3f2b0c1e-0000-4000-8000-000000000001',
-    orderNumber: 'AGE-1001',
+    orderNumber: 'ÄGE-2026-0001',
     token,
     expiresAt: 1790000000,
   });
@@ -253,7 +253,11 @@ test('tunnusega tellimus: tagasisuunamised /aitah?t=… ja /ostukorv?katkestatud
   assert.equal(p.expires_at, 1790000000);
   assert.equal(p.client_reference_id, '3f2b0c1e-0000-4000-8000-000000000001');
   assert.equal(p.metadata.order_id, '3f2b0c1e-0000-4000-8000-000000000001');
-  assert.equal(p.metadata.order_number, 'AGE-1001');
-  assert.match(p.payment_intent_data.description, /^ÄGE tellimus AGE-1001: /);
-  assert.equal(p.payment_intent_data.metadata.order_number, 'AGE-1001');
+  assert.equal(p.metadata.order_number, 'ÄGE-2026-0001');
+  assert.equal(p.metadata.order_number_ascii, 'AGE-2026-0001', 'ASCII-kuju otsinguks Stripe’i töölaual');
+  assert.match(p.payment_intent_data.description, /^Tellimus ÄGE-2026-0001: /);
+  assert.equal(p.payment_intent_data.metadata.order_number, 'ÄGE-2026-0001');
+  // Ainult-ASCII välju (konto väljavõtte tekst) ei kasutata — sinna ei tohi Ä sattuda.
+  const all = JSON.stringify(p);
+  assert.ok(!/statement_descriptor/.test(all));
 });

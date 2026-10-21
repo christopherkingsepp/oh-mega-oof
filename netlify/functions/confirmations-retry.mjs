@@ -1,5 +1,6 @@
-// Ajastatud funktsioon: kord tunnis kontrollib viimase 7 päeva makstud tellimusi, mille mõni
-// kõrvalmõju jäi pooleli (kliendi kinnituskiri, omaniku teavitus või laoseisu vähendamine) —
+// Ajastatud funktsioon: kord ööpäevas kontrollib viimase 7 päeva makstud tellimusi, mille mõni
+// kõrvalmõju jäi pooleli (kliendi kinnituskiri, omaniku teavitus või laoseisu vähendamine;
+// testtellimusel laoseisu ei muudeta, seega seda seal ei oodata) —
 // nt kui e-posti teenus vastas webhooki ajal korraks veaga ja klient sulges kohe vahelehe.
 // Valvurid (confirmation_sent_at / admin_notified_at / laoliikumiste unikaalsus) tagavad, et
 // midagi ei tehta topelt. Netlify käivitab selle ise; HTTP kaudu seda tootmises kutsuda ei saa.
@@ -16,7 +17,7 @@ export async function retryPendingConfirmations({ env = process.env, getDb: getD
     `SELECT * FROM orders
       WHERE payment_status IN ('paid', 'partially_refunded')
         AND paid_at > now() - interval '7 days'
-        AND (confirmation_sent_at IS NULL OR inventory_applied_at IS NULL OR ($1::boolean AND admin_notified_at IS NULL))
+        AND (confirmation_sent_at IS NULL OR (inventory_applied_at IS NULL AND NOT is_test) OR ($1::boolean AND admin_notified_at IS NULL))
       ORDER BY paid_at ASC
       LIMIT $2`,
     [needAdmin, limit],
@@ -44,4 +45,6 @@ export default async function confirmationsRetry() {
   }
 }
 
-export const config = { schedule: '@hourly' };
+// Kord ööpäevas (samal ajal kui lockers-refresh), et tasuta andmebaas ei ärkaks iga tund:
+// peamine tee on webhook ja kinnitusleht (order-status) proovib pooleli jäänu kohe uuesti.
+export const config = { schedule: '@daily' };

@@ -260,11 +260,17 @@ ${p(`Vasta lihtsalt sellele kirjale või kirjuta <a href="mailto:${esc(SITE.emai
  * 2) Uus tellimus omanikule
  * ------------------------------------------------------------------------- */
 
+/** Halduse tellimuse vaate aadress (number URL-kodeeritult: Ä → %C3%84). */
+const adminOrderUrl = (siteUrl, number) => `${siteUrl}/admin/tellimused/${encodeURIComponent(number || '')}`;
+
+const TEST_NOTE = 'TESTTELLIMUS (Stripe’i testrežiim) — päris raha ei liikunud, laoseis ja statistika ei muutu.';
+
 export function adminNewOrderEmail(order, { siteUrl }) {
   const subject = `Uus tellimus ${order.number} — ${eur(order.total_cents)} (${order.carrier_name})`;
-  const adminUrl = `${siteUrl}/admin`;
+  const adminUrl = adminOrderUrl(siteUrl, order.number);
   const body = `
 ${h1(`Uus makstud tellimus ${esc(order.number)}`)}
+${order.is_test ? box(`<strong style="color:${C.pinkDark};">${esc(TEST_NOTE)}</strong>`) : ''}
 ${p(`${esc(tallinnDateTime(order.paid_at || order.created_at))} · kokku <strong>${esc(eur(order.total_cents))}</strong>`)}
 ${h2('Tooted')}
 ${itemsHtml(order.items)}
@@ -277,10 +283,11 @@ ${kvTable([
 ])}
 ${h2('Saata')}
 ${box(`<strong>${esc(order.carrier_name)}</strong><br>${lockerLines(order).map(esc).join('<br>')}${order.locker_id ? '' : `<br><span style="color:${C.pinkDark};font-size:13px;">Automaat on sisestatud käsitsi — kontrolli enne saatmist.</span>`}`)}
-${button(adminUrl, 'Ava halduspaneel')}
+${button(adminUrl, 'Ava tellimus halduspaneelis')}
 `;
   const text = [
     `Uus makstud tellimus ${order.number}`,
+    ...(order.is_test ? [TEST_NOTE] : []),
     `${tallinnDateTime(order.paid_at || order.created_at)} · kokku ${eur(order.total_cents)}`,
     '',
     itemsText(order.items),
@@ -359,7 +366,7 @@ ${p(`Kui midagi on valesti või sul on küsimusi, vasta sellele kirjale või kir
 export function adminWithdrawalEmail(w, { siteUrl }) {
   const subject = `Taganemisavaldus ${w.reference} — tellimus ${w.order_number}`;
   const deadline = tallinnDate(addDays(w.created_at, 14));
-  const adminUrl = `${siteUrl}/admin`;
+  const adminUrl = `${siteUrl}/admin/taganemised`;
   const rows = [['Klient', w.customer_name], ['E-post', w.customer_email], ...withdrawalRows(w)];
   const body = `
 ${h1(`Uus taganemisavaldus ${esc(w.reference)}`)}

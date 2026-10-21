@@ -91,7 +91,8 @@ test('mail: MOCK_MAIL=1 → .json + .html failid; Lambdas mock välja lülitatud
 
 const ORDER = {
   id: 'o1',
-  number: 'AGE-1001',
+  number: 'ÄGE-2026-0001',
+  is_test: false,
   public_token: 'tok_abc',
   created_at: '2026-10-19T09:05:00Z',
   paid_at: '2026-10-19T09:06:00Z',
@@ -118,9 +119,10 @@ const CTX = { siteUrl: 'https://age.example' };
 
 test('mall: tellimuse kinnitus kliendile — nr, read + komplekti sisu, summad, soodustus, tarne, mis edasi, taganemine, kontakt', () => {
   const m = orderConfirmationEmail(ORDER, CTX);
-  assert.equal(m.subject, 'Tellimus AGE-1001 on makstud — aitäh!');
+  assert.equal(m.subject, 'Tellimus ÄGE-2026-0001 on makstud — aitäh!');
   for (const part of [
-    'AGE-1001',
+    'ÄGE-2026-0001',
+    'https://age.example/taganemine?tellimus=%C3%84GE-2026-0001',
     'Kõik 3 mängu',
     'Komplektis: MIDA V!!!U + Oled Semu? + Vigur',
     'Vigur',
@@ -152,8 +154,14 @@ test('mall: tellimuse kinnitus kliendile — nr, read + komplekti sisu, summad, 
 
 test('mall: omaniku teavitus — klient, automaat (ID) ja link halduspaneelile; käsitsi automaadi hoiatus', () => {
   const m = adminNewOrderEmail(ORDER, CTX);
-  assert.match(m.subject, /^Uus tellimus AGE-1001 — 50,06/);
-  assert.ok(m.html.includes('https://age.example/admin'));
+  assert.match(m.subject, /^Uus tellimus ÄGE-2026-0001 — 50,06/);
+  assert.ok(m.html.includes('https://age.example/admin/tellimused/%C3%84GE-2026-0001'), 'otselink tellimusele (Ä URL-kodeeritud)');
+  assert.ok(m.html.includes('Uus makstud tellimus ÄGE-2026-0001'));
+  assert.ok(!/TESTTELLIMUS/.test(m.text), 'päris tellimusel testi märget pole');
+  const test = adminNewOrderEmail({ ...ORDER, number: 'TEST-ÄGE-2026-0001', is_test: true }, CTX);
+  assert.match(test.subject, /^Uus tellimus TEST-ÄGE-2026-0001 — /);
+  assert.match(test.text, /TESTTELLIMUS/);
+  assert.ok(test.html.includes('/admin/tellimused/TEST-%C3%84GE-2026-0001'));
   assert.ok(m.html.includes('+37251234567'));
   assert.ok(m.html.includes('Automaadi ID: 96331'));
   assert.ok(m.html.includes(tallinnDateTime(ORDER.paid_at)));
@@ -168,7 +176,7 @@ const W = {
   created_at: '2026-10-19T09:00:00Z',
   customer_name: 'Mari Maasikas',
   customer_email: 'mari@example.ee',
-  order_number: 'AGE-1001',
+  order_number: 'ÄGE-2026-0001',
   received_date: '2026-10-15',
   items: 'MIDA V!!!U',
   message: 'Tere',
@@ -177,11 +185,13 @@ const W = {
 test('mall: taganemisavalduse kinnitus kliendile ja teavitus omanikule (tähtaeg)', () => {
   const ack = withdrawalAckEmail(W, CTX);
   assert.equal(ack.subject, 'Oleme sinu taganemisavalduse kätte saanud (TAG-7K3M9Q)');
-  for (const part of ['Oleme sinu taganemisavalduse kätte saanud', 'TAG-7K3M9Q', 'AGE-1001', '15.10.2026', 'MIDA V!!!U', 'Tagasta kaup 14 päeva jooksul', 'Raha tagastame 14 päeva jooksul']) {
+  for (const part of ['Oleme sinu taganemisavalduse kätte saanud', 'TAG-7K3M9Q', 'ÄGE-2026-0001', '15.10.2026', 'MIDA V!!!U', 'Tagasta kaup 14 päeva jooksul', 'Raha tagastame 14 päeva jooksul']) {
     assert.ok(ack.html.includes(part), `HTML-is puudub "${part}"`);
   }
   const admin = adminWithdrawalEmail(W, CTX);
-  assert.match(admin.subject, /Taganemisavaldus TAG-7K3M9Q — tellimus AGE-1001/);
+  assert.match(admin.subject, /Taganemisavaldus TAG-7K3M9Q — tellimus ÄGE-2026-0001/);
+  assert.match(admin.text, /Tellimuse number: ÄGE-2026-0001/);
+  assert.match(ack.text, /tellimuse ÄGE-2026-0001 lepingust/);
   assert.match(admin.text, /hiljemalt 02\.11\.2026/);
   assert.ok(admin.html.includes('mailto:mari@example.ee'));
 });

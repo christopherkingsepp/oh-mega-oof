@@ -2,7 +2,7 @@
 //
 // Avalik, aga ainult tellimuse salajase tunnusega (t = 32 juhuslikku baiti, base64url).
 // Vastus sisaldab AINULT selle tellimuse andmeid, ilma täieliku e-posti, telefoni ja nimeta:
-//   200 { number, createdAt, paymentStatus, paymentStatusLabel, paid, paidAt,
+//   200 { number, test, createdAt, paymentStatus, paymentStatusLabel, paid, paidAt,
 //         fulfillmentStatus, fulfillmentStatusLabel, shippedAt, trackingCode,
 //         items:[{ id, name, qty, unitCents, totalCents, bundle, includes:[{id,name,qty}] }],
 //         totals:{ subtotalCents, discountCode, discountPercent, discountCents, shippingCents, totalCents, refundedCents, currency },
@@ -27,10 +27,11 @@ const SESSION_RE = /^cs_(test|live)_[A-Za-z0-9]{8,200}$/;
 const RETRY_STATES = ['paid', 'partially_refunded'];
 /** Kordame ainult värskete maksete puhul (nt hiljem lisatud ADMIN_EMAIL ei saada vanade tellimuste teavitusi). */
 const RETRY_WINDOW_MS = 24 * 60 * 60 * 1000;
+// Testtellimus laoseisu ei muuda, seega selle puuduvat laomuutust ei oodata.
 const sideEffectsPending = (o, env, nowMs) =>
   Boolean(o.paid_at) &&
   nowMs - new Date(o.paid_at).getTime() < RETRY_WINDOW_MS &&
-  (!o.inventory_applied_at || !o.confirmation_sent_at || Boolean(adminEmail(env) && !o.admin_notified_at));
+  ((!o.inventory_applied_at && !o.is_test) || !o.confirmation_sent_at || Boolean(adminEmail(env) && !o.admin_notified_at));
 const PRIVATE = { 'X-Robots-Tag': 'noindex, nofollow', 'Referrer-Policy': 'no-referrer' };
 
 /**

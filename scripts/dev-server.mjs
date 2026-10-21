@@ -93,10 +93,21 @@ async function loadRoutes() {
   return list;
 }
 
+/** URL-i osa dekodeerimine, mis vigase kodeeringu (%E0%A4%A) korral ei viska (nagu Netlify). */
+function safeDecode(s) {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+}
+
+// NB! Funktsioonile antakse päringu URL nagu Netlifys: tee on URL-kodeeritud (ÄGE → %C3%84GE).
+// context.params on dekodeeritud. Halduse API dekodeerib tellimuse numbri ise (mõlemad juhud).
 function matchRoute(url) {
   for (const r of routes) {
     const m = r.re.exec(url.pathname);
-    if (m) return { route: r, params: Object.fromEntries(r.keys.map((k, i) => [k, decodeURIComponent(m[i + 1])])) };
+    if (m) return { route: r, params: Object.fromEntries(r.keys.map((k, i) => [k, safeDecode(m[i + 1])])) };
   }
   return null;
 }
@@ -155,7 +166,7 @@ async function tryFile(p) {
 }
 
 async function handleStatic(req, res, url) {
-  const pathname = decodeURIComponent(url.pathname);
+  const pathname = safeDecode(url.pathname);
   const safe = normalize(join(PUBLIC, pathname));
   if (!safe.startsWith(PUBLIC)) return send(res, 403, 'Forbidden');
   // "Ilusad" URL-id nagu Netlifys: /mida-viiu -> mida-viiu.html, / -> index.html

@@ -10,13 +10,16 @@
 // Idempotentsus: iga sündmus (evt_…) salvestatakse tabelisse stripe_events; juba töödeldud sündmus
 // jäetakse vahele. Lisaks on igal olekuüleminekul ja kõrvalmõjul oma valvur (vt _lib/payments.mjs),
 // nii et ka paralleelne/korduv töötlus ei tee midagi topelt.
+// Režiim: kui sündmuse livemode ei klapi tellimusega (päris makse testtellimusele või vastupidi),
+// sündmus logitakse ja jäetakse vahele (vastus 200, et Stripe ei kordaks).
 // Vastused: 200 (ka tundmatule sündmusele), 400 vale allkiri, 500/503 ajutine viga → Stripe kordab.
 import { json, readTextLimited } from './_lib/http.mjs';
 import { webhooks } from './_lib/stripe-client.mjs';
 import { webhookSecret } from './_lib/config.mjs';
 import { getDb } from './_lib/db.mjs';
 import { createMailer } from './_lib/mail.mjs';
-import { applySessionState, applyChargeRefunded, findOrderForSession } from './_lib/payments.mjs';
+import { applySessionState, applyChargeRefunded, findOrderForSession, livemodeMismatch } from './_lib/payments.mjs';
+import { getOrderByPaymentIntent } from './_lib/orders.mjs';
 
 export const MAX_BODY_BYTES = 512 * 1024;
 /** Allkirja ajatempli lubatud vanus (sekundites) — kaitseb vanade sündmuste kordusesituse eest. */
@@ -89,10 +92,15 @@ export function createHandler({ env = process.env, logger = console, getDb: getD
 
       // 2) Töötle.
       let outcome;
-      if (event.type === 'charge.refunded') {
+      const pi = event.type === 'charge.refunded' ? (typeof obj.payment_intent === 'string' ? obj.payment_intent : obj.payment_intent?.id) : null;
+      const order = event.type === 'charge.refunded' ? (pi ? await getOrderByPaymentIntent(db, pi) : null) : await findOrderForSession(db, obj);
+      if (order && livemodeMismatch(order, event.livemode)) {
+        // Kaitse: test- ja päris-Stripe'i sündmused ei tohi teineteise tellimusi muuta.
+        logger.warn(`[webhook] ${event.type} (${event.id}): ${event.livemode ? 'päris' : 'test'}režiimi sündmus, aga ${order.number} on ${order.is_test ? 'testtellimus' : 'päris tellimus'} — jätan vahele.`);
+        outcome = { order: null, ignored: true };
+      } else if (event.type === 'charge.refunded') {
         outcome = await applyChargeRefunded(db, obj, { logger });
       } else {
-        const order = await findOrderForSession(db, obj);
         if (!order) logger.warn(`[webhook] ${event.type}: sessioonile ${obj.id} ei leitud tellimust (mõne teise rakenduse makse?).`);
         outcome = order ? await applySessionState(db, obj, { eventType: event.type, mailer: mail, env, logger, order }) : { order: null };
       }
@@ -100,8 +108,9 @@ export function createHandler({ env = process.env, logger = console, getDb: getD
       // 3) Märgi töödelduks (kui siia ei jõuta, kordab Stripe ja valvurid hoiavad ära topelttegevused).
       await db.query('UPDATE stripe_events SET processed_at = now(), order_id = COALESCE(order_id, $2) WHERE id = $1', [
         String(event.id),
-        outcome?.order?.id || null,
+        outcome?.order?.id || order?.id || null,
       ]);
+      if (outcome?.ignored) return json(200, { received: true, ignored: true, reason: 'livemode' });
       return json(200, {
         received: true,
         ...(outcome?.order ? { order: outcome.order.number, status: outcome.order.payment_status } : {}),

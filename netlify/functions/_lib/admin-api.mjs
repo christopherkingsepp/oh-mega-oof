@@ -13,11 +13,14 @@
 //   POST  /api/admin/login                 { password } → 200 { ok, expiresAt } + küpsis age_admin
 //   POST  /api/admin/logout                → 200 { ok } + küpsise tühistamine
 //   GET   /api/admin/me                    → { authenticated, expiresAt, dev, labels… }
-//   GET   /api/admin/orders                ?q&from&to&payment&fulfillment&sort&page&pageSize
+//   GET   /api/admin/orders                ?q&from&to&payment&fulfillment&sort&page&pageSize&test
 //   GET   /api/admin/orders.csv            samad filtrid → CSV (UTF-8 BOM, ;)
-//   GET   /api/admin/orders/:number        → { order }
+//   GET   /api/admin/orders/:number        → { order }   (:number = ÄGE-2026-0001 URL-kodeeritult,
+//                                          AGE-2026-0001, väiketähtedega või vana AGE-1001 — vastuses õige kuju)
 //   PATCH /api/admin/orders/:number        { fulfillmentStatus?, trackingCode?, notes? } → { order }
-//   GET   /api/admin/packing               → makstud ja saatmata tellimused
+//   POST  /api/admin/orders/:number/restock { confirm: true } → { order, restock }  (mängud lattu tagasi, üks kord)
+//   GET   /api/admin/packing               ?test → makstud ja saatmata tellimused
+//   (test=1 → ainult testtellimused; vaikimisi ainult päris tellimused)
 //   GET   /api/admin/inventory             ?game → { games, movements }
 //   POST  /api/admin/inventory             { gameId, mode:'delta'|'set', value, reason:'adjust'|'restock', note }
 //   GET   /api/admin/withdrawals           ?status=open|received|in_progress|refunded|rejected
@@ -54,12 +57,13 @@ import {
   parseOrderFilters,
   PAYMENT_LABELS,
   PAYMENT_STATUSES,
+  parseTestFlag,
   SORTS,
   updateOrder,
   validateOrderPatch,
 } from './admin-orders.mjs';
 import { ordersToCsv } from './admin-csv.mjs';
-import { applyInventoryChange, getInventory, getMovements, REASON_LABELS, validateInventoryChange } from './admin-inventory.mjs';
+import { applyInventoryChange, getInventory, getMovements, REASON_LABELS, restockOrder, validateInventoryChange } from './admin-inventory.mjs';
 import {
   listWithdrawals,
   normalizeWithdrawalKey,
@@ -313,7 +317,7 @@ export function createAdminApi({ env = process.env, now = () => new Date(), logg
       headers: {
         ...ADMIN_API_HEADERS,
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="age-tellimused-${today}.csv"`,
+        'Content-Disposition': `attachment; filename="age-${f.value.test ? 'testtellimused' : 'tellimused'}-${today}.csv"`,
         'X-Content-Type-Options': 'nosniff',
         'X-Row-Count': String(Math.min(rows.length, CSV_MAX_ROWS)),
         ...(truncated ? { 'X-Truncated': 'true' } : {}),
@@ -327,6 +331,7 @@ export function createAdminApi({ env = process.env, now = () => new Date(), logg
     const db = await getDbImpl();
     const row = await getAdminOrder(db, number);
     if (!row) return reply(404, { error: 'Tellimust ei leitud.' });
+    // Vastuses on alati õige number (order.number) — brauser asendab sellega aadressi (nt AGE-… → ÄGE-…).
     return reply(200, { order: orderDetail(row) });
   }
 
@@ -340,13 +345,36 @@ export function createAdminApi({ env = process.env, now = () => new Date(), logg
     const db = await getDbImpl();
     const result = await updateOrder(db, number, v.value, { now: now() });
     if (!result.ok) return reply(result.status, { error: result.error, field: result.field });
-    logger.log?.(`[haldus] ${number}: ${Object.keys(v.value).join(', ')} muudetud${v.value.fulfillmentStatus ? ` (→ ${v.value.fulfillmentStatus})` : ''}`);
+    logger.log?.(`[haldus] ${result.row.number}: ${Object.keys(v.value).join(', ')} muudetud${v.value.fulfillmentStatus ? ` (→ ${v.value.fulfillmentStatus})` : ''}`);
     return reply(200, { order: orderDetail(result.row) });
   }
 
-  async function packing() {
+  /**
+   * „Pane mängud lattu tagasi“ — omaniku teadlik otsus (tagasimakse ega tühistamine seda ise ei tee).
+   * Keha { confirm: true } (JSON) — kinnitus brauseris ja kaitse juhusliku päringu vastu.
+   * Korduv klõps ei lisa midagi juurde: vastus { restock: { added: false } }.
+   */
+  async function orderRestock({ req, match }) {
+    const number = normalizeNumber(match[1]);
+    if (!number) return reply(404, { error: 'Tellimust ei leitud.' });
+    const { body, error } = await readJson(req, 1024);
+    if (error) return error;
+    if (!body || body.confirm !== true) return reply(400, { error: 'Kinnita, et soovid selle tellimuse mängud lattu tagasi panna.', field: 'confirm' });
     const db = await getDbImpl();
-    return reply(200, await listPacking(db));
+    const row = await getAdminOrder(db, number);
+    if (!row) return reply(404, { error: 'Tellimust ei leitud.' });
+    const result = await restockOrder(db, row, { now: now() });
+    if (!result.ok) return reply(result.status, { error: result.error, code: result.code });
+    const fresh = (await getAdminOrder(db, row.number)) || row;
+    if (result.added) logger.log?.(`[haldus] ${row.number}: mängud lattu tagasi (${result.movements} laoliikumist)`);
+    return reply(200, { order: orderDetail(fresh), restock: { added: result.added, movements: result.movements, stock: result.stock } });
+  }
+
+  async function packing({ url }) {
+    const test = parseTestFlag(url.searchParams.get('test'));
+    if (test === null) return reply(400, { error: 'Vigane test-tellimuste valik.', field: 'test' });
+    const db = await getDbImpl();
+    return reply(200, await listPacking(db, { test }));
   }
 
   /* ---------- laoseis ---------- */
@@ -451,6 +479,7 @@ export function createAdminApi({ env = process.env, now = () => new Date(), logg
     ['GET', /^\/orders\.csv$/, ordersCsv],
     ['GET', /^\/orders\/([^/]+)$/, orderGet],
     ['PATCH', /^\/orders\/([^/]+)$/, orderPatch],
+    ['POST', /^\/orders\/([^/]+)\/restock$/, orderRestock],
     ['GET', /^\/packing$/, packing],
     ['GET', /^\/inventory$/, inventoryGet],
     ['POST', /^\/inventory$/, inventoryPost],

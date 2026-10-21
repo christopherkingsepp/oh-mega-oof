@@ -123,12 +123,11 @@ export function testDb() {
   return sharedDb;
 }
 
-/** Tühjendab kõik tabelid ja alustab tellimuse numbreid uuesti 1001-st. */
+/** Tühjendab kõik tabelid; tellimuse numbrid algavad uuesti 0001-st (loendurid tühjaks). */
 export async function freshDb() {
   const db = await testDb();
   await db.exec(`
-    TRUNCATE orders, stripe_events, inventory, inventory_movements, withdrawals, locker_cache RESTART IDENTITY;
-    ALTER SEQUENCE order_number_seq RESTART WITH 1001;
+    TRUNCATE orders, order_counters, stripe_events, inventory, inventory_movements, withdrawals, locker_cache RESTART IDENTITY;
   `);
   return db;
 }
@@ -150,9 +149,12 @@ export function captureMailer() {
 export const WEBHOOK_SECRET = 'whsec_test_secret_for_unit_tests';
 
 let evtCounter = 0;
-/** Stripe'i sündmus (data.object = antud objekt). */
-export function stripeEvent(type, object, { id = `evt_test_${++evtCounter}_${Date.now()}` } = {}) {
-  return { id, object: 'event', type, created: Math.floor(Date.now() / 1000), livemode: false, data: { object } };
+/**
+ * Stripe'i sündmus (data.object = antud objekt). Vaikimisi livemode: true — sobib päris
+ * tellimusega (createOrder ilma isTest-ita). Testtellimuse jaoks anna { livemode: false }.
+ */
+export function stripeEvent(type, object, { id = `evt_test_${++evtCounter}_${Date.now()}`, livemode = true } = {}) {
+  return { id, object: 'event', type, created: Math.floor(Date.now() / 1000), livemode, data: { object } };
 }
 
 /** Allkirjastatud webhooki päring (nagu Stripe saadab). */

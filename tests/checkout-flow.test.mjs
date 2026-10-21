@@ -47,6 +47,7 @@ test('checkout: keelatud vedaja (DPD vaikimisi) → 400 shipping.carrier, tellim
   assert.equal(row.locker_id, null);
 });
 
+// NB! KEY on testvõti (sk_test_) → need on testtellimused: laoseisu kontroll (409) kehtib ka neile.
 test('checkout: laoseisust ei piisa (komplektid lahti võetuna) → 409, Stripe\'i ei kutsuta', async () => {
   const db = await freshDb();
   await db.query("INSERT INTO inventory (game_id, stock) VALUES ('mida-viiu', 1), ('vigur', 0)");
@@ -152,4 +153,47 @@ test('checkout: MOCK_STRIPE=1 (kohalikult) → test-Stripe\'i makseleht; Lambdas
   const r = await call(prod, postJson(validBody()));
   assert.equal(r.res.status, 500);
   assert.equal(r.data.error, 'Makse pole veel seadistatud. Võta meiega ühendust.');
+});
+
+test('checkout: tellimuse number — päris võti → ÄGE-AAAA-NNNN, testvõti (sk_test_/rk_test_) ja näidisrežiim → TEST-ÄGE-… oma loenduriga', async () => {
+  resetMockStripe();
+  const db = await freshDb();
+  const year = (await db.query("SELECT EXTRACT(YEAR FROM (now() AT TIME ZONE 'Europe/Tallinn'))::int AS y"))[0].y;
+  const run = async (env) => {
+    const { handler } = setup({ env: { URL: 'https://age.example', ...env } });
+    const { res, data } = await call(handler, postJson(validBody()));
+    assert.equal(res.status, 200, JSON.stringify(data));
+    return { ...data, row: await getOrderByToken(db, data.token) };
+  };
+  const live1 = await run({ STRIPE_SECRET_KEY: 'sk_live_51AbCdEfGhIjKlMnOp' });
+  const test1 = await run({ STRIPE_SECRET_KEY: 'sk_test_51AbCdEfGhIjKlMnOp' });
+  const test2 = await run({ STRIPE_SECRET_KEY: 'rk_test_51AbCdEfGhIjKlMnOp' });
+  const live2 = await run({ STRIPE_SECRET_KEY: 'rk_live_51AbCdEfGhIjKlMnOp' });
+  const mock = await run({ MOCK_STRIPE: '1' });
+  assert.equal(live1.orderNumber, `ÄGE-${year}-0001`);
+  assert.equal(live2.orderNumber, `ÄGE-${year}-0002`, 'testtellimused ei kuluta päris numbreid');
+  assert.equal(test1.orderNumber, `TEST-ÄGE-${year}-0001`);
+  assert.equal(test2.orderNumber, `TEST-ÄGE-${year}-0002`);
+  assert.equal(mock.orderNumber, `TEST-ÄGE-${year}-0003`);
+  assert.deepEqual([live1, test1, test2, live2, mock].map((x) => x.row.is_test), [false, true, true, false, true]);
+  assert.deepEqual([live1, test1].map((x) => x.row.number_seq), [1, 1]);
+
+  // Laoseisu kontroll kehtib ka testtellimustele (409)
+  await db.query("INSERT INTO inventory (game_id, stock) VALUES ('mida-viiu', 0)");
+  const { handler } = setup({ env: { URL: 'https://age.example', STRIPE_SECRET_KEY: 'sk_test_51AbCdEfGhIjKlMnOp' } });
+  const blocked = await call(handler, postJson(validBody()));
+  assert.equal(blocked.res.status, 409);
+});
+
+test('checkout: Stripe\'i viga → tellimus märgitakse ebaõnnestunuks, aga number jääb (uus katse saab uue numbri, vana ei kasutata uuesti)', async () => {
+  const db = await freshDb();
+  const failing = setup({ stripe: mockStripe({ sessionError: new Error('Stripe maas') }) });
+  assert.equal((await call(failing.handler, postJson(validBody()))).res.status, 502);
+  const ok = setup();
+  const { data } = await call(ok.handler, postJson(validBody()));
+  const rows = await db.query('SELECT number, payment_status FROM orders ORDER BY number_seq');
+  assert.deepEqual(rows.map((r) => r.payment_status), ['failed', 'pending']);
+  assert.match(rows[0].number, /-0001$/);
+  assert.equal(rows[1].number, data.orderNumber);
+  assert.match(data.orderNumber, /-0002$/);
 });

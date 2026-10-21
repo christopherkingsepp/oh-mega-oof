@@ -3,6 +3,7 @@
 // saaks testida ilma võrguta (vt tests/).
 import { randomInt } from 'node:crypto';
 import { cleanText, truncate } from './http.mjs';
+import { asciiOrderNumber } from '../../../public/assets/js/order-number.js';
 
 const CURRENCY = 'eur';
 
@@ -35,7 +36,8 @@ export function resolveOrigin(req, env = {}, context = {}) {
 }
 
 /* ---------------------------------------------------------------------------
- * Tellimuse number (inimloetav viide; Stripe sessiooni id on tehniline võti).
+ * Varu-viide (kasutatakse ainult siis, kui orderId-d ei antud — nt testides). Päris tellimusel
+ * on andmebaasi id ja number ÄGE-AAAA-NNNN (orders.mjs → createOrder).
  * ------------------------------------------------------------------------- */
 
 const ORDER_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // ilma 0/O/1/I segaduseta
@@ -158,7 +160,10 @@ function absoluteUrl(origin, path) {
  * @param {{origin:string, couponId?:string|null, orderId?:string, orderNumber?:string|null,
  *          token?:string|null, expiresAt?:number|null}} opts
  *   orderId     — andmebaasi tellimuse id (metadata.order_id ja client_reference_id)
- *   orderNumber — inimloetav number "AGE-1001" (metadata.order_number, makse kirjeldus)
+ *   orderNumber — inimloetav number "ÄGE-2026-0001" (metadata.order_number, makse kirjeldus).
+ *                 Metadata ja kirjeldus lubavad täpitähti. Ainult-ASCII välju (statement_descriptor,
+ *                 statement_descriptor_suffix) me EI kasuta; kui neid kunagi lisatakse, kasuta
+ *                 asciiOrderNumber() kuju (AGE-2026-0001) — see on ka metadata.order_number_ascii.
  *   token       — tellimuse avalik tunnus: tagasisuunamised viivad /aitah?t=…&session_id=…
  *   expiresAt   — makselehe aegumine (unix-sekundid; Stripe lubab 30 min … 24 h)
  */
@@ -186,6 +191,7 @@ export function buildSessionParams(order, { origin, couponId = null, orderId = c
   const metadata = toMetadata({
     order_id: orderId,
     order_number: orderNumber || '',
+    order_number_ascii: orderNumber ? asciiOrderNumber(orderNumber) : '',
     customer_name: customer.name,
     phone: customer.phone,
     carrier: shipping.carrier,
@@ -226,7 +232,7 @@ export function buildSessionParams(order, { origin, couponId = null, orderId = c
     ],
     metadata,
     payment_intent_data: {
-      description: truncate(`ÄGE tellimus ${orderNumber || orderId}: ${itemsReadable}`, 1000),
+      description: truncate(`Tellimus ${orderNumber || orderId}: ${itemsReadable}`, 1000),
       metadata,
       receipt_email: customer.email,
       shipping: {

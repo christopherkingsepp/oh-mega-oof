@@ -7,6 +7,12 @@
 // Iga muudatus = üks SQL-lause (Neon HTTP-draiveril pole interaktiivseid tehinguid):
 // laoseisu uuendamine + inventory_movements rida ('adjust' = parandus/inventuur,
 // 'restock' = kaup juurde) tehakse koos CTE-dega.
+//
+// TELLIMUSE MÄNGUD LATTU TAGASI (restockOrder): tagasimakse või tühistamine EI muuda laoseisu
+// automaatselt — omanik otsustab ja vajutab tellimuse vaates „Pane mängud lattu tagasi“.
+// See lisab täpselt need kogused, mis müük laost maha võttis (komplektid lahti võetuna, müügi
+// laoliikumiste järgi), ainult üks kord: laoliikumine (order_id, game_id, 'return') on unikaalne
+// ja orders.restocked_at märgitakse samas lauses.
 import { PRODUCTS, GAMES } from '../../../public/assets/js/catalog.js';
 import { cleanText } from './http.mjs';
 import { formatTallinn, toDate } from './time.mjs';
@@ -15,7 +21,7 @@ export const REASON_LABELS = {
   sale: 'Müük',
   adjust: 'Parandus / inventuur',
   restock: 'Kaup juurde',
-  return: 'Tagastus',
+  return: 'Tellimus lattu tagasi',
 };
 export const MANUAL_REASONS = ['adjust', 'restock'];
 export const MAX_STOCK = 100000;
@@ -147,4 +153,96 @@ export async function applyInventoryChange(db, change) {
   }
   const r = rows[0];
   return { ok: true, stock: Number(r.stock), delta: Number(r.delta), movementId: Number(r.movement_id) };
+}
+
+/* ---------------------------------------------------------------------------
+ * Tellimuse mängud lattu tagasi (omaniku otsus, mitte automaatne)
+ * ------------------------------------------------------------------------- */
+
+/** Makse olekud, mille korral raha on (osaliselt) tagastatud. */
+export const RESTOCK_PAYMENT = ['refunded', 'partially_refunded'];
+
+/**
+ * Miks seda tellimust ei saa lattu tagasi panna (null = saab). Tingimused: päris tellimus,
+ * mille müük vähendas laoseisu, raha on tagastatud või tellimus tühistatud ja seda pole veel tehtud.
+ * @returns {null | {code:string, error:string}}
+ */
+export function restockBlocker(row) {
+  if (!row) return { code: 'not_found', error: 'Tellimust ei leitud.' };
+  if (row.is_test) return { code: 'test', error: 'Testtellimus ei muuda laoseisu — lattu pole midagi tagasi panna.' };
+  if (row.restocked_at) return { code: 'done', error: `Mängud on juba lattu tagasi pandud (${formatTallinn(row.restocked_at)}).` };
+  if (!row.inventory_applied_at) return { code: 'not_applied', error: 'Selle tellimuse eest laoseisu ei vähendatud — lattu pole midagi tagasi panna.' };
+  if (!RESTOCK_PAYMENT.includes(row.payment_status) && row.fulfillment_status !== 'cancelled') {
+    return { code: 'not_returned', error: 'Mänge saab lattu tagasi panna alles siis, kui raha on tagastatud (Stripe’is) või tellimus on tühistatud.' };
+  }
+  return null;
+}
+
+export const canRestock = (row) => restockBlocker(row) === null;
+
+/**
+ * Paneb tellimuse mängud lattu tagasi — täpselt üks kord, ühe lausega:
+ *  • tellimuse rida lukustatakse (FOR UPDATE), nii et topeltklõps ootab esimese järel ja näeb,
+ *    et restocked_at on juba märgitud;
+ *  • kogused = selle tellimuse müügi laoliikumised ('sale', komplektid juba lahti võetud);
+ *  • laoliikumine 'return' (unikaalne order_id + game_id + reason) + inventory.stock suureneb
+ *    (ainult mängudel, mille laoseisu jälgitakse — nagu müügi puhul) + orders.restocked_at.
+ * Juba tehtud → { ok: true, added: false } (korduv klõps ei lisa midagi).
+ * @param {object} row tellimuse rida (vähemalt id, is_test, inventory_applied_at, restocked_at, payment_status, fulfillment_status)
+ * @returns {Promise<{ok:true, added:boolean, movements:number, stock:{gameId,stock}[]} | {ok:false, status:number, code:string, error:string}>}
+ */
+export async function restockOrder(db, row, { now = new Date() } = {}) {
+  const blocker = restockBlocker(row);
+  if (blocker) {
+    if (blocker.code === 'done') return { ok: true, added: false, movements: 0, stock: [] };
+    return { ok: false, status: blocker.code === 'not_found' ? 404 : 409, ...blocker };
+  }
+  const at = now.toISOString();
+  const rows = await db.query(
+    `WITH target AS (
+        SELECT id, number FROM orders
+        WHERE id = $1 AND NOT is_test AND inventory_applied_at IS NOT NULL AND restocked_at IS NULL
+          AND (payment_status IN ('refunded','partially_refunded') OR fulfillment_status = 'cancelled')
+        FOR UPDATE
+     ),
+     need AS (
+        SELECT m.game_id, -m.delta AS qty
+        FROM inventory_movements m JOIN target t ON t.id = m.order_id
+        WHERE m.reason = 'sale' AND m.delta < 0
+     ),
+     ins AS (
+        INSERT INTO inventory_movements (game_id, delta, reason, order_id, note, created_at)
+        SELECT need.game_id, need.qty, 'return', t.id, 'Tellimus ' || t.number || ' — mängud lattu tagasi', $2::timestamptz
+        FROM need, target t
+        ON CONFLICT (order_id, game_id, reason) WHERE order_id IS NOT NULL DO NOTHING
+        RETURNING game_id, delta
+     ),
+     upd AS (
+        UPDATE inventory i SET stock = i.stock + ins.delta, updated_at = $2::timestamptz
+        FROM ins WHERE i.game_id = ins.game_id
+        RETURNING i.game_id, i.stock
+     ),
+     mark AS (
+        UPDATE orders SET restocked_at = $2::timestamptz, updated_at = $2::timestamptz
+        WHERE id IN (SELECT id FROM target) AND restocked_at IS NULL
+        RETURNING id
+     )
+     SELECT (SELECT count(*)::int FROM mark) AS marked,
+            (SELECT count(*)::int FROM ins) AS movements,
+            COALESCE((SELECT json_agg(json_build_object('gameId', game_id, 'stock', stock)) FROM upd), '[]'::json) AS stock`,
+    [row.id, at],
+  );
+  const r = rows[0] || {};
+  if (!Number(r.marked)) {
+    // Keegi teine (nt teine klõps) jõudis ette või olek muutus vahepeal.
+    const [fresh] = await db.query(
+      'SELECT id, is_test, inventory_applied_at, restocked_at, payment_status, fulfillment_status FROM orders WHERE id = $1',
+      [row.id],
+    );
+    const again = restockBlocker(fresh);
+    if (again?.code === 'done') return { ok: true, added: false, movements: 0, stock: [] };
+    if (again) return { ok: false, status: again.code === 'not_found' ? 404 : 409, ...again };
+    return { ok: false, status: 409, code: 'retry', error: 'Tellimust muudeti vahepeal. Värskenda vaadet ja proovi uuesti.' };
+  }
+  return { ok: true, added: true, movements: Number(r.movements) || 0, stock: Array.isArray(r.stock) ? r.stock : [] };
 }

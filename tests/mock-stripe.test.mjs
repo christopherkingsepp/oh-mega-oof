@@ -71,12 +71,13 @@ test('mock-Stripe: makseleht — TESTMAKSE märge, summa ja kõik valikud', asyn
   assert.equal(missing.status, 404);
 });
 
-test('mock-Stripe: „Maksa edukalt“ → allkirjastatud webhook → makstud + laoseis + kirjad → kinnitusleht', async () => {
+test('mock-Stripe: „Maksa edukalt“ → allkirjastatud webhook → makstud + kirjad → kinnitusleht; testtellimus laoseisu ei muuda', async () => {
   resetMockStripe();
   const db = await freshDb();
   await db.query("INSERT INTO inventory (game_id, stock) VALUES ('mida-viiu', 4)");
   const sys = system();
   const c = await startCheckout(sys);
+  assert.match(c.orderNumber, /^TEST-ÄGE-\d{4}-0001$/, 'näidisrežiim → testtellimus');
   const res = await act(sys, c.session, 'pay');
   assert.equal(res.status, 303);
   assert.equal(res.headers.get('location'), `${ORIGIN}/aitah?t=${c.token}&session_id=${c.session}`);
@@ -87,11 +88,20 @@ test('mock-Stripe: „Maksa edukalt“ → allkirjastatud webhook → makstud + 
   const row = await getOrderByToken(db, c.token);
   assert.equal(row.payment_status, 'paid');
   assert.match(row.stripe_payment_intent_id, /^pi_mock_/);
-  assert.equal((await db.query("SELECT stock FROM inventory WHERE game_id = 'mida-viiu'"))[0].stock, 3);
+  assert.equal(row.is_test, true);
+  assert.equal((await db.query("SELECT stock FROM inventory WHERE game_id = 'mida-viiu'"))[0].stock, 4, 'testtellimus laoseisu ei vähenda');
+  assert.equal((await db.query('SELECT count(*)::int AS n FROM inventory_movements'))[0].n, 0);
   assert.equal(sys.mailer.sent.length, 2);
+  assert.match(sys.mailer.sent[0].subject, new RegExp(`Tellimus ${c.orderNumber} on makstud`));
 
   const st = await call(sys.status, new Request(`${ORIGIN}/api/tellimus?t=${c.token}&session_id=${c.session}`));
   assert.equal(st.data.paymentStatus, 'paid');
+  assert.equal(st.data.number, c.orderNumber, 'kinnitusleht näitab sama numbrit');
+  assert.equal(st.data.test, true);
+  // Kinnituslehe korduv laadimine ei saada kirju uuesti ega muuda numbrit
+  const again = await call(sys.status, new Request(`${ORIGIN}/api/tellimus?t=${c.token}&session_id=${c.session}`));
+  assert.equal(again.data.number, c.orderNumber);
+  assert.equal(sys.mailer.sent.length, 2);
 
   // Teist korda maksta ei saa
   assert.equal((await act(sys, c.session, 'pay')).status, 409);
@@ -103,6 +113,8 @@ test('mock-Stripe: „Maksa edukalt“ → allkirjastatud webhook → makstud + 
   const refunded = await getOrderByToken(db, c.token);
   assert.equal(refunded.payment_status, 'refunded');
   assert.equal(refunded.refunded_cents, refunded.total_cents);
+  assert.equal(refunded.number, c.orderNumber);
+  assert.equal((await db.query("SELECT stock FROM inventory WHERE game_id = 'mida-viiu'"))[0].stock, 4);
   assert.equal(sys.mailer.sent.length, 2, 'tagasimakse ei saada uuesti tellimuse kinnitust');
 });
 

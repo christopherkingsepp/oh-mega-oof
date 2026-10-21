@@ -365,6 +365,16 @@ input[type='date'].adm-input {
   background: rgba(255, 255, 255, 0.04);
   border-color: var(--line-strong);
 }
+/* Testtellimus (Stripe'i testrežiim): selgelt eristuv, aga mitte veateate värvi */
+.adm-badge--test {
+  color: #120712;
+  background: var(--warn);
+  border-color: var(--warn);
+  letter-spacing: 0.08em;
+}
+.adm-badge--test::before {
+  display: none;
+}
 .adm-badges {
   display: flex;
   flex-wrap: wrap;
@@ -390,6 +400,11 @@ input[type='date'].adm-input {
 .adm-alert--info {
   border-color: rgba(76, 198, 255, 0.35);
   background: rgba(76, 198, 255, 0.06);
+}
+.adm-alert--test {
+  border-color: rgba(255, 193, 77, 0.6);
+  border-left-width: 4px;
+  background: rgba(255, 193, 77, 0.1);
 }
 .adm-loading {
   display: flex;
@@ -808,6 +823,27 @@ input[type='date'].adm-input {
 .adm-seg__btn[aria-pressed='true'] {
   background: var(--pink);
   color: #fff;
+}
+/* Päris/test lüliti tellimuste ja pakkimise vaates */
+.adm-scope-row {
+  margin: 0 0 14px;
+}
+.adm-seg__btn--test[aria-pressed='true'] {
+  background: var(--warn);
+  color: #120712;
+}
+.adm-seg__count {
+  display: inline-block;
+  min-width: 1.6em;
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.adm-restock-done {
+  color: var(--ok);
 }
 .adm-period__nav {
   display: flex;

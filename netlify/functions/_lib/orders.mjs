@@ -16,8 +16,13 @@
 // keelata midagi) — nii ei jää pood kogemata "kõik otsas" olekusse enne, kui laoseis on
 // sisestatud. Müügi laoliikumine (inventory_movements, reason 'sale') salvestatakse siiski
 // alati ajaloo jaoks; `inventory.stock` väheneb ainult olemasoleval real.
+//
+// TESTTELLIMUSED (is_test: Stripe'i testvõti või kohalik näidisrežiim) saavad numbri
+// TEST-ÄGE-AAAA-NNNN oma loenduriga, EI muuda laoseisu (laoliikumisi ei teki) ega lähe
+// statistikasse. Laoseisu piisavust kontrollitakse kassas siiski ka nende puhul (409).
 import { randomBytes, randomUUID } from 'node:crypto';
 import { PRODUCTS, SHIPPING, DISCOUNT_CODES, GAMES, computeTotals, productContents, gameQuantities } from '../../../public/assets/js/catalog.js';
+import { ORDER_PREFIX, TEST_PREFIX, parseOrderNumber } from '../../../public/assets/js/order-number.js';
 
 /* ---------------------------------------------------------------------------
  * Abifunktsioonid
@@ -78,7 +83,12 @@ async function one(db, sql, params) {
 }
 
 export const getOrderById = (db, id) => one(db, 'SELECT * FROM orders WHERE id = $1', [String(id)]);
-export const getOrderByNumber = (db, number) => one(db, 'SELECT * FROM orders WHERE number = $1', [String(number).toUpperCase()]);
+/** Tellimus numbri järgi: õige kuju, ilma Ä-ta (AGE-2026-0001), väiketähtedega või vana number (AGE-1001). */
+export function getOrderByNumber(db, number) {
+  const parsed = parseOrderNumber(number);
+  if (!parsed) return Promise.resolve(null);
+  return one(db, 'SELECT * FROM orders WHERE number = $1 OR legacy_number = $1 ORDER BY (number = $1) DESC LIMIT 1', [parsed.number]);
+}
 export const getOrderByToken = (db, token) => one(db, 'SELECT * FROM orders WHERE public_token = $1', [String(token)]);
 export const getOrderBySessionId = (db, sessionId) => one(db, 'SELECT * FROM orders WHERE stripe_session_id = $1', [String(sessionId)]);
 export const getOrderByPaymentIntent = (db, pi) =>
@@ -122,7 +132,7 @@ export function shortageMessage(shortages) {
 }
 
 /**
- * Vähendab laoseisu makstud tellimuse eest — täpselt üks kord.
+ * Vähendab laoseisu makstud PÄRIS tellimuse eest — täpselt üks kord (testtellimus ei muuda midagi).
  * Laoliikumised on unikaalsed (order_id, game_id, 'sale'), seega korduv väljakutse ei
  * muuda midagi. Kõik toimub ühes lauses: liikumise lisamine + laoseisu vähendamine +
  * orders.inventory_applied_at märkimine.
@@ -137,7 +147,7 @@ export async function applyInventoryForOrder(db, order) {
   const rows = await db.query(
     `WITH need AS (
         SELECT game_id, qty FROM jsonb_to_recordset($2::jsonb) AS x(game_id text, qty int)
-        WHERE EXISTS (SELECT 1 FROM orders WHERE id = $1 AND payment_status IN ('paid','partially_refunded','refunded'))
+        WHERE EXISTS (SELECT 1 FROM orders WHERE id = $1 AND NOT is_test AND payment_status IN ('paid','partially_refunded','refunded'))
      ),
      ins AS (
         INSERT INTO inventory_movements (game_id, delta, reason, order_id, note)
@@ -169,12 +179,23 @@ export async function applyInventoryForOrder(db, order) {
  * ------------------------------------------------------------------------- */
 
 /**
- * Salvestab uue tellimuse (payment_status 'pending').
+ * Salvestab uue tellimuse (payment_status 'pending') ja annab sellele numbri ÄGE-AAAA-NNNN.
+ *
+ * Number tuleb loendurist order_counters SAMAS lauses, mis tellimuse lisab: loenduri rida
+ * lukustatakse (INSERT … ON CONFLICT DO UPDATE), nii et samaaegsed ostud saavad alati erinevad
+ * järjestikused numbrid. Kui tellimuse lisamine ebaõnnestub, jääb ka loendur muutmata (sama
+ * tehing). AAAA arvutatakse andmebaasi kellast Tallinna aja järgi (31.12 kell 23:59 Tallinnas
+ * on veel vana aasta, 1.01 kell 00:00 juba uus). Number on püsiv — seda ei muudeta hiljem.
+ * Igaks juhuks ei lähe loendur kunagi alla selle aasta suurima olemasoleva numbri.
+ *
  * @param {object} order validateOrder() tulemus (order); summad arvutatakse siin UUESTI kataloogist.
- * @param {{locker?:{id,name,address,city}}} [opts] automaadi andmed vedaja nimekirjast (ülimuslikud kliendi omadest)
+ * @param {{locker?:{id,name,address,city}, isTest?:boolean, now?:Date|string|number|null}} [opts]
+ *   locker — automaadi andmed vedaja nimekirjast (ülimuslikud kliendi omadest)
+ *   isTest — testtellimus (Stripe'i testvõti või näidisrežiim): TEST-eesliide ja oma loendur
+ *   now    — ainult testidele: loomise hetk andmebaasi kella asemel (aastavahetuse kontroll)
  * @returns {Promise<object>} orders rida
  */
-export async function createOrder(db, order, { locker = null } = {}) {
+export async function createOrder(db, order, { locker = null, isTest = false, now = null } = {}) {
   const carrier = order.shipping.carrier;
   if (!Object.prototype.hasOwnProperty.call(SHIPPING.carriers, carrier)) throw new Error(`Tundmatu vedaja: ${carrier}`);
   const totals = computeTotals(order.items, order.code, carrier);
@@ -187,18 +208,33 @@ export async function createOrder(db, order, { locker = null } = {}) {
     lockerCity: nullIfEmpty(locker ? locker.city : order.shipping.lockerCity),
   };
 
+  const test = isTest === true;
   const rows = await db.query(
-    `INSERT INTO orders (
-        id, number, public_token,
+    `WITH clock AS (
+        SELECT COALESCE($20::timestamptz, now()) AS at
+     ),
+     num AS (
+        INSERT INTO order_counters AS c (scope, year, last_value)
+        SELECT $21::text, y.year,
+               COALESCE((SELECT max(o.number_seq) FROM orders o WHERE o.is_test = $22::boolean AND o.number_year = y.year), 0) + 1
+        FROM (SELECT EXTRACT(YEAR FROM (clock.at AT TIME ZONE 'Europe/Tallinn'))::int AS year FROM clock) y
+        ON CONFLICT (scope, year) DO UPDATE SET last_value = GREATEST(c.last_value + 1, EXCLUDED.last_value), updated_at = now()
+        RETURNING c.year, c.last_value
+     )
+     INSERT INTO orders (
+        id, number, number_year, number_seq, is_test, public_token, created_at, updated_at,
         customer_name, customer_email, customer_phone, newsletter, age_confirmed,
         items, subtotal_cents, discount_code, discount_cents, shipping_cents, total_cents, currency,
         carrier, carrier_name, locker_id, locker_name, locker_address, locker_city
-     ) VALUES (
-        $1, 'AGE-' || nextval('order_number_seq'), $2,
+     )
+     SELECT
+        $1, $23::text || num.year::text || '-' || lpad(num.last_value::text, GREATEST(4, length(num.last_value::text)), '0'),
+        num.year, num.last_value, $22::boolean, $2, clock.at, clock.at,
         $3, $4, $5, $6, $7,
         $8::jsonb, $9, $10, $11, $12, $13, 'eur',
         $14, $15, $16, $17, $18, $19
-     ) RETURNING *`,
+     FROM num, clock
+     RETURNING *`,
     [
       randomUUID(),
       createPublicToken(),
@@ -219,6 +255,10 @@ export async function createOrder(db, order, { locker = null } = {}) {
       ship.lockerName,
       ship.lockerAddress,
       ship.lockerCity,
+      toIso(now),
+      test ? 'test' : 'live',
+      test,
+      `${test ? TEST_PREFIX : ''}${ORDER_PREFIX}-`,
     ],
   );
   return rows[0];
@@ -423,6 +463,7 @@ export function publicOrderView(row, { now = Date.now() } = {}) {
   const code = row.discount_code || null;
   return {
     number: row.number,
+    test: Boolean(row.is_test),
     createdAt: toIso(row.created_at),
     paymentStatus: row.payment_status,
     paymentStatusLabel: PAYMENT_STATUS_LABELS[row.payment_status] || row.payment_status,

@@ -7,10 +7,19 @@
 // MUUDETAV halduses: fulfillment_status (koos packed_at/shipped_at ajatemplitega), tracking_code,
 // notes. MITTE muudetav: makse staatus ja summad (tulevad Stripe'ist), klient, tooted ning tarne
 // andmed (vedaja, automaat, automaadi ID ja aadress salvestatakse tellimisel ja jäävad muutmata).
+//
+// PÄRIS- JA TESTTELLIMUSED: nimekiri, CSV ja pakkimisvaade näitavad vaikimisi ainult päris
+// tellimusi; `test=1` näitab ainult testtellimusi (Stripe'i testrežiim / näidisrežiim).
+//
+// TELLIMUSE NUMBER URL-is ja otsingus: ÄGE-2026-0001 võib tulla URL-kodeeritult (%C3%84GE-…),
+// ilma Ä-ta (AGE-2026-0001), väiketähtedega või vana numbrina (AGE-1001) — normalizeNumber()
+// teeb sellest õige kuju ja server vastab alati õige (kanoonilise) numbriga.
 import { PRODUCTS, SHIPPING, DISCOUNT_CODES } from '../../../public/assets/js/catalog.js';
+import { asciiOrderNumber, parseOrderNumber, TEST_PREFIX } from '../../../public/assets/js/order-number.js';
 import { cleanText, truncate } from './http.mjs';
 import { tallinnRange, isDateString, formatTallinn, toDate, diffDays } from './time.mjs';
 import { parseItems, orderGameUnits, PAID_STATUSES, SHIPPABLE_PAYMENT, OPEN_FULFILLMENT } from './stats.mjs';
+import { restockBlocker } from './admin-inventory.mjs';
 
 export const PAYMENT_STATUSES = ['pending', 'processing', 'paid', 'failed', 'expired', 'refunded', 'partially_refunded'];
 export const FULFILLMENT_STATUSES = ['new', 'packed', 'shipped', 'delivered', 'cancelled'];
@@ -60,8 +69,8 @@ export const SORTS = {
   created_asc: 'created_at ASC, id ASC',
   total_desc: 'total_cents DESC, created_at DESC',
   total_asc: 'total_cents ASC, created_at DESC',
-  number_desc: 'length(number) DESC, number DESC',
-  number_asc: 'length(number) ASC, number ASC',
+  number_desc: 'number_year DESC NULLS LAST, number_seq DESC NULLS LAST, created_at DESC',
+  number_asc: 'number_year ASC NULLS LAST, number_seq ASC NULLS LAST, created_at ASC',
   customer_asc: 'lower(customer_name) ASC, created_at DESC',
 };
 
@@ -91,8 +100,9 @@ function parseList(value, allowed, groups) {
 
 /**
  * Loeb ja kontrollib nimekirja/ekspordi filtrid URL-i parameetritest.
- * q (nr/nimi/e-post/telefon/automaat/jälgimiskood), from/to (Tallinna kuupäevad YYYY-MM-DD,
- * tellimuse loomise aeg), payment, fulfillment (olek, rühm või komadega nimekiri), sort, page, pageSize.
+ * q (nr/vana nr/nimi/e-post/telefon/automaat/jälgimiskood), from/to (Tallinna kuupäevad YYYY-MM-DD,
+ * tellimuse loomise aeg), payment, fulfillment (olek, rühm või komadega nimekiri), sort, page, pageSize,
+ * test (1 = ainult testtellimused; vaikimisi ainult päris tellimused).
  */
 export function parseOrderFilters(searchParams) {
   const get = (k) => searchParams.get(k) ?? '';
@@ -111,10 +121,23 @@ export function parseOrderFilters(searchParams) {
   if (!Object.prototype.hasOwnProperty.call(SORTS, sort)) return fail('Tundmatu sortimine.', 'sort');
   const page = Math.max(1, Math.min(100000, Math.floor(Number(get('page')) || 1)));
   const pageSize = Math.max(5, Math.min(MAX_PAGE_SIZE, Math.floor(Number(get('pageSize')) || DEFAULT_PAGE_SIZE)));
-  return { ok: true, value: { q, from, to, payment, fulfillment, sort, page, pageSize } };
+  const test = parseTestFlag(get('test'));
+  if (test === null) return fail('Vigane test-tellimuste valik (lubatud: test=1 või test=0).', 'test');
+  return { ok: true, value: { q, from, to, payment, fulfillment, sort, page, pageSize, test } };
 }
 
-/** WHERE-lause ja parameetrid filtritest. */
+/** URL-i `test` parameeter: '' / '0' → päris tellimused (false), '1' → testtellimused (true), muu → null. */
+export function parseTestFlag(value) {
+  const v = String(value ?? '').trim().toLowerCase();
+  if (v === '' || v === '0' || v === 'false') return false;
+  if (v === '1' || v === 'true') return true;
+  return null;
+}
+
+/**
+ * WHERE-lause ja parameetrid filtritest. `f.test` true/false piirab päris/test tellimustega;
+ * null/undefined → mõlemad (kasutatakse mõlema liigi loendamiseks).
+ */
 export function buildOrderWhere(f) {
   const where = [];
   const params = [];
@@ -122,10 +145,19 @@ export function buildOrderWhere(f) {
     params.push(v);
     return `$${params.length}`;
   };
+  if (typeof f.test === 'boolean') where.push(`is_test = ${add(f.test)}::boolean`);
   if (f.q) {
     const p = add(`%${escapeLike(f.q)}%`);
-    const cols = ['number', 'customer_name', 'customer_email', 'customer_phone', 'locker_name', 'locker_id', 'locker_address', 'locker_city', 'tracking_code', 'stripe_payment_intent_id'];
+    const cols = ['legacy_number', 'customer_name', 'customer_email', 'customer_phone', 'locker_name', 'locker_id', 'locker_address', 'locker_city', 'tracking_code', 'stripe_payment_intent_id'];
     const conds = cols.map((c) => `${c} ILIKE ${p}`);
+    // Tellimuse number ka ilma Ä-ta ja osaliselt: „AGE-2026-0001“, „age-2026“, „2026-0001“, „0001“.
+    conds.push(`translate(number, 'Ää', 'Aa') ILIKE ${add(`%${escapeLike(asciiOrderNumber(f.q))}%`)}`);
+    // Tühikutega või muul kujul number („äge 2026 1“) → täpne vaste (nii päris kui ka testtellimus).
+    const parsed = parseOrderNumber(f.q);
+    if (parsed && !parsed.legacy) {
+      const bare = parsed.number.replace(TEST_PREFIX, '');
+      conds.push(`number = ANY(${add(parsed.test ? [parsed.number] : [bare, TEST_PREFIX + bare])}::text[])`);
+    } else if (parsed?.legacy) conds.push(`legacy_number = ${add(parsed.number)}`);
     const digits = f.q.replace(/\D/g, '');
     // Telefoni otsing ilma tühikute/plussita: "51234567" leiab "+372 5123 4567".
     if (digits.length >= 4) conds.push(`regexp_replace(customer_phone, '[^0-9]', '', 'g') LIKE ${add(`%${digits}%`)}`);
@@ -143,29 +175,39 @@ export function buildOrderWhere(f) {
 
 // Halduses vajalikud veerud. public_token (kliendi kinnituslehe salajane tunnus) ja
 // stripe_session_url jäetakse teadlikult välja — haldus ei vaja neid.
-export const ADMIN_COLUMNS = `id, number, created_at, updated_at, customer_name, customer_email, customer_phone, newsletter, age_confirmed,
+export const ADMIN_COLUMNS = `id, number, legacy_number, is_test, number_year, number_seq, created_at, updated_at, customer_name, customer_email, customer_phone, newsletter, age_confirmed,
   items, subtotal_cents, discount_code, discount_cents, shipping_cents, total_cents, currency,
   carrier, carrier_name, locker_id, locker_name, locker_address, locker_city,
   payment_status, stripe_session_id, stripe_session_expires_at, stripe_payment_intent_id, paid_at, amount_paid_cents, refunded_cents,
   fulfillment_status, packed_at, shipped_at, tracking_code, notes,
-  inventory_applied_at, confirmation_sent_at, admin_notified_at`;
+  inventory_applied_at, restocked_at, confirmation_sent_at, admin_notified_at`;
 
-/** Tellimused filtritega + lehekülgede info. */
+/**
+ * Tellimused filtritega + lehekülgede info. `counts` = samadele filtritele vastavate päris- ja
+ * testtellimuste arv (lüliti „Päris / Test“ jaoks — nt kohalikus näidisrežiimis on kõik testid).
+ */
 export async function listOrders(db, f) {
-  const { sql, params } = buildOrderWhere(f);
-  const [{ count }] = await db.query(`SELECT count(*)::int AS count FROM orders ${sql}`, params);
+  const test = f.test === true;
+  const both = buildOrderWhere({ ...f, test: null });
+  const [c] = await db.query(
+    `SELECT count(*) FILTER (WHERE NOT is_test)::int AS live, count(*) FILTER (WHERE is_test)::int AS test FROM orders ${both.sql}`,
+    both.params,
+  );
+  const counts = { live: Number(c?.live) || 0, test: Number(c?.test) || 0 };
+  const count = test ? counts.test : counts.live;
+  const { sql, params } = buildOrderWhere({ ...f, test });
   const pages = Math.max(1, Math.ceil(count / f.pageSize));
   const page = Math.min(f.page, pages);
   const rows = await db.query(
     `SELECT ${ADMIN_COLUMNS} FROM orders ${sql} ORDER BY ${SORTS[f.sort]} LIMIT ${f.pageSize} OFFSET ${(page - 1) * f.pageSize}`,
     params,
   );
-  return { orders: rows.map(orderSummary), total: count, page, pageSize: f.pageSize, pages };
+  return { orders: rows.map(orderSummary), total: count, page, pageSize: f.pageSize, pages, test, counts };
 }
 
 /** Kõik filtritele vastavad tellimused (CSV), kuni `limit` rida. */
 export async function listOrdersForExport(db, f, { limit = 10000 } = {}) {
-  const { sql, params } = buildOrderWhere(f);
+  const { sql, params } = buildOrderWhere({ ...f, test: f.test === true });
   return db.query(`SELECT ${ADMIN_COLUMNS} FROM orders ${sql} ORDER BY ${SORTS[f.sort]} LIMIT ${Math.max(1, Math.min(50000, int(limit)))}`, params);
 }
 
@@ -184,6 +226,8 @@ export function orderSummary(row) {
   return {
     id: row.id,
     number: row.number,
+    legacyNumber: row.legacy_number || null,
+    isTest: Boolean(row.is_test),
     createdAt: iso(row.created_at),
     createdAtText: formatTallinn(row.created_at),
     paidAt: iso(row.paid_at),
@@ -205,11 +249,11 @@ export function orderSummary(row) {
   };
 }
 
-/** Stripe'i töölaua link maksele (test- või live-režiim sessiooni ID järgi). Näidisrežiimi ID-del linki pole. */
+/** Stripe'i töölaua link maksele (test- või live-režiim). Näidisrežiimi ID-del linki pole. */
 export function stripeDashboardUrl(row) {
   const pi = row.stripe_payment_intent_id;
   if (!pi || !/^pi_[A-Za-z0-9_]+$/.test(pi) || pi.startsWith('pi_mock_')) return null;
-  const test = String(row.stripe_session_id || '').startsWith('cs_test_');
+  const test = Boolean(row.is_test) || String(row.stripe_session_id || '').startsWith('cs_test_');
   return `https://dashboard.stripe.com/${test ? 'test/' : ''}payments/${encodeURIComponent(pi)}`;
 }
 
@@ -268,11 +312,28 @@ export function orderDetail(row) {
       allowed: allowedTransitions(row),
     },
     notes: row.notes || '',
+    restock: restockInfo(row),
     events: {
       inventoryAppliedAt: iso(row.inventory_applied_at),
+      restockedAt: iso(row.restocked_at),
       confirmationSentAt: iso(row.confirmation_sent_at),
       adminNotifiedAt: iso(row.admin_notified_at),
     },
+  };
+}
+
+/**
+ * „Pane mängud lattu tagasi“ olek detailvaatele: kas nupp on lubatud, miks mitte ja millal tehti.
+ * Kogused on samad, mis müük laost maha võttis (komplektid lahti võetuna).
+ */
+export function restockInfo(row) {
+  const blocker = restockBlocker(row);
+  return {
+    allowed: blocker === null,
+    reason: blocker && blocker.code !== 'done' ? blocker.error : '',
+    restockedAt: iso(row.restocked_at),
+    restockedAtText: formatTallinn(row.restocked_at),
+    inventoryApplied: Boolean(row.inventory_applied_at),
   };
 }
 
@@ -282,14 +343,37 @@ export function allowedTransitions(row) {
   return (FULFILLMENT_TRANSITIONS[row.fulfillment_status] || []).filter((s) => !NEEDS_PAYMENT.has(s) || paid);
 }
 
-/** Tellimuse number URL-ist → 'AGE-1001' (või null). */
-export function normalizeNumber(value) {
-  const s = String(value || '').trim().toUpperCase();
-  return /^AGE-[A-Z0-9]{3,12}$/.test(s) ? s : null;
+/**
+ * URL-i lõik → dekodeeritud tekst. Netlify ja kohalik dev-server annavad tee tavaliselt
+ * URL-kodeeritult (%C3%84GE-…), aga see võib olla ka juba dekodeeritud või kogemata kaks korda
+ * kodeeritud — dekodeerime, kuni tekstis pole enam %XX-kodeeringut (tellimuse numbris % ei esine).
+ */
+export function decodePathSegment(value) {
+  let s = String(value ?? '');
+  for (let i = 0; i < 3 && /%[0-9A-Fa-f]{2}/.test(s); i++) {
+    try {
+      s = decodeURIComponent(s);
+    } catch {
+      break;
+    }
+  }
+  return s;
 }
 
+/**
+ * Tellimuse number URL-ist või sisestusest → õige kuju ('ÄGE-2026-0001', 'TEST-ÄGE-2026-0001'
+ * või vana 'AGE-1001'), muidu null. Lubab ka ASCII-kuju (AGE-2026-0001) ja väiketähti.
+ */
+export function normalizeNumber(value) {
+  return parseOrderNumber(decodePathSegment(value))?.number || null;
+}
+
+/** Tellimus numbri (või vana numbri) järgi. */
 export async function getAdminOrder(db, number) {
-  const rows = await db.query(`SELECT ${ADMIN_COLUMNS} FROM orders WHERE number = $1`, [number]);
+  const rows = await db.query(
+    `SELECT ${ADMIN_COLUMNS} FROM orders WHERE number = $1 OR legacy_number = $1 ORDER BY (number = $1) DESC LIMIT 1`,
+    [number],
+  );
   return rows[0] || null;
 }
 
@@ -385,9 +469,9 @@ export async function updateOrder(db, number, patch, { now = new Date() } = {}) 
         tracking_code = CASE WHEN $5::boolean THEN $6::text ELSE tracking_code END,
         notes = CASE WHEN $7::boolean THEN $8::text ELSE notes END,
         updated_at = $4::timestamptz
-     WHERE number = $1::text AND fulfillment_status = $3::text
+     WHERE id = $1::text AND fulfillment_status = $3::text
      RETURNING ${ADMIN_COLUMNS}`,
-    [number, to, from, now.toISOString(), 'trackingCode' in patch, patch.trackingCode ?? null, 'notes' in patch, patch.notes ?? ''],
+    [current.id, to, from, now.toISOString(), 'trackingCode' in patch, patch.trackingCode ?? null, 'notes' in patch, patch.notes ?? ''],
   );
   if (!rows[0]) return { ok: false, status: 409, error: 'Tellimust muudeti vahepeal. Värskenda vaadet ja proovi uuesti.' };
   return { ok: true, row: rows[0] };
@@ -397,18 +481,20 @@ export async function updateOrder(db, number, patch, { now = new Date() } = {}) 
  * Pakkimine: makstud ja saatmata tellimused — mida ja kuhu saata
  * ------------------------------------------------------------------------- */
 
-export async function listPacking(db, { limit = 300 } = {}) {
+/** Pakkimisvaade: vaikimisi päris tellimused, `test: true` → ainult testtellimused. */
+export async function listPacking(db, { limit = 300, test = false } = {}) {
   const rows = await db.query(
     `SELECT ${ADMIN_COLUMNS} FROM orders
-     WHERE payment_status = ANY($1::text[]) AND fulfillment_status = ANY($2::text[])
+     WHERE is_test = $3::boolean AND payment_status = ANY($1::text[]) AND fulfillment_status = ANY($2::text[])
      ORDER BY COALESCE(paid_at, created_at) ASC
      LIMIT ${Math.max(1, Math.min(1000, int(limit)))}`,
-    [SHIPPABLE_PAYMENT, OPEN_FULFILLMENT],
+    [SHIPPABLE_PAYMENT, OPEN_FULFILLMENT, test === true],
   );
   const orders = rows.map((r) => {
     const d = orderDetail(r);
     return {
       number: d.number,
+      isTest: d.isTest,
       createdAtText: d.createdAtText,
       paidAt: d.paidAt,
       paidAtText: d.paidAtText,
@@ -432,5 +518,5 @@ export async function listPacking(db, { limit = 300 } = {}) {
   const need = new Map();
   for (const o of orders) for (const g of o.games) need.set(g.id, (need.get(g.id) || 0) + g.qty);
   const games = [...need.entries()].map(([id, qty]) => ({ id, name: PRODUCTS[id]?.name || id, qty }));
-  return { orders, games, count: orders.length };
+  return { orders, games, count: orders.length, test: test === true };
 }

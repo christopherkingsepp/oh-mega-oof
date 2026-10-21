@@ -4,6 +4,8 @@
 //  • Arvestame AINULT tegelikult tasutud tellimusi: payment_status 'paid', 'partially_refunded'
 //    või 'refunded' (ka tagastatud tellimuse raha laekus kord — tagasimakse näidatakse eraldi).
 //    Ootel, töötlemisel, aegunud ja ebaõnnestunud tellimused ei ole müük.
+//  • Testtellimused (is_test: Stripe'i testrežiim / näidisrežiim) ei lähe ühtegi numbrisse
+//    (statistika, kalender, saatmist ootavad) — need on ainult poe proovimiseks.
 //  • Periood = makse laekumise aeg (paid_at; vanadel ridadel varuna created_at) Tallinna
 //    kalendripäevades (vt time.mjs), mitte UTC päevades.
 //  • Toodete müük = toodete summa PÄRAST sooduskoodi, ILMA tarneta (subtotal − discount).
@@ -98,7 +100,7 @@ export const saleTime = (o) => toDate(o.paid_at) || toDate(o.created_at);
 
 /** Näitajate selgitused (näidatakse halduses iga numbri juures). */
 export const METRIC_INFO = {
-  orders: { label: 'Tasutud tellimused', description: 'Tellimused, mille makse laekus valitud perioodil (sh hiljem osaliselt või täielikult tagastatud). Maksmata, aegunud ja ebaõnnestunud tellimusi ei loeta.' },
+  orders: { label: 'Tasutud tellimused', description: 'Tellimused, mille makse laekus valitud perioodil (sh hiljem osaliselt või täielikult tagastatud). Maksmata, aegunud ja ebaõnnestunud tellimusi ega testtellimusi ei loeta.' },
   grossSalesCents: { label: 'Toodete müük', description: 'Toodete summa pärast sooduskoodi, ilma tarneta. Komplekt on arvestatud komplekti hinnaga — mängude kaupa seda ei jagata.' },
   shippingCents: { label: 'Tarnetulu', description: 'Klientidelt võetud tarnetasud (tasuta tarnega tellimustel 0 €).' },
   refundsCents: { label: 'Tagasimaksed', description: 'Stripe’i kaudu tagastatud raha nende tellimuste eest, mis maksti valitud perioodil.' },
@@ -130,8 +132,8 @@ function addToBucket(b, m) {
 }
 
 /**
- * Arvutab statistika tellimuste ridadest (andmebaasist; arvesse lähevad AINULT tasutud ja
- * vahemikku jäävad — kontroll on ka siin, et funktsioon oleks ohutu ka valimata andmetel).
+ * Arvutab statistika tellimuste ridadest (andmebaasist; arvesse lähevad AINULT tasutud, päris
+ * (mitte test-) ja vahemikku jäävad — kontroll on ka siin, et funktsioon oleks ohutu ka valimata andmetel).
  * @param {object[]} rows orders read
  * @param {{fromDate:string, toDate:string, from?:Date, to?:Date}} range Tallinna kuupäevad (mõlemad kaasa arvatud)
  */
@@ -145,7 +147,7 @@ export function computeStats(rows, range) {
   const codes = new Map();
 
   for (const o of rows) {
-    if (!PAID_STATUSES.includes(o.payment_status)) continue;
+    if (!PAID_STATUSES.includes(o.payment_status) || o.is_test) continue;
     const t = saleTime(o);
     if (!t) continue;
     const date = tallinnDate(t);
@@ -227,11 +229,11 @@ export function computeStats(rows, range) {
 const STAT_COLUMNS = `id, number, created_at, paid_at, customer_name, items, subtotal_cents, discount_code, discount_cents,
   shipping_cents, total_cents, amount_paid_cents, refunded_cents, payment_status, fulfillment_status, carrier_name, locker_name`;
 
-/** Tasutud tellimused, mille makse laekus vahemikus [from, to) (UTC hetked). */
+/** Tasutud PÄRIS tellimused (testtellimused välja arvatud), mille makse laekus vahemikus [from, to) (UTC hetked). */
 export async function fetchPaidOrders(db, from, to, { limit = 20000 } = {}) {
   return db.query(
     `SELECT ${STAT_COLUMNS} FROM orders
-     WHERE payment_status = ANY($1::text[])
+     WHERE NOT is_test AND payment_status = ANY($1::text[])
        AND COALESCE(paid_at, created_at) >= $2::timestamptz AND COALESCE(paid_at, created_at) < $3::timestamptz
      ORDER BY COALESCE(paid_at, created_at) ASC
      LIMIT ${Math.max(1, Math.min(50000, int(limit)))}`,
@@ -239,14 +241,14 @@ export async function fetchPaidOrders(db, from, to, { limit = 20000 } = {}) {
   );
 }
 
-/** Saatmist ootavad tellimused (makstud, täitmine new/packed) — vanimad ees. */
+/** Saatmist ootavad päris tellimused (makstud, täitmine new/packed) — vanimad ees. */
 export async function fetchPendingShipment(db, { limit = 10 } = {}) {
   const rows = await db.query(
     `SELECT id, number, created_at, paid_at, customer_name, fulfillment_status, carrier_name, locker_name, total_cents,
             count(*) OVER ()::int AS total_count,
             count(*) FILTER (WHERE fulfillment_status = 'packed') OVER ()::int AS packed_count
      FROM orders
-     WHERE payment_status = ANY($1::text[]) AND fulfillment_status = ANY($2::text[])
+     WHERE NOT is_test AND payment_status = ANY($1::text[]) AND fulfillment_status = ANY($2::text[])
      ORDER BY COALESCE(paid_at, created_at) ASC
      LIMIT ${Math.max(1, Math.min(500, int(limit)))}`,
     [SHIPPABLE_PAYMENT, OPEN_FULFILLMENT],
@@ -278,7 +280,7 @@ export async function fetchPendingShipment(db, { limit = 10 } = {}) {
 export function computeCalendar(rows, { fromDate, toDate: toDateStr }) {
   const days = new Map(datesBetween(fromDate, toDateStr).map((d) => [d, { date: d, orders: 0, paidCents: 0, grossCents: 0, refundsCents: 0 }]));
   for (const o of rows) {
-    if (!PAID_STATUSES.includes(o.payment_status)) continue;
+    if (!PAID_STATUSES.includes(o.payment_status) || o.is_test) continue;
     const t = saleTime(o);
     if (!t) continue;
     const day = days.get(tallinnDate(t));

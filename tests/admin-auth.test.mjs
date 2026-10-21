@@ -164,7 +164,7 @@ test('küpsis: HttpOnly, SameSite=Strict, Path=/, Max-Age 12 h; Secure https-il,
  * ------------------------------------------------------------------------- */
 
 test('CSRF: Origin peab vastama hostile (Referer varuna)', () => {
-  const r = (headers) => req('/api/admin/orders/AGE-1001', { method: 'PATCH', headers });
+  const r = (headers) => req('/api/admin/orders/%C3%84GE-2026-0001', { method: 'PATCH', headers });
   assert.equal(isSameOrigin(r({ Origin: ORIGIN })), true);
   assert.equal(isSameOrigin(r({ Origin: 'https://evil.example' })), false);
   assert.equal(isSameOrigin(r({ Origin: 'https://age.example.evil.example' })), false);
@@ -183,9 +183,9 @@ test('requireAdmin: 401 ilma seansita, 403 võõra päritoluga muutval päringul
   assert.equal(none.response.status, 401);
   assert.match(none.response.headers.get('set-cookie'), /Max-Age=0/);
   assert.equal(requireAdmin(req('/api/admin/orders', { headers: { cookie } }), { env: PROD_ENV }).ok, true);
-  const csrf = requireAdmin(req('/api/admin/orders/AGE-1', { method: 'PATCH', headers: { cookie, Origin: 'https://evil.example' } }), { env: PROD_ENV });
+  const csrf = requireAdmin(req('/api/admin/orders/%C3%84GE-2026-0001', { method: 'PATCH', headers: { cookie, Origin: 'https://evil.example' } }), { env: PROD_ENV });
   assert.equal(csrf.response.status, 403);
-  assert.equal(requireAdmin(req('/api/admin/orders/AGE-1', { method: 'PATCH', headers: { cookie, Origin: ORIGIN } }), { env: PROD_ENV }).ok, true);
+  assert.equal(requireAdmin(req('/api/admin/orders/%C3%84GE-2026-0001', { method: 'PATCH', headers: { cookie, Origin: ORIGIN } }), { env: PROD_ENV }).ok, true);
 });
 
 /* ---------------------------------------------------------------------------
@@ -261,7 +261,7 @@ test('sisselogimine: seadistamata → 503 selge põhjusega; arenduses ADMIN_DEV_
 
 test('/admin: sisselogimata näeb ainult sisselogimisvormi (rakendust ega andmeid mitte)', async () => {
   const page = createPageHandler({ env: PROD_ENV });
-  for (const path of ['/admin', '/admin/tellimused', '/admin/tellimused/AGE-1001']) {
+  for (const path of ['/admin', '/admin/tellimused', '/admin/tellimused/%C3%84GE-2026-0001', '/admin/tellimused/AGE-2026-0001']) {
     const res = await page(req(path));
     assert.equal(res.status, 200);
     const html = await res.text();
@@ -269,7 +269,7 @@ test('/admin: sisselogimata näeb ainult sisselogimisvormi (rakendust ega andmei
     assert.ok(html.includes('/assets/admin/login.js'));
     assert.ok(!html.includes('/assets/admin/admin.js'), 'rakenduse JS-i ei laeta');
     assert.ok(!html.includes('data-nav'), 'navigatsiooni pole');
-    assert.ok(!/AGE-\d/.test(html.replace(path, '')), 'andmeid pole');
+    assert.ok(!/(AGE|%C3%84GE|ÄGE)-\d/.test(html.replace(path, '')), 'andmeid pole');
     assert.equal(res.headers.get('x-frame-options'), 'DENY');
     assert.match(res.headers.get('x-robots-tag'), /noindex/);
     assert.match(res.headers.get('cache-control'), /no-store/);

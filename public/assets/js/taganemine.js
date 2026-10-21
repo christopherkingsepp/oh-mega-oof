@@ -5,6 +5,7 @@ import { PRODUCTS } from './catalog.js';
 import { esc, toast } from './layout.js';
 import { SITE } from './site.js';
 import { isValidEmail } from './validate.js'; // sama reegel mis serveris
+import { normalizeOrderNumber, ORDER_INPUT_MAX } from './order-number.js'; // sama reegel mis serveris
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -64,19 +65,14 @@ itemsHost.addEventListener('change', (e) => {
 });
 const selectedItems = () => $$('input[name="items"]:checked', itemsHost).map((i) => i.value);
 
-/* ---------- Eeltäitmine: /taganemine?tellimus=AGE-1001 (link tellimuse kinnituslehelt) ---------- */
+/* ---------- Eeltäitmine: /taganemine?tellimus=ÄGE-2026-0001 (link kinnituslehelt ja -kirjast) ---------- */
+// Klient võib numbri kirjutada ka ilma Ä-ta, väiketähtedega või tühikutega (AGE 2026 1) —
+// normalizeOrderNumber() teeb sellest õige kuju (ÄGE-2026-0001), sama reegel kehtib serveris.
 const params = new URLSearchParams(location.search);
-const pre = (params.get('tellimus') || '').trim().slice(0, 20);
-if (/^(AGE-?)?[A-Za-z0-9]{3,12}$/i.test(pre)) FIELD.orderNumber.value = pre.toUpperCase();
+const pre = normalizeOrderNumber((params.get('tellimus') || '').trim().slice(0, ORDER_INPUT_MAX));
+if (pre) FIELD.orderNumber.value = pre;
 
 /* ---------- Valideerimine (sama loogika mis serveris) ---------- */
-function normalizeOrderNumber(value) {
-  const s = String(value || '').trim().toUpperCase().replace(/[\s–—]+/g, '').replace(/^#/, '');
-  if (!s || s.length > 20) return null;
-  if (/^\d{3,10}$/.test(s)) return `AGE-${s}`;
-  const m = s.match(/^AGE-?([A-Z0-9]{3,12})$/);
-  return m ? `AGE-${m[1]}` : null;
-}
 
 const V = {
   name(v) {
@@ -89,7 +85,7 @@ const V = {
     return isValidEmail(v.trim()) ? '' : 'Kontrolli e-posti aadressi — sinna saadame avalduse kinnituse.';
   },
   orderNumber(v) {
-    return normalizeOrderNumber(v) ? '' : 'Sisesta tellimuse number (nt AGE-1001). Selle leiad tellimuse kinnituskirjast.';
+    return normalizeOrderNumber(v) ? '' : 'Sisesta tellimuse number (nt ÄGE-2026-0001). Selle leiad tellimuse kinnituskirjast.';
   },
   receivedDate(v) {
     if (!v) return '';

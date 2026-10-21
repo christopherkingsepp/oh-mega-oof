@@ -191,13 +191,13 @@ Pärast avamist saad poodi muuta millal tahes, ilma kedagi kutsumata:
      ▼
   VEEBILEHT (Netlify)
      │  /api/checkout: arvutab summa üle, kontrollib laoseisu,
-     │  salvestab tellimuse AGE-1001 andmebaasi („Ootab makset“)
+     │  salvestab tellimuse ÄGE-2026-0001 andmebaasi („Ootab makset“)
      ▼
   STRIPE'I MAKSELEHT (kaart, Apple Pay, Google Pay …)
      │  makse õnnestus
      ├──► Stripe → /api/stripe-webhook → tellimus „Makstud“, laoseis väheneb
      │         ├──► KLIENT: kinnituskiri (Resend) + Stripe'i kviitung
-     │         └──► SINA: teavitus „Uus tellimus AGE-1001 …“
+     │         └──► SINA: teavitus „Uus tellimus ÄGE-2026-0001 …“
      └──► KLIENT: kinnitusleht /aitah (kontrollib makset serverist)
      ▼
   SINA: /admin → Pakkimine → paki → registreeri saadetis vedaja iseteeninduses
@@ -222,7 +222,9 @@ Pärast avamist saad poodi muuta millal tahes, ilma kedagi kutsumata:
 
 - **Pakkide registreerimine pole automaatne.** Saadetise teed ise vedaja iseteeninduses (peatükk 13.2).
 - **Pood ei saada eraldi kirja „pakk on teel“.** Kui märgid tellimuse saadetuks, näeb klient seda koos jälgimiskoodiga kinnituskirja lingilt. Pakiautomaati jõudmisest teatab vedaja SMS-iga.
-- **Tühistamine ja tagasimakse ei muuda laoseisu automaatselt.** Tagastatud mängu lisad lattu käsitsi (peatükk 13.4).
+- **Tühistamine ja tagasimakse ei muuda laoseisu automaatselt.** Kui mängud tulid tagasi ja on müügikõlblikud, vajutad tellimuse juures **„Pane mängud lattu tagasi“** (peatükk 13.4).
+- **Tellimuse number** on kujul **ÄGE-2026-0001** (aasta + selle aasta järjekorranumber, uuel aastal algab 0001-st). Number antakse tellimuse salvestamisel ega muutu kunagi. Maksmata või tühistatud tellimuse numbrit uuesti ei kasutata, seega võib makstud tellimuste numbrite vahel olla vahesid.
+- **Testtellimused** (Stripe'i testvõtmega tehtud) saavad numbri **TEST-ÄGE-2026-0001**, ei muuda laoseisu ega statistikat ja on halduspaneelis eraldi lüliti **„Testtellimused“** taga.
 - **Sooduskood AGE15 pole isiklik ega ühekordne.** Seda saab kasutada mitu korda ja teistega jagada (peatükk 16.4).
 - **Vanusekontroll on enesekinnitus**, mitte isikutuvastus.
 - **Tellimusi ei saa halduspaneelist kustutada.** See on meelega nii, sest müügiandmed tuleb raamatupidamise jaoks alles hoida.
@@ -538,16 +540,16 @@ Stripe'i ametlik juhend: [docs.stripe.com/webhooks](https://docs.stripe.com/webh
    | CVC | suvalised 3 numbrit, nt `123` |
    | Nimi | suvaline |
 
-6. Maksa. Sind suunatakse lehele **`/aitah`**. Leht näitab hetke *„Kontrollime tellimust…“* ja seejärel tellimuse numbrit (esimene on **AGE-1001**), olekut **„Makstud“**, tooteid ja pakiautomaati. Konfetid lendavad ainult kinnitatud makse korral. Ostukorv on nüüd tühi.
+6. Maksa. Sind suunatakse lehele **`/aitah`**. Leht näitab hetke *„Kontrollime tellimust…“* ja seejärel tellimuse numbrit (testvõtmega tehtud esimene tellimus on **TEST-ÄGE-2026-0001**), olekut **„Makstud“**, tooteid ja pakiautomaati. Konfetid lendavad ainult kinnitatud makse korral. Ostukorv on nüüd tühi.
 
 ### 8.2 Kontrolli, et tellimus jõudis halduspaneeli „Makstud“ olekusse
 
 1. Ava `https://<sinu-sait>/admin` ja logi sisse.
-2. **Tellimused:** nimekirjas on **AGE-1001**, makse olek **„Makstud“** ja täitmise olek **„Ootab pakkimist“**. Klõpsa sellel: näed klienti, tooteid, summasid, automaati ja linki Stripe'i maksele.
+2. **Tellimused:** vaikimisi näed **päris** tellimusi. Testtellimuse nägemiseks vajuta üleval **„Testtellimused“**. Nimekirjas on **TEST-ÄGE-2026-0001**, makse olek **„Makstud“** ja täitmise olek **„Ootab pakkimist“**. Klõpsa sellel: näed klienti, tooteid, summasid, automaati ja linki Stripe'i maksele.
 3. **Pakkimine:** tellimus on seal koos sellega, mida ja kuhu saata.
 4. **Ülevaade:** statistikas on 1 tasutud tellimus.
 5. **Stripe'is:** **Transactions** (või **Payments**) all on makse 20,49 € staatusega **Succeeded**. Webhooki lehel (7.4) on sündmuse `checkout.session.completed` saatmise vastus **200**.
-6. **E-kirjad** (kui Resend on seadistatud, peatükk 10): sulle tuli *„Uus tellimus AGE-1001 …“* ja kliendile (sulle endale) *„Tellimus AGE-1001 on makstud — aitäh!“*.
+6. **E-kirjad** (kui Resend on seadistatud, peatükk 10): sulle tuli *„Uus tellimus TEST-ÄGE-2026-0001 …“* ja kliendile (sulle endale) *„Tellimus TEST-ÄGE-2026-0001 on makstud — aitäh!“*.
 
 > ⚠️ **Kui tellimus jääb olekusse „Ootab makset“**, kuigi Stripe'is on makse olemas, ei jõua webhook poeni. Kontrolli endpointi aadressi, valitud sündmusi ja `STRIPE_WEBHOOK_SECRET`-i (peatükk 19).
 
@@ -576,7 +578,7 @@ Rohkem testkaarte: [docs.stripe.com/testing](https://docs.stripe.com/testing).
 
 ✅ Kui kõik ülaltoodu töötab, on maksete pool valmis. Päris raha liigub alles pärast peatükki 12.
 
-> 💡 **Testtellimused jäävad andmebaasi** ja paistavad halduspaneeli statistikas. Kuidas need enne avamist eemaldada, on kirjas peatükis 12.5.
+> 💡 **Testtellimused on päris tellimustest eraldi:** number TEST-ÄGE-…, laoseisu ja statistikat need ei muuda ja need on lüliti „Testtellimused“ taga. Esimene päris tellimus on ÄGE-<aasta>-0001 ka siis, kui testtellimusi on palju. Kustutada neid pole vaja (valikuline puhastus: peatükk 12.5).
 
 ---
 
@@ -670,10 +672,10 @@ Pood saadab kirju teenusega **Resend**:
 
 | Kiri | Kellele | Millal |
 |---|---|---|
-| *„Tellimus AGE-1001 on makstud — aitäh!“* | Kliendile | Kui makse on kinnitatud. Kirjas on tooted, summa, pakiautomaat ja link kinnituslehele, kus klient näeb hiljem ka saatmise olekut ja jälgimiskoodi |
-| *„Uus tellimus AGE-1001 — 20,49 € (Omniva)“* | Sulle (`ADMIN_EMAIL`) | Samal ajal. Kirjale vastates läheb vastus kliendile |
+| *„Tellimus ÄGE-2026-0001 on makstud — aitäh!“* | Kliendile | Kui makse on kinnitatud. Kirjas on tooted, summa, pakiautomaat ja link kinnituslehele, kus klient näeb hiljem ka saatmise olekut ja jälgimiskoodi |
+| *„Uus tellimus ÄGE-2026-0001 — 20,49 € (Omniva)“* | Sulle (`ADMIN_EMAIL`) | Samal ajal. Kirjale vastates läheb vastus kliendile |
 | *„Oleme sinu taganemisavalduse kätte saanud (TAG-…)“* | Kliendile | Kui klient saadab vormi `/taganemine` |
-| *„Taganemisavaldus TAG-… — tellimus AGE-…“* | Sulle | Samal ajal |
+| *„Taganemisavaldus TAG-… — tellimus ÄGE-…“* | Sulle | Samal ajal |
 
 Iga kiri saadetakse ainult üks kord, ka siis, kui Stripe sama teadet mitu korda saadab. Kliendi vastused kinnituskirjale lähevad aadressile, mis on failis `site.js` väljal `email`.
 
@@ -801,21 +803,24 @@ LIVE-režiimis on **kõik eraldi**: eraldi võti ja eraldi webhook koos eraldi s
    - [ ] LIVE-webhooki lehel on vastus **200**.
 3. Tee sellele maksele **tagasimakse**: Stripe → makse → **Refund** → kogu summa. Halduspaneelis muutub olek „Raha on tagastatud“. Stripe ei tagasta oma algset teenustasu, nii et see test maksab umbes 0,49 €.
 
-### 12.5 Testandmete eemaldamine (valikuline, ainult enne päris müüki)
+### 12.5 Testtellimuste eemaldamine (valikuline)
 
-Testtellimused jäävad andmebaasi ja statistikasse. Kui tahad avada puhta lehega (esimene päris tellimus on siis AGE-1001):
+Testvõtmega tehtud tellimused saavad numbri **TEST-ÄGE-…**, ei muuda laoseisu ega statistikat ja on halduses lüliti **„Testtellimused“** taga. Esimene päris tellimus on **ÄGE-<aasta>-0001** ka siis, kui testtellimusi on palju. **Neid pole vaja kustutada.**
+
+Kui tahad siiski testtellimused ära kustutada:
 
 1. Ava oma Neoni konto ([console.neon.tech](https://console.neon.tech)) → õige projekt → **SQL Editor**.
 2. Käivita:
 
    ```sql
-   TRUNCATE orders, stripe_events, inventory_movements, withdrawals;
-   ALTER SEQUENCE order_number_seq RESTART WITH 1001;
+   DELETE FROM stripe_events WHERE order_id IN (SELECT id FROM orders WHERE is_test);
+   DELETE FROM orders WHERE is_test;
+   DELETE FROM order_counters WHERE scope = 'test';
    ```
 
-3. Halduspaneelis **Laoseis** määra igale mängule õige laoseis (inventuur, peatükk 13.4).
+3. Halduspaneelis **Laoseis** kontrolli, et igal mängul on õige laoseis (inventuur, peatükk 13.4).
 
-> ⚠️ **See kustutab KÕIK tellimused ja taganemisavaldused jäädavalt.** Tee seda ainult enne esimest päris müüki. Pärast avamist ära seda kunagi tee. Kui sa pole kindel, jäta testtellimused alles: need ei sega ja neid on halduspaneelis lihtne ära tunda.
+> ⚠️ Need käsud kustutavad **ainult** testtellimused (`is_test`). Päris tellimusi ära kustuta kunagi: müügiandmed tuleb raamatupidamise jaoks alles hoida.
 
 ### 12.6 Avamise kontrollnimekiri
 
@@ -841,8 +846,8 @@ Veebilehel on lubatud, et **pakk saadetakse teele 1–3 tööpäeva jooksul**. H
 | Vaade | Aadress | Mida seal teed |
 |---|---|---|
 | **Ülevaade** | `/admin` | Statistika valitud perioodi kohta, müügigraafikud, populaarsemad tooted, saatmist ootavad tellimused |
-| **Tellimused** | `/admin/tellimused` | Kõik tellimused: otsing (number, nimi, e-post, telefon, automaat), kuupäeva- ja olekufiltrid, CSV-eksport. Klõps tellimusel avab detailvaate |
-| **Pakkimine** | `/admin/pakkimine` | Makstud ja saatmata tellimused: mida ja kuhu saata. Prinditav |
+| **Tellimused** | `/admin/tellimused` | Kõik tellimused, uusimad eespool: otsing (number, nimi, e-post, telefon, automaat; numbrit võid kirjutada ka ilma täpita `AGE-2026-0001`, lühidalt `2026-0001` või `0001`), kuupäeva-, makse- ja täitmise oleku filtrid, CSV-eksport. Lüliti **Päris tellimused / Testtellimused**. Klõps tellimusel avab detailvaate |
+| **Pakkimine** | `/admin/pakkimine` | Makstud ja saatmata tellimused: mida ja kuhu saata. Prinditav. Testtellimused on eraldi lüliti taga |
 | **Laoseis** | `/admin/laoseis` | Mängude laoseis, käsitsi muutmine ja ajalugu |
 | **Kalender** | `/admin/kalender` | Kuu ruudustik müügiga päevade kaupa. Päeva klõps näitab selle päeva tellimusi |
 | **Taganemised** | `/admin/taganemised` | Taganemisavaldused ja nende olek |
@@ -855,7 +860,7 @@ Veebilehel on lubatud, et **pakk saadetakse teele 1–3 tööpäeva jooksul**. H
 
 ### 13.2 Töövoog: tellimusest pakini
 
-1. **Teavitus:** tuleb e-kiri *„Uus tellimus AGE-…“* (kui `ADMIN_EMAIL` ja Resend on seadistatud). Või ava lihtsalt halduspaneel.
+1. **Teavitus:** tuleb e-kiri *„Uus tellimus ÄGE-…“* (kirjas on link otse tellimusele) (kui `ADMIN_EMAIL` ja Resend on seadistatud). Või ava lihtsalt halduspaneel.
 2. **Ava Pakkimine** (`/admin/pakkimine`). Üleval on kokkuvõte, mitu mängu kokku vaja on. Iga tellimuse juures on:
    - **Mida:** tooted ja kogused. Komplekt on lahti kirjutatud (nt „Kõik 3 mängu“ = MIDA V!!!U + Oled Semu? + Vigur);
    - **Kuhu:** vedaja, automaadi nimi, aadress ja **automaadi ID**;
@@ -882,7 +887,7 @@ Veebilehel on lubatud, et **pakk saadetakse teele 1–3 tööpäeva jooksul**. H
 | Automaadi nimi on segane (käsitsi sisestatud automaat) | Kirjuta või helista kliendile ja küsi täpsustust. E-post ja telefon on tellimuse juures |
 | Pakk saabus katki või millestki on puudu | Palu kliendilt pilti ja saada uus mäng või tee tagasimakse. Kirjuta tellimuse märkmetesse, mis juhtus |
 | Klient ei võtnud pakki välja | Pakk tuleb mõne aja pärast tagasi. Võta kliendiga ühendust ja lepi kokku uus saatmine või tagasimakse |
-| Tellimus tuleb tühistada | Tee Stripe'is tagasimakse ja märgi halduses täitmise olekuks **„Tühistatud“**. Kui mäng jäi lattu, lisa see Laoseisu vaates tagasi (13.4) |
+| Tellimus tuleb tühistada | Tee Stripe'is tagasimakse ja märgi halduses täitmise olekuks **„Tühistatud“**. Kui mäng jäi lattu (pakki ei saadetud), vajuta tellimuse juures **„Pane mängud lattu tagasi“** (13.4) |
 | Klient vaidlustab makse pangas (*dispute*) | Stripe → **Disputes**. Vasta tähtaja jooksul ja lisa tõendid: jälgimiskood, vedaja kinnitus, kirjavahetus |
 
 ### 13.4 Laoseis
@@ -895,7 +900,7 @@ Ava **Laoseis** (`/admin/laoseis`).
 - **Vähendamine** (nt kahjustatud karp): **„Lisa või eemalda“** → nt `-1` → põhjus **„Parandus / inventuur“**.
 - **Makstud tellimus vähendab laoseisu automaatselt.** Komplektid võetakse lahti: „Oled Semu? + Vigur“ vähendab mõlemat ühe võrra.
 - Kui klient tahab rohkem, kui laos on, ütleb kassa enne maksmist, et mängu pole piisavalt.
-- **Tagasimakse ja tühistamine laoseisu ei muuda.** Kui tagastatud mäng on müügikõlblik, lisa see käsitsi: **„Lisa või eemalda“** → `1` → **„Parandus / inventuur“** → selgitus „tagastus TAG-…“.
+- **Tagasimakse ja tühistamine laoseisu ise ei muuda.** Kui mängud tulid tagasi ja on müügikõlblikud, ava tellimus → plokk **Laoseis** → **„Pane mängud lattu tagasi“**. See lisab tellimuse mängud (komplektid lahti võetuna) lattu **ühe korra**; ajaloos on rida „Tellimus lattu tagasi“. Nupp on olemas ainult tagastatud või tühistatud päris tellimusel. Kui tagasi tuli ainult osa mänge, kasuta hoopis **„Lisa või eemalda“** → kogus → **„Parandus / inventuur“** → selgitus „tagastus TAG-…“.
 - Iga muudatus on ajaloos koos põhjuse ja ajaga.
 
 > 💡 **Laoseis võib harva minna miinusesse**, kui kaks inimest ostavad viimast mängu peaaegu samal ajal. Mõlemad maksed on siis laekunud. Telli mänge juurde või võta ühe kliendiga ühendust ja tee tagasimakse.
@@ -914,7 +919,7 @@ Klient võib **14 päeva jooksul alates kauba kättesaamisest** lepingust tagane
    Raha tuleb tagastada **14 päeva jooksul avalduse saamisest**. Võid sellega oodata, kuni oled kauba tagasi saanud või klient on näidanud tõendit selle saatmise kohta. Tagasimakse ei tohi kliendile midagi maksta.
 5. Stripe teatab tagasimaksest poele ja tellimuse makse olek muutub ise: **„Raha on tagastatud“** või **„Raha on osaliselt tagastatud“**.
 6. Märgi taganemisavaldus olekusse **„Raha tagastatud“**. Kui keeldud põhjendatult (nt tähtaeg on möödas), vali **„Tagasi lükatud“** ja kirjuta põhjus märkmetesse ja kliendile.
-7. Kui tagastatud mäng on müügikõlblik, lisa see lattu (13.4).
+7. Kui tagastatud mäng on müügikõlblik, vajuta tellimuse juures **„Pane mängud lattu tagasi“** (13.4).
 
 > 💡 **Vigane või kirjeldusele mittevastav mäng** ei ole taganemine. Selle puhul kehtivad seadusjärgsed õigused (2 aastat): asendus, parandus või raha tagasi. Saatmiskulu kannad sina.
 

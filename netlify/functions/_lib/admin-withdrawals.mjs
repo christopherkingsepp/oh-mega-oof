@@ -1,5 +1,7 @@
 // Halduse taganemisavaldused: nimekiri ja menetluse staatuse/märkmete muutmine.
 // Avaldused ise tulevad veebivormist (/api/taganemine → tabel withdrawals).
+// Tellimus seotakse numbri järgi (withdrawals.order_number); vana numbri (AGE-1001) korral
+// leitakse tellimus veeru legacy_number kaudu.
 import { formatTallinn, formatDateString, toDate } from './time.mjs';
 import { FULFILLMENT_LABELS, PAYMENT_LABELS } from './admin-orders.mjs';
 
@@ -31,6 +33,8 @@ function view(r) {
     customerEmail: r.customer_email,
     orderNumber: r.order_number,
     orderFound: Boolean(r.o_number),
+    orderCurrentNumber: r.o_number || null,
+    orderIsTest: Boolean(r.o_is_test),
     orderPaymentLabel: r.o_payment ? PAYMENT_LABELS[r.o_payment] || r.o_payment : null,
     orderFulfillmentLabel: r.o_fulfillment ? FULFILLMENT_LABELS[r.o_fulfillment] || r.o_fulfillment : null,
     receivedDate: received,
@@ -44,9 +48,14 @@ function view(r) {
   };
 }
 
-const SELECT = `SELECT w.*, w.received_date::text AS received_date_str,
-    o.number AS o_number, o.payment_status AS o_payment, o.fulfillment_status AS o_fulfillment
-  FROM withdrawals w LEFT JOIN orders o ON o.number = w.order_number`;
+const ORDER_JOIN = (alias) => `LEFT JOIN LATERAL (
+    SELECT number AS o_number, payment_status AS o_payment, fulfillment_status AS o_fulfillment, is_test AS o_is_test
+    FROM orders WHERE number = ${alias}.order_number OR legacy_number = ${alias}.order_number
+    ORDER BY (number = ${alias}.order_number) DESC LIMIT 1
+  ) o ON true`;
+
+const SELECT = `SELECT w.*, w.received_date::text AS received_date_str, o.*
+  FROM withdrawals w ${ORDER_JOIN('w')}`;
 
 export async function listWithdrawals(db, { status = '' } = {}) {
   const params = [];
@@ -101,9 +110,8 @@ export async function updateWithdrawal(db, key, patch) {
           admin_notes = CASE WHEN $4::boolean THEN $5::text ELSE admin_notes END
         WHERE ${column} = $1 RETURNING *
      )
-     SELECT upd.*, upd.received_date::text AS received_date_str,
-            o.number AS o_number, o.payment_status AS o_payment, o.fulfillment_status AS o_fulfillment
-     FROM upd LEFT JOIN orders o ON o.number = upd.order_number`,
+     SELECT upd.*, upd.received_date::text AS received_date_str, o.*
+     FROM upd ${ORDER_JOIN('upd')}`,
     [key.value, 'status' in patch, patch.status ?? null, 'adminNotes' in patch, patch.adminNotes ?? ''],
   );
   return rows[0] ? view(rows[0]) : null;

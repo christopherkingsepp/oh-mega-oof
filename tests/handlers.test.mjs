@@ -144,7 +144,8 @@ test('checkout: õnnestub → 200 { url, orderNumber, token }, summad serverist,
   assert.equal(res.status, 200);
   assertJsonNoStore(res);
   assert.equal(data.url, 'https://checkout.stripe.com/c/pay/cs_test_a1b2c3');
-  assert.match(data.orderNumber, /^AGE-\d{4,}$/);
+  // Stripe'i testvõti (sk_test_) → testtellimus oma loenduriga
+  assert.match(data.orderNumber, /^TEST-ÄGE-\d{4}-\d{4,}$/);
   assert.match(data.token, /^[A-Za-z0-9_-]{43}$/);
   assert.ok(Date.parse(data.expiresAt) > Date.now() + 59 * 60 * 1000);
   assert.equal(data.orderId, undefined, 'sisemist id-d kliendile ei anta');
@@ -166,6 +167,9 @@ test('checkout: õnnestub → 200 { url, orderNumber, token }, summad serverist,
   // Tellimus on andmebaasis ootel ja sessioon on selle juures.
   const order = await getOrderByToken(await testDb(), data.token);
   assert.equal(order.number, data.orderNumber);
+  assert.equal(order.is_test, true);
+  assert.equal(p.metadata.order_number_ascii, data.orderNumber.replace('Ä', 'A'));
+  assert.match(p.payment_intent_data.description, new RegExp(`^Tellimus ${data.orderNumber}: `));
   assert.equal(order.payment_status, 'pending');
   assert.equal(p.client_reference_id, order.id);
   assert.equal(p.metadata.order_id, order.id);

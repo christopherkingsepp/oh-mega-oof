@@ -10,6 +10,7 @@ import { authConfig, createSessionToken, hashPassword } from '../netlify/functio
 import { computeStats, allocateDiscount, METRIC_INFO, PAID_STATUSES } from '../netlify/functions/_lib/stats.mjs';
 import { computeTotals, SHIPPING, PRODUCTS, toCents } from '../public/assets/js/catalog.js';
 import { itemsSnapshot } from '../netlify/functions/_lib/orders.mjs';
+import { formatOrderNumber } from '../public/assets/js/order-number.js';
 import { tallinnRange } from '../netlify/functions/_lib/time.mjs';
 
 const ORIGIN = 'https://age.example';
@@ -28,18 +29,19 @@ async function get(path) {
 }
 
 let n = 0;
-async function insert(key, { items, code = '', carrier = 'omniva', payment = 'paid', paidAt = null, createdAt = null, refunded = 0, fulfillment = 'new', amountPaid = undefined }) {
+async function insert(key, { items, code = '', carrier = 'omniva', payment = 'paid', paidAt = null, createdAt = null, refunded = 0, fulfillment = 'new', amountPaid = undefined, test = false }) {
   const t = computeTotals(items, code, carrier);
   const paid = PAID_STATUSES.includes(payment);
   const created = createdAt || paidAt || '2026-04-15T10:00:00Z';
+  const seq = ++n;
   const [row] = await db.query(
     `INSERT INTO orders (id, number, public_token, created_at, customer_name, customer_email, customer_phone, items,
        subtotal_cents, discount_code, discount_cents, shipping_cents, total_cents, carrier, carrier_name, locker_name,
-       payment_status, paid_at, amount_paid_cents, refunded_cents, fulfillment_status)
-     VALUES ($1,$2,$3,$4,'Klient ' || $2,'k@example.ee','+37250000000',$5::jsonb,$6,$7,$8,$9,$10,$11,$12,'Automaat',$13,$14,$15,$16,$17) RETURNING *`,
+       payment_status, paid_at, amount_paid_cents, refunded_cents, fulfillment_status, is_test, number_year, number_seq)
+     VALUES ($1,$2,$3,$4,'Klient ' || $2,'k@example.ee','+37250000000',$5::jsonb,$6,$7,$8,$9,$10,$11,$12,'Automaat',$13,$14,$15,$16,$17,$18,2026,$19) RETURNING *`,
     [
       randomUUID(),
-      `AGE-${3000 + ++n}`,
+      formatOrderNumber({ year: 2026, seq, test }),
       randomBytes(32).toString('base64url'),
       created,
       JSON.stringify(itemsSnapshot(t)),
@@ -55,6 +57,8 @@ async function insert(key, { items, code = '', carrier = 'omniva', payment = 'pa
       paid ? (amountPaid ?? t.totalCents) : null,
       payment === 'refunded' && !refunded ? t.totalCents : refunded,
       fulfillment,
+      test,
+      seq,
     ],
   );
   orders[key] = row;
@@ -82,6 +86,9 @@ before(async () => {
   // Väljaspool aprilli (Tallinna aja järgi)
   await insert('I', { items: [{ id: 'oled-semu', qty: 1 }], paidAt: '2026-03-31T20:30:00Z' }); // 31.03 23:30 Tallinnas
   await insert('J', { items: [{ id: 'vigur', qty: 1 }], paidAt: '2026-04-30T21:30:00Z' }); // 01.05 00:30 Tallinnas
+  // Testtellimused (Stripe'i testrežiim) — ei lähe ühtegi numbrisse, ka saatmist ootavatesse mitte
+  await insert('T', { items: [{ id: 'komplekt-koik', qty: 5 }], paidAt: '2026-04-05T11:00:00Z', test: true });
+  await insert('U', { items: [{ id: 'vigur', qty: 1 }], paidAt: '2026-04-01T10:00:00Z', fulfillment: 'packed', test: true });
 });
 
 const PAID_APRIL = ['A', 'B', 'C', 'D', 'H', 'K'];
@@ -104,7 +111,8 @@ test('statistika: ainult tasutud tellimused, brutomüük/tarne/tagasimaksed eral
 
   // Mitte-tasutud (pending/expired/failed/processing) ja teise kuu tellimused EI ole sees
   const counted = new Set(data.orders.map((o) => o.number));
-  for (const k of ['E', 'F', 'G', 'P', 'I', 'J']) assert.ok(!counted.has(orders[k].number), `${k} ei tohi olla arvestatud`);
+  for (const k of ['E', 'F', 'G', 'P', 'I', 'J', 'T', 'U']) assert.ok(!counted.has(orders[k].number), `${k} ei tohi olla arvestatud`);
+  assert.match(orders.T.number, /^TEST-ÄGE-2026-/);
   for (const k of PAID_APRIL) assert.ok(counted.has(orders[k].number), `${k} peab olema arvestatud`);
 });
 
@@ -166,7 +174,7 @@ test('statistika: paid_at ja Tallinna päevapiirid (23:30 UTC 31.03 = 01.04)', a
 test('statistika: saatmist ootavad = makstud (sh osaliselt tagastatud) ja uus/pakitud, vanimad ees', async () => {
   const { data } = await get('stats?period=month&date=2026-04-01');
   const pend = data.pending;
-  // B, H, I, J (paid/new), C (partially_refunded/packed); A shipped, D refunded/cancelled, K delivered
+  // B, H, I, J (paid/new), C (partially_refunded/packed); A shipped, D refunded/cancelled, K delivered; T, U testid
   assert.equal(pend.count, 5);
   assert.equal(pend.packed, 1);
   assert.equal(pend.new, 4);

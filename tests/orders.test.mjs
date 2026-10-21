@@ -37,13 +37,20 @@ async function setStock(db, stock) {
 }
 const stockOf = async (db) => Object.fromEntries((await db.query('SELECT game_id, stock FROM inventory')).map((r) => [r.game_id, r.stock]));
 
-test('createOrder: number AGE-1001…, salajane tunnus, read koos komplekti sisuga, summad serverist', async () => {
+test('createOrder: number ÄGE-2026-0001…, salajane tunnus, read koos komplekti sisuga, summad serverist', async () => {
   const db = await freshDb();
+  const at = '2026-05-04T09:00:00Z';
   const o = await createOrder(
     db,
     orderOf({ items: [{ id: 'komplekt-koik', qty: 1 }, { id: 'mida-viiu', qty: 2 }], code: 'AGE15', shipping: { carrier: 'smartpost' } }),
+    { now: at },
   );
-  assert.equal(o.number, 'AGE-1001');
+  assert.equal(o.number, 'ÄGE-2026-0001');
+  assert.equal(o.number_year, 2026);
+  assert.equal(o.number_seq, 1);
+  assert.equal(o.is_test, false);
+  assert.equal(o.legacy_number, null);
+  assert.equal(new Date(o.created_at).toISOString(), '2026-05-04T09:00:00.000Z');
   assert.match(o.id, /^[0-9a-f-]{36}$/);
   assert.match(o.public_token, TOKEN_RE);
   assert.equal(o.payment_status, 'pending');
@@ -79,8 +86,8 @@ test('createOrder: number AGE-1001…, salajane tunnus, read koos komplekti sisu
   assert.equal(o.locker_name, 'Tallinna Kristiine keskuse pakiautomaat');
   assert.equal(o.locker_address, 'Endla tn 45, Tallinn');
 
-  const second = await createOrder(db, orderOf());
-  assert.equal(second.number, 'AGE-1002');
+  const second = await createOrder(db, orderOf(), { now: at });
+  assert.equal(second.number, 'ÄGE-2026-0002');
   assert.notEqual(second.public_token, o.public_token);
 });
 
@@ -133,6 +140,19 @@ test('laoseis: rida puudub → piiramatu; komplektid võetakse lahti', async () 
 
   await setStock(db, { 'mida-viiu': 3 });
   assert.equal((await checkAvailability(db, [{ id: 'komplekt-koik', qty: 2 }, { id: 'mida-viiu', qty: 1 }])).ok, true, 'täpselt piisav kogus');
+});
+
+test('applyInventoryForOrder: testtellimus laoseisu EI muuda (laoliikumisi ei teki)', async () => {
+  const db = await freshDb();
+  await setStock(db, { 'mida-viiu': 3 });
+  const o = await createOrder(db, orderOf({ items: [{ id: 'komplekt-koik', qty: 1 }] }), { isTest: true });
+  assert.match(o.number, /^TEST-ÄGE-\d{4}-0001$/);
+  const { order: paid } = await markPaid(db, o.id, { paymentIntentId: 'pi_test_1', amountPaid: o.total_cents });
+  assert.equal((await applyInventoryForOrder(db, paid)).movements, 0);
+  assert.deepEqual(await stockOf(db), { 'mida-viiu': 3 });
+  assert.equal((await db.query('SELECT count(*)::int AS n FROM inventory_movements'))[0].n, 0);
+  assert.equal((await getOrderById(db, o.id)).inventory_applied_at, null);
+  assert.equal(publicOrderView(paid).test, true);
 });
 
 test('applyInventoryForOrder: vähendab laoseisu täpselt üks kord (komplektid lahti võetuna)', async () => {
@@ -265,5 +285,8 @@ test('publicOrderView: ainult avalikud väljad, maskeeritud e-post, resumeUrl ai
   const { order: paid } = await markPaid(db, o.id, {});
   assert.equal(publicOrderView(paid).resumeUrl, undefined);
   assert.equal(publicOrderView(paid).paid, true);
+  assert.equal(publicOrderView(paid).test, false);
   assert.equal((await getOrderByNumber(db, o.number.toLowerCase())).id, o.id);
+  assert.equal((await getOrderByNumber(db, o.number.replace('Ä', 'A'))).id, o.id, 'ASCII-kuju AGE-…');
+  assert.equal(await getOrderByNumber(db, 'prügi'), null);
 });

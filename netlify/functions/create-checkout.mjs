@@ -8,7 +8,9 @@
 // Voog:
 //   1) valideerimine (_lib/order.mjs) + lubatud vedaja (ENABLED_CARRIERS)
 //   2) laoseisu kontroll (komplektid lahti võetuna; ainult mängud, millel on laoseis seatud) → 409
-//   3) tellimus andmebaasi (payment_status 'pending'; read, summad ja tarne hetktõmmisena)
+//   3) tellimus andmebaasi (payment_status 'pending'; read, summad ja tarne hetktõmmisena) — number
+//      ÄGE-AAAA-NNNN antakse siin ja jääb püsivaks. Stripe'i testvõtme (sk_test_/rk_test_) või
+//      näidisrežiimi korral on see testtellimus TEST-ÄGE-AAAA-NNNN (ei muuda laoseisu ega statistikat).
 //   4) Stripe Checkout Session (metadata.order_id, client_reference_id, aegub 60 min pärast)
 //   5) sessiooni id/url/aegumine tellimuse juurde → kliendile makselehe URL
 // Makse tulemus jõuab tellimusse webhooki kaudu (stripe-webhook.mjs), mitte brauserist.
@@ -154,7 +156,7 @@ export function createHandler({
           }
         }
       }
-      row = await createOrder(db, order, { locker });
+      row = await createOrder(db, order, { locker, isTest: resolved.test === true });
     } catch (err) {
       logDbError(logger, 'insert', err);
       return json(503, { error: MSG_DB_FAILED });
@@ -212,7 +214,7 @@ export function createHandler({
       logDbError(logger, 'attach-session', err);
     }
 
-    logger.log?.(`[checkout] ${row.number}: makseleht loodud (${row.total_cents} senti, ${order.items.length} rida, ${order.shipping.carrier})`);
+    logger.log?.(`[checkout] ${row.number}: makseleht loodud (${row.total_cents} senti, ${order.items.length} rida, ${order.shipping.carrier}${row.is_test ? ', testtellimus' : ''})`);
     return json(200, {
       url: session.url,
       orderNumber: row.number,

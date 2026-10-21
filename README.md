@@ -2,13 +2,13 @@
 
 Tallinna kaardimängufirma **ÄGE** (Äärmiselt Geniaalne Ettevõtmine) e-pood. Müügil on **MIDA V!!!U** (18+), **Oled Semu?** ja **Vigur** ning nende komplektid. Tarne käib Eesti pakiautomaatidesse (vaikimisi Omniva ja SmartPosti), maksed Stripe Checkouti kaudu. Tellimused, laoseis ja taganemisavaldused on Postgresi andmebaasis ning neid hallatakse halduspaneelis `/admin`.
 
-👉 **Omanikule: samm-sammuline juhend on failis [JUHEND.md](JUHEND.md)**: avaldamine, Netlify DB, Stripe ja webhook, Resend, halduspaneel, igapäevane töö, õiguslik kontrollnimekiri ja veaotsing.
+👉 **Omanikule: samm-sammuline juhend on failis [JUHEND.md](JUHEND.md)**: odavaim avamistee (Kiirtee), avaldamine, Neoni andmebaas, domeen ja e-post, Stripe ja webhook, Resend, halduspaneel, igapäevane töö, õiguslik kontrollnimekiri ja veaotsing.
 
 ## Arhitektuur
 
 - **Staatiline sait** (`public/`): HTML, CSS ja brauseri ES-moodulid. Ehitusetappi pole. Netlify avaldab ainult kausta `public`.
 - **Netlify Functions v2** (`netlify/functions/`, Node 22): `export default async (req, context) => Response`, aadress failis endas (`export const config = { path }`). Abimoodulid on kaustas `_lib/`. Iga käsitleja on kujul `createHandler({ env, logger, getDb, mailer, stripeFactory, now })`, nii et testides saab sõltuvused süstida.
-- **Andmebaas:** Postgres. Tootmises Netlify DB / Neon (`NETLIFY_DATABASE_URL` või `DATABASE_URL`, HTTP-draiver `@netlify/neon`). Interaktiivseid tehinguid pole, seega on iga olekumuutus üks SQL-lause (CTE). Kohalikult PGlite (`.data/pglite`), testides mälus PGlite. Skeem (`_lib/schema.mjs`) rakendatakse automaatselt ja idempotentselt esimesel päringul. Tabelid: `orders`, `stripe_events`, `inventory`, `inventory_movements`, `withdrawals`, `locker_cache`. Tellimuse number tuleb jadast `order_number_seq` (AGE-1001 …). Rahasummad on täisarvulistes sentides, ajad `timestamptz`, kuupäevaarvutused Europe/Tallinn (`_lib/time.mjs`).
+- **Andmebaas:** Postgres. Tootmises Neon (`DATABASE_URL`; vana Netlify DB beeta `NETLIFY_DATABASE_URL` töötab ka), HTTP-draiver `@netlify/neon`. Interaktiivseid tehinguid pole, seega on iga olekumuutus üks SQL-lause (CTE). Kohalikult PGlite (`.data/pglite`), testides mälus PGlite. Skeem (`_lib/schema.mjs`) rakendatakse automaatselt ja idempotentselt esimesel päringul. Tabelid: `orders`, `order_counters`, `stripe_events`, `inventory`, `inventory_movements`, `withdrawals`, `locker_cache`. Tellimuse number on `ÄGE-AAAA-NNNN` (Stripe'i testvõtme / näidisrežiimi tellimustel `TEST-ÄGE-AAAA-NNNN`, `is_test = true`): aasta Tallinna aja järgi, järjekorranumber tabelist `order_counters` (aasta ja päris/test kaupa) samas lauses, mis tellimuse salvestab; unikaalsus `orders.number` ja `(is_test, number_year, number_seq)`. Vanad numbrid (AGE-1001) on veerus `legacy_number`. Testtellimused ei muuda laoseisu ega lähe statistikasse. Rahasummad on täisarvulistes sentides, ajad `timestamptz`, kuupäevaarvutused Europe/Tallinn (`_lib/time.mjs`).
 - **Ühine kataloog:** `public/assets/js/catalog.js` (tooted, hinnad, komplektide sisu, tarne, vedajad, sooduskoodid, `computeTotals`). Seda kasutavad nii brauser kui ka server. Hinnad ja tarne arvutatakse alati serveris uuesti.
 - **Maksed:** Stripe Checkout (`locale: 'et'`, makseviisid töölaua seadetest, soodustus deterministliku kupongina). Makse olek tuleb ainult webhookist või serveripoolsest `checkout.sessions.retrieve`-ist, mitte brauserist.
 - **E-post:** Resend (`_lib/mail.mjs`). Kui see pole seadistatud, logitakse hoiatus ja tellimus ei ebaõnnestu.
@@ -38,10 +38,11 @@ Tallinna kaardimängufirma **ÄGE** (Äärmiselt Geniaalne Ettevõtmine) e-pood.
 | `GET /api/tellimus?t=…[&session_id=…]` | `order-status.mjs` | Kinnituslehe andmed tunnusega; ootel makse puhul sünkroonib Stripe'ist |
 | `GET /api/pakiautomaadid?carrier=omniva\|smartpost\|dpd\|all` | `parcel-lockers.mjs` | Automaadid ja vedajate info (`enabled`, `lockerCount`, `stale`, `manual`, `errors`). Puhver `locker_cache` 12 h |
 | ajastatud `@daily` | `lockers-refresh.mjs` | Värskendab automaatide puhvrit |
+| ajastatud `@daily` | `confirmations-retry.mjs` | Kordab pooleli jäänud kinnituskirja, omaniku teavituse ja laoseisu vähendamise (viimased 7 päeva, idempotentne) |
 | `POST /api/taganemine` | `withdrawal.mjs` | Taganemisavaldus → viide `TAG-XXXXXX` (rateLimit 5/min) |
 | `/admin`, `/admin/*` | `admin-page.mjs` | Sisselogimisleht või halduse kest (`public/assets/admin/`) |
 | `POST /api/admin/login` | `admin-login.mjs` | Sisselogimine (rateLimit 10/min + mälupiiraja) |
-| `/api/admin/*` | `admin-api.mjs` → `_lib/admin-api.mjs` | `me`, `orders`, `orders.csv`, `orders/:number` (PATCH: täitmise olek, jälgimiskood, märkmed), `packing`, `inventory`, `withdrawals`, `stats`, `calendar`, `logout` |
+| `/api/admin/*` | `admin-api.mjs` → `_lib/admin-api.mjs` | `me`, `orders` (`?test=1` testtellimused), `orders.csv`, `orders/:number` (PATCH: täitmise olek, jälgimiskood, märkmed; `:number` URL-kodeeritud, sobib ka `AGE-2026-0001`), `orders/:number/restock` (POST `{confirm:true}`: mängud lattu tagasi, üks kord), `packing`, `inventory`, `withdrawals`, `stats`, `calendar`, `logout` |
 | `/__mock-stripe/*` | `dev-mock-stripe.mjs` | Ainult kohalik test-Stripe (`MOCK_STRIPE=1` ja mitte Lambdas), muidu 404 |
 
 ## Struktuur
@@ -99,7 +100,7 @@ Täielik kirjeldus on failis [.env.example](.env.example).
 
 | Nimi | Kohustuslik | Kirjeldus |
 |---|---|---|
-| `NETLIFY_DATABASE_URL` | jah* | Netlify DB seab ise. *Või `DATABASE_URL` (Neoni ühendusaadress, sest draiver on Neoni HTTP-draiver) |
+| `DATABASE_URL` | jah | Neoni ühendusaadress (draiver on Neoni HTTP-draiver). Vana Netlify DB beeta nimi `NETLIFY_DATABASE_URL` töötab ka |
 | `STRIPE_SECRET_KEY` | jah | `sk_test_…` / `sk_live_…` |
 | `STRIPE_WEBHOOK_SECRET` | jah | Webhooki endpointi `whsec_…` (test ja live eraldi) |
 | `ADMIN_PASSWORD_HASH` | halduseks | `scrypt$N$r$p$saltB64$hashB64` (`npm run admin:hash`) |
@@ -108,6 +109,7 @@ Täielik kirjeldus on failis [.env.example](.env.example).
 | `ADMIN_EMAIL` | ei | Omaniku teavitused (uus tellimus, taganemine) |
 | `ENABLED_CARRIERS` | ei | Vaikimisi `omniva,smartpost`. Server keeldub keelatud vedajast (400, `field: 'shipping.carrier'`) |
 | `DPD_LOCKERS_URL` | ei | DPD automaatide JSON. Ilma selleta käsitsi sisestus |
+| `OMNIVA_LOCKERS_URL`, `SMARTPOST_LOCKERS_URL` | ei | Vedaja nimekirja aadressi ülekirjutus (vaikimisi avalikud JSON-id) |
 | `SITE_URL` | ei | E-kirjade linkide alus. Vaikimisi Netlify `URL` |
 | `PGLITE_DIR`, `MAIL_DIR`, `ADMIN_DEV_PASSWORD`, `MOCK_*` | ainult kohalik | Netlifys neid ei kasutata |
 

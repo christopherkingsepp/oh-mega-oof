@@ -15,10 +15,10 @@ function setup({ env = ENV, getDb = () => testDb() } = {}) {
   return { handler, mailer, logger };
 }
 
-/** Ootel tellimus koos Stripe'i sessiooniga + sellele vastav sessiooniobjekt. */
-async function pendingOrder(db, overrides = {}) {
+/** Ootel tellimus koos Stripe'i sessiooniga + sellele vastav sessiooniobjekt (isTest → testtellimus). */
+async function pendingOrder(db, overrides = {}, { isTest = false } = {}) {
   const r = validateOrder(validBody(overrides));
-  const order = await createOrder(db, r.order);
+  const order = await createOrder(db, r.order, { isTest });
   const sessionId = `cs_test_${order.id.replace(/-/g, '')}`;
   await attachCheckoutSession(db, order.id, { sessionId, url: 'https://checkout.stripe.com/c/pay/x', expiresAt: Math.floor(Date.now() / 1000) + 3600 });
   const session = (extra = {}) => ({
@@ -30,7 +30,7 @@ async function pendingOrder(db, overrides = {}) {
     currency: 'eur',
     client_reference_id: order.id,
     metadata: { order_id: order.id, order_number: order.number },
-    payment_intent: `pi_${order.number.replace('-', '')}`,
+    payment_intent: `pi_${order.id.replace(/-/g, '')}`,
     ...extra,
   });
   return { order: await getOrderById(db, order.id), session };
@@ -205,6 +205,7 @@ test('webhook: charge.refunded (payment_intent järgi) → osaliselt / täieliku
   await call(handler, signedWebhook(stripeEvent('checkout.session.completed', session())));
 
   const charge = (amount_refunded) => ({ id: 'ch_1', object: 'charge', amount: order.total_cents, amount_refunded, payment_intent: session().payment_intent });
+  const stockAfterSale = await db.query('SELECT game_id, stock FROM inventory ORDER BY game_id');
   let r = await call(handler, signedWebhook(stripeEvent('charge.refunded', charge(500))));
   assert.equal(r.res.status, 200);
   let row = await getOrderById(db, order.id);
@@ -215,6 +216,11 @@ test('webhook: charge.refunded (payment_intent järgi) → osaliselt / täieliku
   row = await getOrderById(db, order.id);
   assert.equal(row.payment_status, 'refunded');
   assert.equal(row.refunded_cents, order.total_cents);
+  assert.equal(row.number, order.number, 'tagasimakse ei muuda tellimuse numbrit');
+  // Tagasimakse EI pane mänge automaatselt lattu tagasi — seda otsustab omanik halduses.
+  assert.deepEqual(await db.query('SELECT game_id, stock FROM inventory ORDER BY game_id'), stockAfterSale);
+  assert.equal(row.restocked_at, null);
+  assert.equal((await db.query("SELECT count(*)::int AS n FROM inventory_movements WHERE reason <> 'sale'"))[0].n, 0);
 
   // tundmatu makse → 200, midagi ei muutu
   const unknown = await call(handler, signedWebhook(stripeEvent('charge.refunded', { ...charge(100), payment_intent: 'pi_tundmatu' })));
@@ -292,4 +298,64 @@ test('webhook: teise sessiooni sündmus ei muuda tellimust; tundmatu tellimus �
   const unknown = await call(handler, signedWebhook(stripeEvent('checkout.session.completed', session({ id: 'cs_test_tundmatu', metadata: {}, client_reference_id: null }))));
   assert.equal(unknown.res.status, 200);
   assert.equal(unknown.data.order, undefined);
+});
+
+/* ---------------------------------------------------------------------------
+ * Päris- ja testtellimused (livemode)
+ * ------------------------------------------------------------------------- */
+
+test('webhook: testtellimus (livemode: false) → makstud ja kirjad, aga laoseis EI muutu; number jääb samaks', async () => {
+  const db = await freshDb();
+  await db.query("INSERT INTO inventory (game_id, stock) VALUES ('mida-viiu', 5)");
+  const { order, session } = await pendingOrder(db, {}, { isTest: true });
+  assert.match(order.number, /^TEST-ÄGE-\d{4}-0001$/);
+  const { handler, mailer } = setup();
+  const evt = stripeEvent('checkout.session.completed', session(), { livemode: false });
+  const { data } = await call(handler, signedWebhook(evt));
+  assert.deepEqual(data, { received: true, order: order.number, status: 'paid' });
+  const row = await getOrderById(db, order.id);
+  assert.equal(row.payment_status, 'paid');
+  assert.equal(row.number, order.number);
+  assert.equal(row.inventory_applied_at, null, 'testtellimus laoseisu ei muuda');
+  assert.equal(await stock(db, 'mida-viiu'), 5);
+  assert.equal((await db.query('SELECT count(*)::int AS n FROM inventory_movements'))[0].n, 0);
+  assert.equal(mailer.sent.length, 2);
+  assert.match(mailer.sent[0].subject, /Tellimus TEST-ÄGE-\d{4}-0001 on makstud/);
+  assert.match(mailer.sent[1].text, /TESTTELLIMUS/);
+  assert.match(mailer.sent[1].html, /\/admin\/tellimused\/TEST-%C3%84GE-\d{4}-0001/);
+
+  // Korduv sündmus ja tagasimakse ei muuda numbrit ega laoseisu.
+  await call(handler, signedWebhook(evt));
+  await call(handler, signedWebhook(stripeEvent('charge.refunded', { id: 'ch_t', object: 'charge', amount: order.total_cents, amount_refunded: order.total_cents, payment_intent: session().payment_intent }, { livemode: false })));
+  const after = await getOrderById(db, order.id);
+  assert.equal(after.payment_status, 'refunded');
+  assert.equal(after.number, order.number);
+  assert.equal(await stock(db, 'mida-viiu'), 5);
+  assert.equal(mailer.sent.length, 2);
+});
+
+test('webhook: livemode ei klapi tellimusega → logitakse ja jäetakse vahele (200)', async () => {
+  const db = await freshDb();
+  const { handler, logger, mailer } = setup();
+
+  // Testrežiimi sündmus päris tellimusele
+  const live = await pendingOrder(db);
+  const r1 = await call(handler, signedWebhook(stripeEvent('checkout.session.completed', live.session(), { livemode: false })));
+  assert.equal(r1.res.status, 200);
+  assert.deepEqual(r1.data, { received: true, ignored: true, reason: 'livemode' });
+  assert.equal((await getOrderById(db, live.order.id)).payment_status, 'pending');
+
+  // Päris sündmus testtellimusele
+  const test = await pendingOrder(db, {}, { isTest: true });
+  const r2 = await call(handler, signedWebhook(stripeEvent('checkout.session.completed', test.session(), { livemode: true })));
+  assert.equal(r2.data.ignored, true);
+  assert.equal((await getOrderById(db, test.order.id)).payment_status, 'pending');
+  assert.ok(logger.lines.filter((l) => /jätan vahele/.test(l)).length >= 2);
+  assert.equal(mailer.sent.length, 0);
+
+  // Päris tellimus makstud → testrežiimi tagasimakse ei muuda seda
+  await call(handler, signedWebhook(stripeEvent('checkout.session.completed', live.session())));
+  const refund = await call(handler, signedWebhook(stripeEvent('charge.refunded', { id: 'ch_x', object: 'charge', amount: live.order.total_cents, amount_refunded: 100, payment_intent: live.session().payment_intent }, { livemode: false })));
+  assert.equal(refund.data.ignored, true);
+  assert.equal((await getOrderById(db, live.order.id)).payment_status, 'paid');
 });

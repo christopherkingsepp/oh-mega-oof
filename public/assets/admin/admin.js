@@ -6,6 +6,7 @@
 // kõik andmed (XSS-kaitse) — vt util.js.
 import { html, render, api, ApiError, money, moneyRound, count, dateTime, dateStr, addDays, MONTHS, WEEKDAYS_SHORT, WEEKDAYS, monthShort, weekdayIndex, badge, toast, debounce } from './util.js';
 import { barChart } from './charts.js';
+import { parseOrderNumber } from '../js/order-number.js';
 
 const view = document.getElementById('view');
 const state = { me: null };
@@ -16,13 +17,39 @@ const onCleanup = (fn) => teardown.push(fn);
 const L = (kind, status) => state.me?.labels?.[kind]?.[status] || status;
 
 /* ===========================================================================
+ * Tellimuse number aadressis
+ * Number on kujul ÄGE-2026-0001 (testmaksetel TEST-ÄGE-2026-0001). Aadressis on Ä
+ * URL-kodeeritud (%C3%84) — lingid tehakse alati encodeURIComponent'iga. Aadressiribalt
+ * loetakse ka ASCII-kuju (AGE-2026-0001), väiketähed ja vana number (AGE-1001); server
+ * vastab õige numbriga ja aadress asendatakse sellega.
+ * ======================================================================== */
+
+/** Tellimuse vaate aadress. */
+const orderHref = (number) => `/admin/tellimused/${encodeURIComponent(number)}`;
+
+/** Aadressi lõik → tellimuse number (õige kuju, kui see on tuvastatav). */
+function numberFromPath(segment) {
+  let s = String(segment || '');
+  for (let i = 0; i < 3 && /%[0-9A-Fa-f]{2}/.test(s); i++) {
+    try {
+      s = decodeURIComponent(s);
+    } catch {
+      break;
+    }
+  }
+  return parseOrderNumber(s)?.number || s.trim().toUpperCase();
+}
+
+const testBadge = () => html`<span class="adm-badge adm-badge--test" title="Stripe'i testrežiimi tellimus — ei mõjuta laoseisu ega statistikat">TEST</span>`;
+
+/* ===========================================================================
  * Marsruutimine
  * ======================================================================== */
 
 const ROUTES = [
   { re: /^\/admin\/?$/, nav: 'ulevaade', title: 'Ülevaade', render: renderOverview },
   { re: /^\/admin\/tellimused\/?$/, nav: 'tellimused', title: 'Tellimused', render: () => renderOrders() },
-  { re: /^\/admin\/tellimused\/(AGE-[A-Za-z0-9]{3,12})\/?$/i, nav: 'tellimused', title: 'Tellimus', render: (m) => renderOrders({ open: m[1].toUpperCase() }) },
+  { re: /^\/admin\/tellimused\/([^/]{3,120})\/?$/, nav: 'tellimused', title: 'Tellimus', render: (m) => renderOrders({ open: numberFromPath(m[1]) }) },
   { re: /^\/admin\/pakkimine\/?$/, nav: 'pakkimine', title: 'Pakkimine', render: renderPacking },
   { re: /^\/admin\/laoseis\/?$/, nav: 'laoseis', title: 'Laoseis', render: renderInventory },
   { re: /^\/admin\/kalender\/?$/, nav: 'kalender', title: 'Kalender', render: renderCalendar },
@@ -179,7 +206,7 @@ function pendingList(pending, { compact = false } = {}) {
     <ul class="adm-list">
       ${pending.orders.map(
         (o) => html`<li class="adm-list__row">
-          <a class="adm-list__main" href="/admin/tellimused/${o.number}"><strong>${o.number}</strong> ${o.customerName}</a>
+          <a class="adm-list__main" href="${orderHref(o.number)}"><strong>${o.number}</strong> ${o.customerName}</a>
           <span class="adm-list__meta">${dateTime(o.paidAt)} · ${o.lockerName}</span>
           ${badge('fulfillment', o.fulfillmentStatus, L('fulfillment', o.fulfillmentStatus))}
         </li>`,
@@ -397,7 +424,21 @@ const SORT_OPTIONS = [
   ['number_desc', 'Number ↓'],
   ['customer_asc', 'Klient A–Ü'],
 ];
-const FILTER_KEYS = ['q', 'from', 'to', 'payment', 'fulfillment', 'sort', 'page'];
+const FILTER_KEYS = ['q', 'from', 'to', 'payment', 'fulfillment', 'sort', 'page', 'test'];
+
+/**
+ * Päris/test lüliti (tellimuste nimekiri ja pakkimisvaade). Testtellimused tulevad Stripe'i
+ * testrežiimist või kohalikust näidisrežiimist — need ei mõjuta laoseisu ega statistikat.
+ */
+function scopeSwitch(test, counts = null) {
+  const n = (k) => (counts ? html` <span class="adm-seg__count">${count(counts[k])}</span>` : '');
+  return html`<div class="adm-seg adm-scope" role="group" aria-label="Päris või testtellimused">
+    <button type="button" class="adm-seg__btn" data-scope="live" aria-pressed="${String(!test)}">Päris tellimused${n('live')}</button>
+    <button type="button" class="adm-seg__btn adm-seg__btn--test" data-scope="test" aria-pressed="${String(test)}">Testtellimused${n('test')}</button>
+  </div>`;
+}
+const testBanner = () =>
+  html`<p class="adm-alert adm-alert--test" role="status"><strong>Testtellimused.</strong> Need tulid Stripe'i testrežiimist (või kohalikust näidisrežiimist): päris raha ei liikunud, laoseisu ega statistikat need ei mõjuta. Päris tellimuste juurde saad ülal lülitiga.</p>`;
 
 const options = (list, value) => list.map(([v, label]) => html`<option value="${v}" ${v === value ? 'selected' : ''}>${label}</option>`);
 
@@ -405,13 +446,18 @@ function renderOrders({ open = null } = {}, signal = controller.signal) {
   const qs = new URLSearchParams(location.search);
   const f = Object.fromEntries(FILTER_KEYS.map((k) => [k, qs.get(k) || '']));
   if (!f.sort) f.sort = 'created_desc';
+  // Testtellimuse otselink (TEST-ÄGE-…) avab testtellimuste nimekirja, kui aadressis pole muud öeldud.
+  if (!qs.has('test') && open && /^TEST-/.test(open)) f.test = '1';
+  f.test = f.test === '1' ? '1' : '';
 
   render(
     view,
     html`<section class="adm-page-head">
-      <div><p class="adm-eyebrow">Tellimused</p><h1 class="adm-h1">Kõik tellimused</h1><p class="adm-muted" data-total>&nbsp;</p></div>
+      <div><p class="adm-eyebrow">Tellimused</p><h1 class="adm-h1" data-heading>${f.test ? 'Testtellimused' : 'Kõik tellimused'}</h1><p class="adm-muted" data-total>&nbsp;</p></div>
       <div class="adm-page-head__actions"><a class="adm-btn adm-btn--ghost" data-csv href="/api/admin/orders.csv" download>⬇ Lae CSV (Excel)</a></div>
     </section>
+    <div class="adm-scope-row" data-scope-host>${scopeSwitch(Boolean(f.test))}</div>
+    <div data-test-banner>${f.test ? testBanner() : ''}</div>
     <form class="adm-filters" data-filters role="search" aria-label="Tellimuste filtrid">
       <label class="adm-filters__search"><span class="adm-label">Otsi</span>
         <input class="adm-input" type="search" name="q" value="${f.q}" placeholder="Nr, nimi, e-post, telefon, automaat…" maxlength="100" autocomplete="off"></label>
@@ -425,7 +471,7 @@ function renderOrders({ open = null } = {}, signal = controller.signal) {
         <button class="adm-btn adm-btn--ghost adm-btn--sm adm-filters__reset" type="reset">Tühjenda filtrid</button>
       </div>
     </form>
-    <p class="adm-note">Kuupäevad = tellimuse loomise aeg Tallinna aja järgi. CSV sisaldab kõiki filtritele vastavaid tellimusi (kuni 10 000).</p>
+    <p class="adm-note">Kuupäevad = tellimuse loomise aeg Tallinna aja järgi. Numbri võib otsida ka ilma Ä-ta või osaliselt (nt „2026-0001“). CSV sisaldab kõiki filtritele vastavaid tellimusi (kuni 10 000) valitud liigist (päris või test).</p>
     <div data-list>${loading()}</div>
     <aside class="adm-drawer" data-drawer hidden aria-labelledby="drawer-title" role="dialog" aria-modal="false"></aside>`,
   );
@@ -435,6 +481,22 @@ function renderOrders({ open = null } = {}, signal = controller.signal) {
   const totalEl = view.querySelector('[data-total]');
   const csv = view.querySelector('[data-csv]');
   const drawer = view.querySelector('[data-drawer]');
+  const scopeHost = view.querySelector('[data-scope-host]');
+  const bannerHost = view.querySelector('[data-test-banner]');
+  const heading = view.querySelector('[data-heading]');
+
+  scopeHost.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-scope]');
+    if (!b) return;
+    const test = b.dataset.scope === 'test' ? '1' : '';
+    if (test === f.test) return;
+    f.test = test;
+    f.page = '';
+    render(bannerHost, f.test ? testBanner() : '');
+    heading.textContent = f.test ? 'Testtellimused' : 'Kõik tellimused';
+    scopeHost.querySelectorAll('[data-scope]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    loadList();
+  });
 
   function filterParams({ withPage = true } = {}) {
     const out = {};
@@ -451,7 +513,7 @@ function renderOrders({ open = null } = {}, signal = controller.signal) {
   function syncUrl() {
     const active = ['from', 'to', 'payment', 'fulfillment'].filter((k) => f[k]).length + (f.sort !== 'created_desc' ? 1 : 0);
     toggle.textContent = active ? `Filtrid · ${active}` : 'Filtrid';
-    const base = open ? `/admin/tellimused/${open}` : '/admin/tellimused';
+    const base = open ? orderHref(open) : '/admin/tellimused';
     const q = new URLSearchParams(filterParams()).toString();
     history.replaceState({}, '', q ? `${base}?${q}` : base);
     const csvQ = new URLSearchParams(filterParams({ withPage: false })).toString();
@@ -463,10 +525,21 @@ function renderOrders({ open = null } = {}, signal = controller.signal) {
     list.classList.add('is-busy');
     try {
       const data = await api('orders', { params: { ...filterParams(), pageSize: 25 }, signal });
-      totalEl.textContent = `${count(data.total)} ${data.total === 1 ? 'tellimus' : 'tellimust'}${Object.keys(filterParams({ withPage: false })).some((k) => k !== 'sort') ? ' (filtreeritud)' : ''}`;
+      const filtered = Object.keys(filterParams({ withPage: false })).some((k) => k !== 'sort' && k !== 'test');
+      totalEl.textContent = `${count(data.total)} ${f.test ? (data.total === 1 ? 'testtellimus' : 'testtellimust') : data.total === 1 ? 'tellimus' : 'tellimust'}${filtered ? ' (filtreeritud)' : ''}`;
+      if (data.counts) {
+        render(scopeHost, scopeSwitch(Boolean(f.test), data.counts));
+      }
       if (!data.orders.length) {
-        render(list, html`<div class="adm-empty"><p>Ühtegi tellimust ei leitud.</p>${Object.keys(filterParams()).length ? html`<button class="adm-btn adm-btn--ghost adm-btn--sm" type="button" data-clear>Tühjenda filtrid</button>` : ''}</div>`);
+        const other = data.counts ? (f.test ? data.counts.live : data.counts.test) : 0;
+        render(
+          list,
+          html`<div class="adm-empty"><p>${f.test ? 'Ühtegi testtellimust ei leitud.' : 'Ühtegi tellimust ei leitud.'}</p>
+            ${other ? html`<p><button class="adm-btn adm-btn--ghost adm-btn--sm" type="button" data-other-scope>${f.test ? `Näita päris tellimusi (${count(other)})` : `Näita testtellimusi (${count(other)})`}</button></p>` : ''}
+            ${filtered ? html`<button class="adm-btn adm-btn--ghost adm-btn--sm" type="button" data-clear>Tühjenda filtrid</button>` : ''}</div>`,
+        );
         list.querySelector('[data-clear]')?.addEventListener('click', () => form.reset());
+        list.querySelector('[data-other-scope]')?.addEventListener('click', () => scopeHost.querySelector(`[data-scope="${f.test ? 'live' : 'test'}"]`)?.click());
         return;
       }
       render(
@@ -478,7 +551,7 @@ function renderOrders({ open = null } = {}, signal = controller.signal) {
           </tr></thead>
           <tbody>${data.orders.map(
             (o) => html`<tr class="adm-row${o.number === open ? ' is-open' : ''}" data-number="${o.number}" tabindex="0" aria-label="Ava tellimus ${o.number}">
-              <td data-label="Nr"><strong class="adm-mono">${o.number}</strong></td>
+              <td data-label="Nr"><strong class="adm-mono">${o.number}</strong>${o.legacyNumber ? html`<span class="adm-cell-sub">vana nr ${o.legacyNumber}</span>` : ''}</td>
               <td data-label="Aeg">${o.createdAtText}</td>
               <td data-label="Klient"><span class="adm-cell-main">${o.customerName}</span><span class="adm-cell-sub">${o.customerEmail}</span></td>
               <td data-label="Tooted" class="adm-cell-items">${o.itemsText}</td>
@@ -530,7 +603,8 @@ function renderOrders({ open = null } = {}, signal = controller.signal) {
   });
   form.addEventListener('reset', () => {
     setTimeout(() => {
-      for (const k of FILTER_KEYS) f[k] = '';
+      // Päris/test lüliti ei ole filter — see jääb samaks.
+      for (const k of FILTER_KEYS) if (k !== 'test') f[k] = '';
       f.sort = 'created_desc';
       form.elements.sort.value = 'created_desc';
       loadList();
@@ -582,6 +656,13 @@ function renderOrders({ open = null } = {}, signal = controller.signal) {
     try {
       const { order } = await api(`orders/${encodeURIComponent(number)}`, { signal });
       if (open !== number) return;
+      // Server vastab õige numbriga (nt aadressis oli AGE-2026-0001 või vana AGE-1001) → aadress õigeks.
+      if (order.number !== number) {
+        open = order.number;
+        syncUrl();
+        document.title = `${order.number} | ÄGE haldus`;
+        list.querySelectorAll('tr[data-number]').forEach((r) => r.classList.toggle('is-open', r.dataset.number === order.number));
+      }
       renderDetail(order);
     } catch (err) {
       if (err?.name === 'AbortError') return;
@@ -595,6 +676,28 @@ function renderOrders({ open = null } = {}, signal = controller.signal) {
     }
   }
 
+  /** Laoseisu plokk: mis juhtus laoseisuga ja (vajadusel) nupp „Pane mängud lattu tagasi“. */
+  function stockSection(o) {
+    const games = o.games.map((g) => `${g.name} × ${g.qty}`).join(', ') || '—';
+    let body;
+    if (o.isTest) {
+      body = html`<p class="adm-note">Testtellimus — laoseisu ei vähendatud ega suurendata.</p>`;
+    } else if (o.restock.restockedAt) {
+      body = html`<p class="adm-restock-done"><strong>Lattu tagastatud ${o.restock.restockedAtText}</strong></p>
+        <p class="adm-note">Lisati tagasi: ${games}. Muutus on näha Laoseisu vaate ajaloos.</p>`;
+    } else if (o.restock.allowed) {
+      body = html`<p>Raha on tagastatud või tellimus tühistatud. Kui mängud on tagasi ja müügikõlblikud, pane need lattu tagasi: <strong>${games}</strong>.</p>
+        <p class="adm-note">Seda ei tehta automaatselt. Kui tagasi tuli ainult osa mänge, paranda laoseisu pärast Laoseisu vaates.</p>
+        <p class="adm-field-error" data-restock-error role="alert"></p>
+        <button class="adm-btn adm-btn--primary" type="button" data-restock>Pane mängud lattu tagasi</button>`;
+    } else if (o.restock.inventoryApplied) {
+      body = html`<p class="adm-note">Laoseisust maha arvatud ${dateTime(o.events.inventoryAppliedAt)} (${games}). ${o.restock.reason}</p>`;
+    } else {
+      body = html`<p class="adm-note">Laoseisu pole selle tellimuse eest muudetud.</p>`;
+    }
+    return html`<section class="adm-sec" data-stock-sec><h3 class="adm-h3">Laoseis</h3>${body}</section>`;
+  }
+
   function renderDetail(o) {
     const t = o.totals;
     const fs = o.fulfillment;
@@ -604,13 +707,14 @@ function renderOrders({ open = null } = {}, signal = controller.signal) {
       html`<div class="adm-drawer__panel">
         <div class="adm-drawer__head">
           <div>
-            <p class="adm-eyebrow">Tellimus</p>
+            <p class="adm-eyebrow">${o.isTest ? 'Testtellimus' : 'Tellimus'}</p>
             <h2 class="adm-h2 adm-mono" id="drawer-title">${o.number}</h2>
-            <p class="adm-muted">${o.createdAtText} (Tallinna aeg)</p>
-            <p class="adm-badges">${badge('payment', o.payment.status, o.payment.label)} ${badge('fulfillment', fs.status, fs.label)}</p>
+            <p class="adm-muted">${o.createdAtText} (Tallinna aeg)${o.legacyNumber ? html` · vana number <span class="adm-mono">${o.legacyNumber}</span>` : ''}</p>
+            <p class="adm-badges">${o.isTest ? testBadge() : ''} ${badge('payment', o.payment.status, o.payment.label)} ${badge('fulfillment', fs.status, fs.label)}</p>
           </div>
           <button class="adm-icon-btn" type="button" data-close aria-label="Sulge tellimuse vaade">✕</button>
         </div>
+        ${o.isTest ? html`<p class="adm-alert adm-alert--test" role="note"><strong>TEST</strong> — see tellimus tehti Stripe'i testrežiimis (päris raha ei liikunud). See ei mõjuta laoseisu ega statistikat.</p>` : ''}
 
         <section class="adm-sec">
           <h3 class="adm-h3">Klient</h3>
@@ -679,10 +783,12 @@ function renderOrders({ open = null } = {}, signal = controller.signal) {
             <input class="adm-input" name="trackingCode" value="${fs.trackingCode}" maxlength="100" autocomplete="off" placeholder="nt CC123456789EE"></label>
           <label class="adm-field"><span class="adm-label">Sisemised märkmed <span class="adm-muted">(klient ei näe)</span></span>
             <textarea class="adm-input" name="notes" rows="3" maxlength="5000">${o.notes}</textarea></label>
-          <p class="adm-note">Tühistamine ei tagasta raha ega muuda laoseisu automaatselt.</p>
+          <p class="adm-note">Tühistamine ei tagasta raha ega muuda laoseisu automaatselt — mängud saad pärast lattu tagasi panna (plokk „Laoseis“).</p>
           <p class="adm-field-error" data-error role="alert"></p>
           <button class="adm-btn adm-btn--primary" type="submit">Salvesta muudatused</button>
         </form>
+
+        ${stockSection(o)}
 
         <section class="adm-sec">
           <h3 class="adm-h3">Ajalugu</h3>
@@ -691,6 +797,7 @@ function renderOrders({ open = null } = {}, signal = controller.signal) {
             ${o.payment.paidAtText ? html`<li><span>Makse laekus</span><span>${o.payment.paidAtText}</span></li>` : ''}
             ${o.events.confirmationSentAt ? html`<li><span>Kinnituskiri kliendile</span><span>${dateTime(o.events.confirmationSentAt)}</span></li>` : ''}
             ${o.events.inventoryAppliedAt ? html`<li><span>Laoseis vähendatud</span><span>${dateTime(o.events.inventoryAppliedAt)}</span></li>` : ''}
+            ${o.events.restockedAt ? html`<li><span>Lattu tagastatud</span><span>${dateTime(o.events.restockedAt)}</span></li>` : ''}
             ${fs.packedAtText ? html`<li><span>Pakitud</span><span>${fs.packedAtText}</span></li>` : ''}
             ${fs.shippedAtText ? html`<li><span>Saadetud</span><span>${fs.shippedAtText}</span></li>` : ''}
             <li><span>Viimati muudetud</span><span>${dateTime(o.updatedAt)}</span></li>
@@ -700,6 +807,22 @@ function renderOrders({ open = null } = {}, signal = controller.signal) {
     );
     drawer.querySelector('[data-close]').addEventListener('click', closeDrawer);
     drawer.querySelector('[data-close]').focus({ preventScroll: true });
+    drawer.querySelector('[data-restock]')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      const games = o.games.map((g) => `${g.qty} × ${g.name}`).join(', ');
+      if (!confirm(`Panna tellimuse ${o.number} mängud lattu tagasi?\n\n${games}\n\nLaoseis suureneb kohe. Seda saab teha ainult üks kord.`)) return;
+      const errEl = drawer.querySelector('[data-restock-error]');
+      errEl.textContent = '';
+      btn.disabled = true;
+      try {
+        const res = await api(`orders/${encodeURIComponent(o.number)}/restock`, { method: 'POST', body: { confirm: true } });
+        toast(res.restock.added ? `${o.number}: mängud on lattu tagasi pandud.` : `${o.number}: mängud olid juba lattu tagasi pandud.`, { tone: res.restock.added ? 'ok' : 'info' });
+        renderDetail(res.order);
+      } catch (err) {
+        errEl.textContent = err.message;
+        btn.disabled = false;
+      }
+    });
     const edit = drawer.querySelector('[data-edit]');
     edit.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -751,6 +874,7 @@ function itemsChecklist(items) {
 }
 
 async function renderPacking(_m, signal) {
+  let test = new URLSearchParams(location.search).get('test') === '1';
   render(
     view,
     html`<section class="adm-page-head">
@@ -758,16 +882,33 @@ async function renderPacking(_m, signal) {
         <p class="adm-muted">Makstud tellimused, mis on veel saatmata (vanimad ees).</p></div>
       <div class="adm-page-head__actions adm-no-print"><button class="adm-btn adm-btn--ghost" type="button" data-print>🖨 Prindi</button></div>
     </section>
+    <div class="adm-scope-row adm-no-print" data-scope-host>${scopeSwitch(test)}</div>
+    <div data-test-banner>${test ? testBanner() : ''}</div>
     <div data-packing>${loading()}</div>`,
   );
   view.querySelector('[data-print]').addEventListener('click', () => window.print());
   const body = view.querySelector('[data-packing]');
+  const scopeHost = view.querySelector('[data-scope-host]');
+  scopeHost.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-scope]');
+    if (!b || (b.dataset.scope === 'test') === test) return;
+    test = b.dataset.scope === 'test';
+    scopeHost.querySelectorAll('[data-scope]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    render(view.querySelector('[data-test-banner]'), test ? testBanner() : '');
+    load();
+  });
 
   async function load() {
+    setQuery(test ? { test: '1' } : {});
     try {
-      const data = await api('packing', { signal });
+      const data = await api('packing', { params: test ? { test: '1' } : null, signal });
       if (!data.count) {
-        render(body, html`<div class="adm-empty"><p class="adm-empty__big">Kõik on teele saadetud! 🎉</p><p class="adm-muted">Uued makstud tellimused ilmuvad siia automaatselt.</p></div>`);
+        render(
+          body,
+          test
+            ? html`<div class="adm-empty"><p>Saatmata testtellimusi pole.</p></div>`
+            : html`<div class="adm-empty"><p class="adm-empty__big">Kõik on teele saadetud! 🎉</p><p class="adm-muted">Uued makstud tellimused ilmuvad siia automaatselt.</p></div>`,
+        );
         return;
       }
       render(
@@ -780,8 +921,9 @@ async function renderPacking(_m, signal) {
           ${data.orders.map(
             (o) => html`<article class="adm-pack" data-number="${o.number}">
               <header class="adm-pack__head">
-                <div><h2 class="adm-h2 adm-mono"><a href="/admin/tellimused/${o.number}">${o.number}</a></h2>
+                <div><h2 class="adm-h2 adm-mono"><a href="${orderHref(o.number)}">${o.number}</a></h2>
                   <p class="adm-muted">Makstud ${o.paidAtText || o.createdAtText}</p></div>
+                ${o.isTest ? testBadge() : ''}
                 ${badge('fulfillment', o.fulfillmentStatus, o.fulfillmentLabel)}
               </header>
               ${o.paymentStatus === 'partially_refunded' ? html`<p class="adm-alert adm-alert--warn">Osaliselt tagastatud (${money(o.refundedCents)}) — kontrolli enne saatmist sisu.</p>` : ''}
@@ -919,7 +1061,7 @@ async function renderInventory(_m, signal) {
                     <td data-label="Aeg">${mv.createdAtText}</td>
                     <td data-label="Mäng">${mv.gameName}</td>
                     <td data-label="Muutus" class="num"><strong class="${mv.delta < 0 ? 'adm-neg' : 'adm-pos'}">${mv.delta > 0 ? '+' : ''}${mv.delta}</strong></td>
-                    <td data-label="Põhjus">${mv.reasonLabel}${mv.orderNumber ? html` <a class="adm-mono" href="/admin/tellimused/${mv.orderNumber}">${mv.orderNumber}</a>` : ''}</td>
+                    <td data-label="Põhjus">${mv.reasonLabel}${mv.orderNumber ? html` <a class="adm-mono" href="${orderHref(mv.orderNumber)}">${mv.orderNumber}</a>` : ''}</td>
                     <td data-label="Selgitus">${mv.note}</td>
                   </tr>`,
                 )}</tbody></table></div>`
@@ -1088,7 +1230,7 @@ async function renderCalendar(_m, signal) {
             ? html`<h3 class="adm-h3">Selle päeva tasutud tellimused</h3>
               <ul class="adm-list">${s.orders.map(
                 (o) => html`<li class="adm-list__row">
-                  <a class="adm-list__main" href="/admin/tellimused/${o.number}"><strong class="adm-mono">${o.number}</strong> ${o.customerName}</a>
+                  <a class="adm-list__main" href="${orderHref(o.number)}"><strong class="adm-mono">${o.number}</strong> ${o.customerName}</a>
                   <span class="adm-list__meta">${o.paidAtText.slice(11)} · ${o.itemsText}</span>
                   <span class="adm-list__amount">${money(o.totalCents)}</span>
                   ${badge('fulfillment', o.fulfillmentStatus, o.fulfillmentLabel)}
@@ -1155,7 +1297,7 @@ async function renderWithdrawals(_m, signal) {
       <dl class="adm-dl">
         <dt>Klient</dt><dd>${w.customerName}<br><a href="mailto:${w.customerEmail}">${w.customerEmail}</a></dd>
         <dt>Tellimus</dt><dd>${w.orderFound
-          ? html`<a class="adm-mono" href="/admin/tellimused/${w.orderNumber}">${w.orderNumber}</a> <span class="adm-muted">(${w.orderPaymentLabel}, ${w.orderFulfillmentLabel})</span>`
+          ? html`<a class="adm-mono" href="${orderHref(w.orderCurrentNumber || w.orderNumber)}">${w.orderCurrentNumber || w.orderNumber}</a>${w.orderIsTest ? html` ${testBadge()}` : ''} <span class="adm-muted">(${w.orderPaymentLabel}, ${w.orderFulfillmentLabel})</span>`
           : html`<span class="adm-mono">${w.orderNumber}</span> <span class="adm-badge adm-badge--warn">ei leitud</span>`}</dd>
         <dt>Kauba kättesaamine</dt><dd>${w.receivedDateText || '—'}</dd>
         <dt>Tooted</dt><dd>${w.items || '—'}</dd>

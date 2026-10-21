@@ -63,6 +63,15 @@ export function targetState(session, eventType = null) {
   }
 }
 
+/**
+ * Kas Stripe'i režiim ja tellimuse liik lähevad lahku? Päris makse (livemode: true) ei tohi muuta
+ * testtellimust ega testmakse (livemode: false) päris tellimust — nt kui test- ja päris-webhook on
+ * kogemata sama aadressi peal. Kui livemode puudub (vanemad/näidisobjektid), ei kontrollita.
+ */
+export function livemodeMismatch(order, livemode) {
+  return typeof livemode === 'boolean' && Boolean(order?.is_test) === livemode;
+}
+
 /** Leiab sessioonile vastava tellimuse (metadata.order_id → client_reference_id → sessiooni id). */
 export async function findOrderForSession(db, session) {
   const candidates = [session?.metadata?.order_id, session?.client_reference_id].filter((v) => typeof v === 'string' && v);
@@ -89,6 +98,10 @@ export async function applySessionState(db, session, { eventType = null, mailer,
   if (found.stripe_session_id && session?.id && found.stripe_session_id !== session.id) {
     logger.warn?.(`[makse] ${found.number}: sessioon ${session.id} ei kuulu sellele tellimusele — jätan vahele.`);
     return { order: found, state: null, transitioned: false, reason: 'vale sessioon' };
+  }
+  if (livemodeMismatch(found, session?.livemode)) {
+    logger.warn?.(`[makse] ${found.number}: ${session.livemode ? 'päris' : 'test'}režiimi sessioon ${session.id} ei sobi ${found.is_test ? 'test' : 'päris '}tellimusele — jätan vahele.`);
+    return { order: found, state: null, transitioned: false, reason: 'vale režiim' };
   }
 
   const state = targetState(session, eventType);
@@ -130,9 +143,10 @@ export async function applySessionState(db, session, { eventType = null, mailer,
 /**
  * Makstud tellimuse ühekordsed kõrvalmõjud. Andmebaasi vead visatakse edasi (webhook
  * vastab siis 500 ja Stripe kordab); e-posti vead ainult logitakse.
+ * Testtellimus laoseisu ei muuda (kirjad lähevad siiski, et kogu voogu saaks proovida).
  */
 export async function ensurePaidSideEffects(db, order, { mailer, env = process.env, logger = console } = {}) {
-  if (!order.inventory_applied_at) {
+  if (!order.inventory_applied_at && !order.is_test) {
     const inv = await applyInventoryForOrder(db, order);
     if (inv.movements) logger.log?.(`[ladu] ${order.number}: ${inv.movements} laoliikumist`);
     for (const s of inv.stock) if (s.stock < 0) logger.warn?.(`[ladu] ${s.gameId}: laoseis on negatiivne (${s.stock}) — kontrolli halduses!`);
@@ -183,7 +197,8 @@ async function sendGuarded(db, order, column, mailer, logger, message) {
 /**
  * charge.refunded → tellimus 'refunded' või 'partially_refunded'.
  * Laoseisu tagasimakse automaatselt EI suurenda (kaup võib olla teel/kahjustatud) — omanik
- * lisab tagastatud mängud halduses käsitsi.
+ * otsustab ise ja paneb mängud lattu tagasi tellimuse vaates („Pane mängud lattu tagasi“,
+ * vt admin-inventory.mjs → restockOrder).
  */
 export async function applyChargeRefunded(db, charge, { logger = console } = {}) {
   const pi = idOf(charge?.payment_intent);

@@ -10,7 +10,8 @@ Node + `playwright` (devDependency). Käivita Pythoni skriptid `python3 -I …` 
 
 | Skript | Sisend | Väljund |
 | --- | --- | --- |
-| `mida-viiu-faces.py` | `source/mida-viiu-pakend-stants.pdf` | `games/mida-viiu/{front,back,left,right,top,bottom}.webp` |
+| `mida-viiu-center.py` | `source/mida-viiu-pakend-stants.pdf` | sama stants, kus kirjad ja märgid on tahkude keskel (ajutisse kausta; taust muutmata) |
+| `mida-viiu-faces.py` | `mida-viiu-center.py` väljund (või algne stants) | `games/mida-viiu/{front,back,left,right,top,bottom}.webp` |
 | `photo-faces.py` | Oled Semu? / Vigur pakendifotod `IMG_8180…8193.jpeg` (privaatsed) | vahetulemused (puhastatud kujundus + taust) ajutisse kausta |
 | `compose-faces.py` | `photo-faces.py` väljund + fondid | `games/{oled-semu,vigur}/{front,…,bottom}.webp` |
 | `render-boxes.mjs` | ülaltoodud tahud + `box3d.js/css` | `games/<id>-box.webp`, `-box-sm.webp`, `-box.png`, `komplekt-*.webp/png`, `<id>-cover.webp` |
@@ -19,8 +20,9 @@ Node + `playwright` (devDependency). Käivita Pythoni skriptid `python3 -I …` 
 ## Järjekord
 
 ```sh
-# 1. MIDA V!!!U tahud stantsifailist
-python3 -I scripts/assets/mida-viiu-faces.py source/mida-viiu-pakend-stants.pdf public/assets/img/games/mida-viiu --work /tmp/age-mida
+# 1. MIDA V!!!U: kirjad ja märgid tahkude keskele (vajab: pip install pikepdf), siis tahud
+python3 -I scripts/assets/mida-viiu-center.py source/mida-viiu-pakend-stants.pdf /tmp/age-mida/stants-keskel.pdf --work /tmp/age-mida/center
+python3 -I scripts/assets/mida-viiu-faces.py /tmp/age-mida/stants-keskel.pdf public/assets/img/games/mida-viiu --work /tmp/age-mida
 
 # 2. Oled Semu? ja Vigur tahud fotodelt (perspektiivkorrektsioon, vana logo eemaldus) + lõplik kujundus
 python3 -I scripts/assets/photo-faces.py source/private/pakendifotod /tmp/age-faces
@@ -46,6 +48,11 @@ alla <https://fonts.google.com/> lehelt ja pane `.ttf` failid ühte kausta (skri
 - **Tahkude orientatsioon** (box3d.js): front/back püsti nagu karpi eest/tagant vaadates; left-pildi
   PAREM serv ja right-pildi VASAK serv on vastu esikülge; top-pildi ALUMINE serv ja bottom-pildi
   ÜLEMINE serv on vastu esikülge.
+- **MIDA V!!!U keskele seadmine**: logo „MIDA V!!!U“, „ROHKEM KUI KAARDIMÄNG“, külgede hüüumärgid ja
+  kontaktiplokid, tagakülje kuju + tekstid ning klappide logod on oma tahu keskel; esikülje nurgamärgid
+  (ÄGE, 18+) on servadest võrdsel kaugusel. Taust (must + roosad helendused) on algne.
+- **OLED SEMU? värvid** (omaniku antud): tagakülg `#004aad`, esi- ja küljed ning klapid `#cb6ce6`
+  (`compose-faces.py` → `GAMES['oled-semu']['bg']`). Sama paar on veebis Oled Semu? teema gradiendis.
 - **Logo**: kehtiv ÄGE logo `public/assets/img/brand/age-logo-white.png` (esiküljel väike, klappidel suur).
   Vana ÄGE logo (fotodel) on eemaldatud.
 - **Tootepildid** on ruudukujulised läbipaistva taustaga (3/4 nurk, kontaktvari) — üks ja sama pilt

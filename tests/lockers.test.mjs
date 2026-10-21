@@ -193,3 +193,15 @@ test('loadLockers: DPD DPD_LOCKERS_URL-iga', async () => {
   assert.deepEqual(urls, ['https://dpd.example/lockers.json']);
   assert.equal(r.lockers.length, 2);
 });
+
+test('loadLockers: allika aadressi saab üle kirjutada (OMNIVA_LOCKERS_URL, SMARTPOST_LOCKERS_URL)', async () => {
+  const urls = [];
+  const fetchImpl = async (url) => {
+    urls.push(url);
+    return jsonResponse(fixture(url.includes('omniva') ? 'omniva-locations.json' : 'smartpost-places.json'));
+  };
+  const env = { OMNIVA_LOCKERS_URL: 'https://omniva.example/uus.json', SMARTPOST_LOCKERS_URL: 'https://smartpost.example/uus.json' };
+  await loadLockers('omniva', { fetchImpl, env, timeoutMs: 1000 });
+  await loadLockers('smartpost', { fetchImpl, env, timeoutMs: 1000 });
+  assert.deepEqual(urls, ['https://omniva.example/uus.json', 'https://smartpost.example/uus.json']);
+});

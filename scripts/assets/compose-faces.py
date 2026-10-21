@@ -24,6 +24,7 @@ Kujundusotsused (vt ka scripts/assets/README.md):
     kehtivatega (@ou.age, aarmiselt@gmail.com) samas paigutuses nagu MIDA V!!!U külgedel.
   * Viguri taustamuster on fotol kriimustatud ja rebenenud -> joonistatakse uuesti puhtalt
     (samad sõnad, sama nurk ja kirjatüüp, sama läbipaistvus).
+  * OLED SEMU? taustavärvid on omaniku antud: tagakülg #004aad, muud tahud ja klapid #cb6ce6.
   * Viguri vasak külg on fotodel liiga viltu -> tehakse parema külje põhjal (logo 180° pööratud,
     nagu päris karbil).
 """
@@ -47,7 +48,10 @@ WORK = (1000, 1543, 601)  # tööresolutsioon (W, H, D)
 
 GAMES = {
     'oled-semu': {
-        'color': (179, 155, 224),
+        # Omaniku antud kujundusvärvid: tagakülg #004aad (sinine), ülejäänud tahud #cb6ce6 (lilla).
+        # Fotolt tuletatud taust asendatakse nende värvidega; kujundus (art) jääb fotolt.
+        'color': (0xCB, 0x6C, 0xE6),
+        'bg': {'back': (0x00, 0x4A, 0xAD), 'default': (0xCB, 0x6C, 0xE6)},
         'logo_small': {'cx': None, 'left': 62, 'cy': 228, 'h': 112, 'color': 'from:12+'},
         'socials': {'cy': 1222, 'color': (255, 255, 255)},
         'pattern': False,
@@ -276,7 +280,10 @@ def main():
         os.makedirs(outdir, exist_ok=True)
 
         def layer(face, kind):
-            return Image.open(os.path.join(args.faces, f'{game}-{face}-{kind}.png')).convert('RGBA')
+            im = Image.open(os.path.join(args.faces, f'{game}-{face}-{kind}.png')).convert('RGBA')
+            if kind == 'bg' and g.get('bg'):
+                return flat_bg(im.size, g['bg'].get(face, g['bg']['default']))
+            return im
 
         def pat(size, off):
             return pattern_layer(size, fonts, off) if g['pattern'] else None

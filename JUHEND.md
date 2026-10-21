@@ -11,6 +11,7 @@ Juhendi lõpuks:
 
 **Kuidas seda juhendit kasutada**
 
+- **Kõige kiirem algus:** loe kõigepealt [Kiirtee](#kiirtee-kõige-odavam-viis-pood-avada). Seal on kogu avamine ühel lehel koos hindadega (kõige odavam variant: püsikulu umbes **8 € aastas**, ainult domeen).
 - **Esimesel korral** käi läbi peatükid **1–12** järjest. Kokku kulub umbes 3–5 tundi. Lisaks tuleb oodata, kuni Stripe sinu ettevõtte andmed üle kontrollib, ja kuni domeeni DNS-kirjed hakkavad tööle (mõlemal mõnest minutist mõne päevani).
 - **Pärast avamist** on sinu igapäevane tööriist peatükk **13** (halduspaneel). Hindade, tekstide ja piltide muutmiseks vaata peatükki **16**.
 - Kui midagi ei tööta, ava peatükk **19** (veaotsing).
@@ -22,23 +23,24 @@ Juhendi lõpuks:
 
 ## Sisukord
 
+- [Kiirtee: kõige odavam viis pood avada](#kiirtee-kõige-odavam-viis-pood-avada)
 0. [Ülevaade](#0-ülevaade)
 1. [Mida on vaja enne alustamist](#1-mida-on-vaja-enne-alustamist)
 2. [Kood GitHubi põhiharusse](#2-kood-githubi-põhiharusse)
 3. [Netlify: pood internetti](#3-netlify-pood-internetti)
-4. [Andmebaas: Netlify DB](#4-andmebaas-netlify-db)
+4. [Andmebaas: Neon (tasuta)](#4-andmebaas-neon-tasuta)
 5. [Keskkonnamuutujad ehk poe seaded](#5-keskkonnamuutujad-ehk-poe-seaded)
 6. [Halduspaneeli parool](#6-halduspaneeli-parool)
 7. [Stripe: maksed testrežiimis](#7-stripe-maksed-testrežiimis)
 8. [Testtellimus](#8-testtellimus)
-9. [Oma domeen](#9-oma-domeen)
-10. [E-kirjad: Resend](#10-e-kirjad-resend)
+9. [Oma domeen: ostmine ja ühendamine](#9-oma-domeen-ostmine-ja-ühendamine)
+10. [E-post: poe aadress ja kirjad (Cloudflare + Resend)](#10-e-post-poe-aadress-ja-kirjad-cloudflare--resend)
 11. [Pakiautomaadid ja vedajad](#11-pakiautomaadid-ja-vedajad)
 12. [LIVE-režiim: päris maksed](#12-live-režiim-päris-maksed)
 13. [Igapäevane töö halduspaneelis](#13-igapäevane-töö-halduspaneelis)
 14. [Eelvaade: vaata muudatusi enne avaldamist](#14-eelvaade-vaata-muudatusi-enne-avaldamist)
 15. [Uudiskirja e-postid Netlify Formsiga](#15-uudiskirja-e-postid-netlify-formsiga)
-16. [Sisu muutmine: hinnad, tekstid, pildid](#16-sisu-muutmine-hinnad-tekstid-pildid)
+16. [Sisu muutmine hiljem: hinnad, tekstid, pildid](#16-sisu-muutmine-hiljem-hinnad-tekstid-pildid)
 17. [Pacdora 3D-mudel](#17-pacdora-3d-mudel)
 18. [Õiguslik kontrollnimekiri](#18-õiguslik-kontrollnimekiri)
 19. [Veaotsing](#19-veaotsing)
@@ -46,6 +48,76 @@ Juhendi lõpuks:
 - [Lisa A: kohalik arendus arvutis](#lisa-a-kohalik-arendus-arvutis)
 - [Lisa B: failide kaart](#lisa-b-failide-kaart)
 - [Lisa C: kasulikud lingid](#lisa-c-kasulikud-lingid)
+
+---
+
+## Kiirtee: kõige odavam viis pood avada
+
+Siin on kogu avamine ühel lehel. Iga sammu täpsed juhised on viidatud peatükis. Hinnad on kontrollitud **21.10.2026** teenuste hinnalehtedelt, aga need muutuvad. Vaata enne maksmist hinda lingilt üle.
+
+### Mis maksab mis (odavaim töötav komplekt)
+
+**Püsikulud**
+
+| Teenus | Milleks | Hind | Piirang tasuta paketis |
+|---|---|---|---|
+| **GitHub** | Koodi hoidmine, muutmine brauseris | 0 € | – |
+| **Netlify Free** | Veebileht + serverifunktsioonid + vormid | 0 € | 300 krediiti kuus. Iga avaldamine (deploy) maksab **15 krediiti**, liiklus umbes 20 krediiti GB kohta. Kui krediit saab otsa, **pood läheb kuu lõpuni maha**. Järgmine pakett **Personal 9 $/kuu**. [Hinnad](https://www.netlify.com/pricing/) |
+| **Neon Free** | Andmebaas (tellimused, laoseis) | 0 € | 100 arvutustundi kuus, 0,5–1 GB. Väikesele poele piisab mitmekordselt. [Hinnad](https://neon.com/pricing) |
+| **Resend Free** | Tellimuse kinnituskirjad | 0 € | 3000 kirja kuus, 100 päevas. [Hinnad](https://resend.com/pricing) |
+| **Cloudflare Free** | Domeeni DNS + tasuta poe e-posti aadress (suunamine Gmaili) | 0 € | – |
+| **`.ee` domeen** | Poe aadress, nt `agemangud.ee` | **umbes 8 € aastas** (Zone.ee ~8,37 €, Veebimajutus.ee ~7,95 €) | – |
+| **Stripe** | Kaardimaksed, Apple Pay, Google Pay | 0 € kuutasu | – |
+| **Ettevõtluskonto** (nt LHV) | Müük ilma ettevõtet loomata | 0 € kuni 500 € käibega kuus, siis ~5 €/kuu | Kuni 40 000 € aastas |
+
+**Kokku püsikulu: umbes 8 € aastas** (ainult domeen). Kui pood kasvab ja Netlify tasuta krediidist ei piisa: +9 $ kuus.
+
+**Iga tellimuse kulud** (näide: MIDA V!!!U 17,50 € + tarne 2,99 € = 20,49 €)
+
+| Kulu | Summa |
+|---|---|
+| Stripe (Euroopa tavakaart 1,5% + 0,25 €) | ~0,56 € |
+| Pakk automaati (eraisiku hind 2026: SmartPosti XS 2,90 € / S 3,34 €, DPD XS 2,63 € / S 3,04 €, Omniva S 3,46 €) | ~2,60–3,50 € |
+| Ettevõtluskonto tulumaks 20% laekunud summast | ~4,10 € |
+
+> 💡 Pood küsib kliendilt tarne eest **2,99 €**. Omniva eraisiku hind on sellest kõrgem. Kui saadad peamiselt Omnivaga, kaalu tarnehinna tõstmist (peatükk 16.3) või ärikliendi lepingut.
+
+### Kui sul pole veel ettevõtet
+
+Müüa saab ka ilma OÜ-ta:
+
+1. **Ettevõtluskonto** (soovitatav alguseks, odavaim). Avad pangas eraldi konto, kuhu laekub müügitulu. Pank kinnitab sinu eest **20% tulumaksu** iga laekumise pealt, muud deklareerimist ega raamatupidamist pole. Kulusid maha arvata ei saa ja aastas võib laekuda kuni **40 000 €**. Küsi pangalt üle, et Stripe'i väljamaksed sobivad ettevõtluskontole. Info: [EMTA: ettevõtluskonto](https://www.emta.ee/en/private-client/taxes-and-payment/taxable-income/entrepreneur-account) (eesti keeles otsi emta.ee lehelt „ettevõtluskonto“).
+2. **FIE.** Registreerimine on odav, aga sotsiaalmaksu miinimum on suur (2026: ~877 € kvartalis), kui sul pole muud tööd. Väikesele poele tavaliselt kallis.
+3. **OÜ.** Asutamine e-äriregistris ~265 €, osakapital võib olla 0,01 €. Vajab raamatupidamist. Mõistlik siis, kui müük kasvab.
+
+**Poes peavad olema müüja andmed** (seadus nõuab enne tellimist): **nimi** (ettevõtluskonto puhul sinu ees- ja perekonnanimi), **aadress** (päris aadress, mitte ainult „Tallinn“) ja **e-post**. Need kirjutad ühte faili: `public/assets/js/site.js` (peatükk 16.5).
+
+> ⚠️ **Alla 18-aastasena** ei saa Stripe'i kontot ega ettevõtluskontot üldjuhul ise avada. Siis peab konto avama ja haldama täiskasvanu (nt lapsevanem).
+
+### Sammud järjest
+
+| # | Mida teed | Aeg | Hind | Peatükk |
+|---|---|---|---|---|
+| 1 | Kood GitHubis põhiharusse `main` | 10 min | 0 € | [2](#2-kood-githubi-põhiharusse) |
+| 2 | Netlify konto ja pood internetti (`….netlify.app`) | 15 min | 0 € | [3](#3-netlify-pood-internetti) |
+| 3 | Neoni andmebaas, aadress Netlifysse (`DATABASE_URL`) | 10 min | 0 € | [4](#4-andmebaas-neon-tasuta) |
+| 4 | Halduspaneeli parool | 15 min | 0 € | [6](#6-halduspaneeli-parool) |
+| 5 | Stripe testrežiimis + testost | 40 min | 0 € | [7](#7-stripe-maksed-testrežiimis), [8](#8-testtellimus) |
+| 6 | Domeen: osta `.ee` ja ühenda Cloudflare'i kaudu | 30 min + ootamine (kuni 1 päev) | ~8 €/a | [9](#9-oma-domeen-ostmine-ja-ühendamine) |
+| 7 | Poe e-post (`info@sinudomeen.ee` → sinu Gmail) ja kinnituskirjad (Resend) | 30 min | 0 € | [10](#10-e-post-poe-aadress-ja-kirjad-cloudflare--resend) |
+| 8 | Vedajad: kontrolli automaatide nimekirja | 10 min | 0 € | [11](#11-pakiautomaadid-ja-vedajad) |
+| 9 | Müüja andmed `site.js`-i, tingimused üle | 20 min | 0 € | [16.5](#165-müüja-ja-kontaktandmed), [18](#18-õiguslik-kontrollnimekiri) |
+| 10 | Stripe LIVE (päris maksed) | 30 min + Stripe'i kontroll | 0 € | [12](#12-live-režiim-päris-maksed) |
+
+### Kuidas hiljem muuta (ja krediiti säästa)
+
+Pärast avamist saad poodi muuta millal tahes, ilma kedagi kutsumata:
+
+- **Väike muudatus** (hind, tekst, e-post): GitHubis faili pliiatsiga muutmine → **Commit** → Netlify avaldab umbes minutiga ([16.1](#161-kuidas-faili-muuta-ilma-programmeerimata)).
+- **Suurem muudatus** (uus toode, kujundus): tee muudatused eraldi harus ja vaata **Deploy Preview** eelvaadet ([14.1](#141-netlify-deploy-preview-soovitatav)). Eelvaated on Netlifys tasuta, krediiti kulub alles avaldamisel.
+- **Claude Code'iga:** ava see repo Claude Code'is ja kirjelda, mida tahad muuta. Claude teeb muudatuse, kontrollib testidega ja lükkab selle GitHubi.
+- **Krediidi säästmine:** iga avaldamine `main` harusse maksab 15 krediiti 300-st. **Kogu muudatused kokku** (üks avaldamine 5 muudatusega, mitte 5 avaldamist). Kasutust näed Netlifys: **Team settings → Billing → Usage**.
+- **Kui midagi läks katki:** Netlify **Deploys** → vana töötav versioon → **Publish deploy**. Tagasivõtmine on tasuta.
 
 ---
 
@@ -59,7 +131,7 @@ Juhendi lõpuks:
 |---|---|
 | `/` (avaleht) | MIDA V!!!U tutvustus, pöörlev 3D-karp, **kaardieelvaade**, kõik kolm mängu, komplektid, reeglid, ÄGE lugu, KKK eelvaade ja sotsiaalmeedia lingid |
 | `/kataloog` | Kõik mängud ja komplektid ühel lehel (menüüs „Kataloog“ ja „Komplektid“) |
-| `/mida-viiu` | MIDA V!!!U tooteleht: 3D-karp kõigist külgedest, kaardieelvaade, reeglid, kogusevalik, mobiilis ekraani alla kinnituv osturiba, nupp **„Vaata 3D-mudelit“** (Pacdora), KKK |
+| `/mida-viiu` | MIDA V!!!U tooteleht: 3D-karp kõigist külgedest, kaardieelvaade, reeglid, kogusevalik, nupp **„Vaata 3D-mudelit“** (Pacdora), KKK |
 | `/oled-semu`, `/vigur` | Oled Semu? ja Viguri tootelehed päris kaardipiltide ja reeglitega |
 | `/ostukorv` | Ostukorv ja kassa ühel lehel: **Sinu ostukorv → Tarne pakiautomaati → Kontaktandmed → Kinnita ja maksa**. Sooduskoodi väli, pakiautomaadi otsing ja kokkuvõte. Nupp **„Maksa …“** viib Stripe'i makselehele |
 | `/aitah` | Kinnitusleht. Leht küsib serverilt, kas makse on **päriselt** laekunud, ja näitab tellimuse numbrit, tooteid, summat, pakiautomaati ja olekut. Ostukorv tühjendatakse alles siis, kui makse on kinnitatud (või pangamakse on töötlemisel) |
@@ -94,20 +166,20 @@ Juhendi lõpuks:
 
 **✅ Valmis ja kohalikult testitud.** Arendaja arvutis töötab kogu ostuteekond algusest lõpuni: kassa → test-Stripe'i makseleht → webhook → tellimus „Makstud“ andmebaasis → kinnituskiri → halduspaneel → pakkimine → saadetuks märkimine. Läbi on proovitud ka tagasimakse, makseaja lõppemine, ebaõnnestunud makse ja taganemisavaldus.
 
-> ⚠️ **Mida EI ole testitud:** päris Stripe'i, Resendi, Netlify DB ning Omniva ja SmartPosti päris nimekirjadega. Arenduskeskkonnast polnud nende teenusteni internetiühendust. Kood on kirjutatud nende ametlike liideste järgi ja testitud näidisandmetega, kuid **esimene päris test on sinu teha** (peatükid 8 ja 12). Kui midagi ei tööta, aitab peatükk 19.
+> ⚠️ **Mida EI ole testitud:** päris Stripe'i, Resendi, Neoni andmebaasi ning Omniva ja SmartPosti päris nimekirjadega. Arenduskeskkonnast polnud nende teenusteni internetiühendust. Kood on kirjutatud nende ametlike liideste järgi ja testitud näidisandmetega, kuid **esimene päris test on sinu teha** (peatükid 8 ja 12). Kui midagi ei tööta, aitab peatükk 19.
 
 **🔧 Vajab sinu seadistust**
 
 | Mida | Milleks | Kui see puudub | Peatükk |
 |---|---|---|---|
-| **Netlify DB** (andmebaas) | Tellimused, laoseis, taganemisavaldused | Kassa ütleb: *„Tellimuste vastuvõtt on hetkel ajutiselt peatatud.“* Halduspaneel ja taganemisvorm ei tööta | 4 |
+| **Andmebaas** (Neon, `DATABASE_URL`) | Tellimused, laoseis, taganemisavaldused | Kassa ütleb: *„Tellimuste vastuvõtt on hetkel ajutiselt peatatud.“* Halduspaneel ja taganemisvorm ei tööta | 4 |
 | **Halduspaneeli parool** (`ADMIN_PASSWORD_HASH`, `ADMIN_SESSION_SECRET`) | Sisselogimine `/admin` | `/admin` ütleb, et parool on seadistamata, ja sisse ei saa | 6 |
 | **Stripe'i võti** (`STRIPE_SECRET_KEY`) | Makselehe loomine | Kassa ütleb: *„Makse pole veel seadistatud. Võta meiega ühendust.“* | 7 |
 | **Stripe'i webhook** (`STRIPE_WEBHOOK_SECRET`) | Makse kinnitus serverisse | Tellimus jääb olekusse **„Ootab makset“**, kui klient pärast makset tänulehele ei jõua. Aegumised ja tagasimaksed halduspaneeli ei jõua | 7.4 |
-| **Domeen** | Oma aadress (nt `age.ee`) ja e-kirjade saatja | Pood töötab aadressil `….netlify.app`, aga e-kirju klientidele saata ei saa (vt Resend) | 9 |
+| **Domeen** | Oma aadress (nt `agemangud.ee`) ja e-kirjade saatja | Pood töötab aadressil `….netlify.app`, aga e-kirju klientidele saata ei saa (vt Resend) | 9 |
 | **Resend** (`RESEND_API_KEY`, `MAIL_FROM`, `ADMIN_EMAIL`) | Kinnituskirjad kliendile, teavitused sulle | Kirju ei saadeta. Tellimused töötavad edasi ja kõik on halduspaneelis näha | 10 |
 | **Vedajad** (`ENABLED_CARRIERS`) ja **lepingud** | Kuhu saab tellida ja kuidas sa pakke saadad | Vaikimisi saab tellida Omniva ja SmartPosti automaati. DPD on välja lülitatud | 11 |
-| **Ettevõtte andmed** (registrikood jm) | Seadusega nõutud info poes | Jaluses ja tingimustes puudub registrikood | 16.5, 18 |
+| **Müüja andmed** (nimi, aadress, e-post; registrikood ainult OÜ/FIE puhul) | Seadusega nõutud info poes | Poes on brändinimi ja „Tallinn, Eesti“. Enne avamist pane sinna päris nimi ja aadress | Kiirtee, 16.5, 18 |
 | **Tagastusaadress** | Kuhu klient taganemisel kauba saadab | Kinnituskirjas on *„saadame sulle peagi juhised“*. Pead juhised ise e-postiga saatma | 18 |
 | **Repo privaatseks** | Kood ja failid pole kõigile nähtavad | Repo on praegu avalik | 18 |
 
@@ -157,17 +229,7 @@ Juhendi lõpuks:
 
 ### Kulud
 
-| Mis | Hind | Märkus |
-|---|---|---|
-| GitHub | 0 € | Siin hoitakse koodi (ka privaatne repo on tasuta) |
-| Netlify (Free plaan) | 0 € | Veebimajutus, serverifunktsioonid ja vormid. Tasuta plaanil on igakuised limiidid (krediidid, mida kulutavad näiteks deploy'd, liiklus ja funktsioonide käivitused). Väikesele poele piisab sellest tavaliselt. Kontrolli: [netlify.com/pricing](https://www.netlify.com/pricing/) |
-| Netlify DB (Neon Postgres) | tavaliselt 0 € | Neoni tasuta paketis on mahupiirang, mis väikesele poele piisab. Kontrolli kehtivaid tingimusi Netlify ja [Neoni](https://neon.com/pricing) lehelt |
-| Resend | tasuta pakett | Tasuta paketis on igakuine ja päevane kirjade limiit. Kontrolli: [resend.com/pricing](https://resend.com/pricing) |
-| Stripe | Kuutasu pole. Iga makse pealt umbes **1,5% + 0,25 €** (standardsed Euroopa kaardid) | Premium-, äri- ja Euroopa-väliste kaartide tasu on suurem. **Kontrolli: [stripe.com/ee/pricing](https://stripe.com/ee/pricing)** |
-| `.ee` domeen | umbes 10–20 € aastas | Vajalik e-kirjade saatmiseks (peatükk 9) |
-| Pakkide saatmine | vedaja hinnakirja järgi | Klient maksab tarne eest 2,99 € (alates 30 € on tarne tasuta). Ülejäänu on sinu kulu |
-
-**Näide:** klient ostab MIDA V!!!U koos tarnega: 17,50 € + 2,99 € = 20,49 €. Stripe võtab sellest umbes 20,49 × 1,5% + 0,25 ≈ **0,56 €**, nii et sinu kontole jõuab umbes **19,93 €**. Sellest tuleb veel maksta paki saatmise eest.
+Kõik hinnad, tasuta pakettide piirangud ja näide ühe tellimuse kuludest on [Kiirtee](#kiirtee-kõige-odavam-viis-pood-avada) alguses. Lühidalt: odavaimal viisil on püsikulu ainult domeen (umbes 8 € aastas). Iga makse pealt võtab Stripe umbes 1,5% + 0,25 €, lisaks paki saatmise hind.
 
 ### Mini-sõnastik
 
@@ -181,7 +243,7 @@ Juhendi lõpuks:
 | **Deploy Preview** | Netlify eelvaade: pood koos muudatustega eraldi aadressil, enne kui see päris poodi läheb |
 | **Keskkonnamuutuja** | Seadistus (nt Stripe'i võti), mida hoitakse Netlifys, mitte koodis |
 | **Netlify Function** | Väike serveriprogramm, mis töötab Netlifys (nt makse alustamine) |
-| **Andmebaas** | Koht, kuhu tellimused, laoseis ja taganemisavaldused salvestatakse (Netlify DB ehk Neon Postgres) |
+| **Andmebaas** | Koht, kuhu tellimused, laoseis ja taganemisavaldused salvestatakse (Neon Postgres) |
 | **Webhook** | Automaatne teade ühest teenusest teise. Stripe teatab webhookiga poele, et makse õnnestus |
 | **Testrežiim / LIVE** | Stripe'i harjutusrežiim (raha ei liigu) ja päris maksete režiim |
 | **Räsi** (hash) | Parooli ühesuunaline „sõrmejälg“. Netlifysse salvestatakse räsi, mitte parool ise |
@@ -191,19 +253,22 @@ Juhendi lõpuks:
 ## 1. Mida on vaja enne alustamist
 
 - [ ] **GitHubi konto**, millel on ligipääs repole **`christopherkingsepp/oh-mega-oof`**. Kood on juba seal.
-- [ ] **Netlify konto** ([netlify.com](https://www.netlify.com)). Kõige lihtsam on registreeruda GitHubi kontoga.
+- [ ] **Netlify konto** ([netlify.com](https://www.netlify.com)). Kõige lihtsam on registreeruda GitHubi kontoga. Pakett **Free** (0 €).
+- [ ] **Neoni konto** ([neon.com](https://neon.com)) andmebaasi jaoks. Pakett **Free** (0 €).
+- [ ] **Cloudflare'i konto** ([cloudflare.com](https://www.cloudflare.com)) domeeni DNS-i ja tasuta poe e-posti jaoks. Pakett **Free** (0 €).
 - [ ] **Stripe'i konto** ([stripe.com/ee](https://stripe.com/ee)). Testimiseks piisab e-postist. Päris maksete jaoks on vaja:
-  - **ettevõtet**, soovitatavalt **OÜ-d** koos registrikoodiga. Stripe toetab ka FIE-d, aga OÜ hoiab ettevõtte raha sinu isiklikust rahast eraldi;
-  - **isikut tõendavat dokumenti** ettevõtte esindaja kohta;
-  - **ettevõtte pangakontot (IBAN)**, kuhu Stripe raha kannab;
+  - **müüjat**: ettevõtet pole tingimata vaja. Stripe lubab Eestis ka eraisikust ettevõtjat (*individual / sole proprietor*). Odavaim viis on **ettevõtluskonto** (vt [Kiirtee → Kui sul pole veel ettevõtet](#kui-sul-pole-veel-ettevõtet)); hiljem saab teha FIE või OÜ;
+  - **isikut tõendavat dokumenti** ja vajadusel aadressitõendit (nt pangaväljavõte või arve viimase 6 kuu jooksul);
+  - **pangakontot (IBAN) enda nimel** (ettevõtluskonto puhul see konto), kuhu Stripe raha kannab;
+  - **veebilehte**, kus on tooted, hinnad, müüja nimi, aadress ja e-post, müügitingimused ja privaatsuspoliitika;
   - telefoninumbrit kaheastmelise sisselogimise jaoks.
-- [ ] **Domeen** (nt `age.ee`). Poe saab avada ka tasuta `netlify.app` aadressil, aga **klientidele e-kirjade saatmiseks on oma domeen vajalik** (peatükk 10).
+- [ ] **Domeen** (nt `agemangud.ee`). Poe saab avada ka tasuta `netlify.app` aadressil, aga **klientidele e-kirjade saatmiseks on oma domeen vajalik** (peatükk 10).
 - [ ] **Resendi konto** ([resend.com](https://resend.com)) e-kirjade saatmiseks.
 - [ ] **Arvuti, kuhu saab paigaldada Node.js-i** ([nodejs.org](https://nodejs.org), versioon 22 LTS). Seda on vaja **üks kord** halduspaneeli parooli räsi tegemiseks (peatükk 6). Kui seda pole, sobib ka GitHub Codespaces (samas peatükis).
-- [ ] **Ettevõtte e-postiaadress**, kuhu tulevad teavitused. Praegu on veebilehel kirjas `aarmiselt@gmail.com`. Kontrolli, et see on õige (peatükk 16.5).
+- [ ] **Poe e-postiaadress.** Praegu on veebilehel ja karpidel kirjas `aarmiselt@gmail.com`. Pärast domeeni ostmist saad tasuta aadressi nagu `info@agemangud.ee`, mis suunab kirjad sinu Gmaili (peatükk 10.0). Seni võib jääda olemasolev Gmail.
 - [ ] **Leping vähemalt ühe pakiautomaatide vedajaga** või valmisolek saata pakke eraklienti iseteeninduses (peatükk 11).
 
-> ⚠️ **Tähtis: alaealisena.** Stripe'i konto avaja ja ettevõtte esindaja peab üldjuhul olema täisealine. Kui oled alla 18, peab Stripe'i konto avama ja seda haldama täiskasvanu (nt lapsevanem), kes on ka ettevõtte esindaja. JA õpilasfirma ei ole juriidiline isik, seega päris maksete jaoks on vaja OÜ-d (või FIE-d). OÜ saab asutada e-äriregistris ([ettevotjaportaal.rik.ee](https://ettevotjaportaal.rik.ee)) ID-kaardi või Smart-ID-ga.
+> ⚠️ **Tähtis: alaealisena.** Stripe'i konto avaja ja ettevõtte esindaja peab üldjuhul olema täisealine. Kui oled alla 18, peab Stripe'i konto avama ja seda haldama täiskasvanu (nt lapsevanem), kes on ka ettevõtte esindaja. JA õpilasfirma ei ole juriidiline isik. Päris müügiks sobib täiskasvanu nimel ettevõtluskonto, FIE või OÜ. OÜ saab asutada e-äriregistris ([ettevotjaportaal.rik.ee](https://ettevotjaportaal.rik.ee)) ID-kaardi või Smart-ID-ga.
 
 ---
 
@@ -262,49 +327,43 @@ Veebilehe kood on GitHubis harus **`claude/age-kaardimang-jt4br4`**. Netlify ava
 - [ ] Lehel `/ostukorv` laeb Omniva ja SmartPosti automaatide nimekiri. DPD on nähtav märkega „Hetkel pole saadaval“ (peatükk 11).
 - [ ] Nupp **„Maksa …“** annab teate *„Makse pole veel seadistatud. Võta meiega ühendust.“* **See on praegu õige**, sest Stripe pole veel ühendatud.
 
-> 💡 **Nipp:** iga muudatus `main` harus avaldatakse nüüd automaatselt. Kõiki avaldusi näed vaates **Deploys**. Kui mõni uus versioon läheb katki, saad seal varasema töötava versiooni tagasi panna (peatükk 19).
+> 💡 **Nipp:** iga muudatus `main` harus avaldatakse nüüd automaatselt (Free paketis 15 krediiti avaldamise kohta, vt [Kiirtee](#kuidas-hiljem-muuta-ja-krediiti-säästa)). Kõiki avaldusi näed vaates **Deploys**. Kui mõni uus versioon läheb katki, saad seal varasema töötava versiooni tagasi panna (peatükk 19).
 
 ---
 
-## 4. Andmebaas: Netlify DB
+## 4. Andmebaas: Neon (tasuta)
 
-Kõik tellimused, laoseis ja taganemisavaldused salvestatakse **Postgresi andmebaasi**. Netlifyl on selleks **Netlify DB**, mille taga on teenus **Neon**. Kui andmebaas on saidiga ühendatud, lisab Netlify keskkonnamuutuja **`NETLIFY_DATABASE_URL`** ise. Midagi käsitsi kirjutama ei pea.
+Kõik tellimused, laoseis ja taganemisavaldused salvestatakse **Postgresi andmebaasi**. Pood kasutab teenust **Neon**: tasuta paketis on 100 arvutustundi kuus ja andmebaas magab, kui keegi poodi ei kasuta. Väikesele poele piisab sellest mitmekordselt.
 
 **Tabeleid ei pea ise looma.** Pood loob need esimesel päringul automaatselt.
 
-Vali **üks** kolmest variandist.
+> 💡 **Miks mitte Netlify enda andmebaas?** Netlify uus andmebaasiteenus (*Netlify Database*, 2026) kasutab teist ühendusviisi, mida see pood ei toeta. Lisaks kulutab see Netlify tasuta paketi krediiti ja võib poe kuu lõpuks seisma panna. Oma Neoni konto on tasuta ega puuduta Netlify krediiti.
 
-### Variant A: Netlify veebiliideses (lihtsaim)
+### 4.1 Neoni andmebaasi loomine
 
-1. Ava Netlifys oma projekt.
-2. Otsi menüüst **Extensions** (laiendused) ja sealt **Neon** või **Netlify DB**.
-3. Paigalda laiendus ja lisa selle juhiste järgi **sellele projektile andmebaas**.
-4. Kui Netlify pakub andmebaasi oma Neoni kontoga siduda (*claim*), **tee seda kohe**. Netlify dokumentatsiooni järgi võidakse sidumata andmebaas mõne päeva pärast kustutada. Seotud andmebaasi näed ka oma Neoni kontol ([console.neon.tech](https://console.neon.tech)).
-5. Kontrolli, et **Project configuration → Environment variables** all on nüüd muutuja `NETLIFY_DATABASE_URL`.
+1. Ava [neon.com](https://neon.com) ja vajuta **Sign up**. Kõige lihtsam on registreeruda GitHubi või Google'i kontoga.
+2. Loo uus projekt (**New project**):
+   - **Name:** `age-pood`
+   - **Region:** **AWS Europe Central (Frankfurt)** või muu Euroopa piirkond (andmed jäävad Euroopasse ja pood on kiirem)
+   - Postgresi versioon: jäta vaikimisi.
+3. Projekti avalehel vajuta **Connect** (või **Connection details**). Vali:
+   - **Branch:** `main` (või `production`), **Database:** `neondb`
+   - ühendusviis **Connection string**; *pooled connection* võib olla sees või väljas.
+4. Kopeeri aadress. See näeb välja umbes nii:
+   `postgresql://neondb_owner:XXXXXXXX@ep-midagi-123456.eu-central-1.aws.neon.tech/neondb?sslmode=require`
 
-Kui sa neid valikuid oma Netlify vaates ei leia, kasuta varianti B või C või ava Netlify ametlik juhend ([docs.netlify.com](https://docs.netlify.com), otsi „Netlify DB“).
+   > ⚠️ Selles aadressis on **parool**. Ära pane seda GitHubi, e-kirja ega vestlusesse. Ainult Netlifysse.
+5. Netlifys: **Project configuration → Environment variables → Add a variable**:
+   - **Key:** `DATABASE_URL`
+   - **Value:** kopeeritud aadress
+   - märgi **Contains secret values**
+6. Tee uus deploy (**Deploys → Trigger deploy → Deploy project**).
 
-### Variant B: käsurealt (`netlify db init`)
+✅ **Kontroll:** ava `https://<sinu-sait>/admin`. Kui parool on juba seadistatud (peatükk 6), avaneb halduspaneel ilma andmebaasi veateateta. Neonis **Tables** vaates on pärast esimest päringut tabelid `orders`, `inventory` jt.
 
-Selleks on vaja arvutis Node.js-i ja repo koopiat (vt [Lisa A](#lisa-a-kohalik-arendus-arvutis)).
+> ⚠️ **Ainult Neon.** Pood kasutab Neoni HTTP-ühendust. Muu Postgresi teenuse (Supabase, oma server, Netlify Database) aadress **ei tööta** ilma koodi muutmata.
 
-```bash
-npx netlify login        # logi Netlifysse sisse (avab brauseri)
-npx netlify link         # seo repo kaust oma Netlify projektiga
-npx netlify db init      # loob andmebaasi ja seob selle projektiga
-```
-
-Vasta käsu küsimustele. Kui käsk pakub näidiskoodi või Drizzle'i seadistust, vasta **ei**, sest poe kood loob tabelid ise. Lõpuks seo andmebaas oma Neoni kontoga, kui seda pakutakse (vt variant A, samm 4).
-
-### Variant C: oma Neoni andmebaas (`DATABASE_URL`)
-
-1. Loo konto [neon.com](https://neon.com) lehel ja uus projekt. Vali Euroopa piirkond.
-2. Kopeeri projekti ühenduse aadress (*connection string*). See algab umbes nii: `postgresql://…neon.tech/…?sslmode=require`.
-3. Lisa Netlifysse keskkonnamuutuja **`DATABASE_URL`** selle väärtusega ja märgi see salajaseks (peatükk 5).
-
-> ⚠️ **Ainult Neon.** Pood kasutab Neoni kiiret HTTP-ühendust. Muu Postgresi teenuse (nt Supabase või oma server) aadress ilma arendaja abita **ei tööta**.
-
-### 4.1 Pärast andmebaasi lisamist
+### 4.2 Pärast andmebaasi lisamist
 
 1. Tee uus deploy: **Deploys → Trigger deploy → Deploy project**. Keskkonnamuutujad hakkavad tööle alles pärast uut deploy'd.
 2. Kontrolli hiljem peatükis 8, et testtellimus jõuab halduspaneeli.
@@ -331,18 +390,17 @@ Kõik salajased võtmed ja seaded on **Netlify keskkonnamuutujates**, mitte kood
 
 | Nimi | Kust saada | Kohustuslik? | Näide |
 |---|---|---|---|
-| `NETLIFY_DATABASE_URL` | Netlify DB lisab ise (peatükk 4) | **Jah** (või `DATABASE_URL`) | `postgresql://…neon.tech/…` |
-| `DATABASE_URL` | Oma Neoni projekt (peatükk 4, variant C) | Ainult siis, kui `NETLIFY_DATABASE_URL` puudub | `postgresql://kasutaja:parool@…neon.tech/neondb?sslmode=require` |
+| `DATABASE_URL` | Oma Neoni projekt (peatükk 4) | **Jah** | `postgresql://neondb_owner:…@…neon.tech/neondb?sslmode=require` |
 | `STRIPE_SECRET_KEY` | Stripe → API keys → Secret key (peatükk 7.3) | **Jah** | `sk_test_51…` (hiljem `sk_live_…`) |
 | `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks → sinu endpoint → Signing secret (peatükk 7.4) | **Jah** | `whsec_…` |
 | `ADMIN_PASSWORD_HASH` | `npm run admin:hash` (peatükk 6) | **Jah** (halduspaneeli jaoks) | `scrypt$…$…$…$…$…` |
 | `ADMIN_SESSION_SECRET` | `npm run admin:hash` prindib selle ka (peatükk 6) | **Jah** (halduspaneeli jaoks) | 64 juhuslikku märki |
 | `RESEND_API_KEY` | Resend → API Keys (peatükk 10) | Soovitatav (ilma selleta kirju pole) | `re_…` |
-| `MAIL_FROM` | Sinu kinnitatud domeeni aadress (peatükk 10) | Koos `RESEND_API_KEY`-ga | `ÄGE <tellimused@age.ee>` |
+| `MAIL_FROM` | Sinu kinnitatud domeeni aadress (peatükk 10) | Koos `RESEND_API_KEY`-ga | `ÄGE <tellimused@agemangud.ee>` |
 | `ADMIN_EMAIL` | Sinu enda e-post | Soovitatav (sinna tulevad teavitused) | `aarmiselt@gmail.com` |
 | `ENABLED_CARRIERS` | Sinu otsus (peatükk 11) | Ei (vaikimisi `omniva,smartpost`) | `omniva,smartpost` |
 | `DPD_LOCKERS_URL` | DPD või vahendaja (peatükk 11) | Ei | `https://…/lockers.json` |
-| `SITE_URL` | Sinu domeen | Ei (Netlify teab põhiaadressi ise) | `https://www.age.ee` |
+| `SITE_URL` | Sinu domeen | Ei (Netlify teab põhiaadressi ise) | `https://agemangud.ee` |
 
 **Netlifysse EI lisa:** `ADMIN_DEV_PASSWORD`, `MOCK_STRIPE`, `MOCK_MAIL`, `MOCK_LOCKERS`, `PGLITE_DIR`, `MAIL_DIR`. Need on ainult arvutis arendamiseks. Netlifys lülitab kood näidisrežiimid igal juhul välja.
 
@@ -522,32 +580,55 @@ Rohkem testkaarte: [docs.stripe.com/testing](https://docs.stripe.com/testing).
 
 ---
 
-## 9. Oma domeen
+## 9. Oma domeen: ostmine ja ühendamine
 
-### 9.1 Domeeni ostmine
+Oma domeen (nt `agemangud.ee`) on vajalik, et pood saaks kliendile kinnituskirju saata ja et sul oleks poe e-posti aadress. Kõige odavam ja lihtsam viis:
 
-1. Mõtle välja nimi ja kontrolli, kas see on vaba. `.ee` domeene müüvad akrediteeritud registripidajad, näiteks [zone.ee](https://www.zone.ee) ja [veebimajutus.ee](https://www.veebimajutus.ee). Täisnimekirja leiad [internet.ee](https://www.internet.ee) lehelt.
-2. Osta domeen. Kui ettevõte on olemas, registreeri see **ettevõtte nimele**.
+- **domeen** Eesti registripidajalt (umbes 8 € aastas);
+- **DNS** (domeeni „aadressiraamat“) tasuta **Cloudflare'is**. Siis saad samas kohas teha ka tasuta poe e-posti aadressi (peatükk 10).
 
-### 9.2 Domeeni lisamine Netlifysse
+### 9.1 Domeeni ostmine (umbes 8 € aastas)
 
-1. Netlifys: **Domain management → Add a domain**, kirjuta näiteks `age.ee` ja kinnita.
-2. Netlify küsib, kuidas DNS-i hallata.
+1. Mõtle välja nimi. Hea on lühike nimi ilma täpitähtedeta, nt `agemangud.ee` või `agepood.ee`.
+2. Ava mõne registripidaja leht, nt [zone.ee](https://www.zone.ee) (umbes 8,37 €/a) või [veebimajutus.ee](https://www.veebimajutus.ee) (umbes 7,95 €/a). Kõigi `.ee` registripidajate nimekiri on [internet.ee](https://www.internet.ee) lehel.
+3. Kirjuta nimi otsingusse. Kui see on vaba, lisa ostukorvi.
+4. **Ära osta lisateenuseid.** Veebimajutust, e-posti paketti ega „SSL-sertifikaati“ pole vaja: veebileht on Netlifys, e-post Cloudflare'is ja HTTPS on Netlifys tasuta.
+5. Registreeri domeen **enda nimele** (eraisikuna isikukoodiga). Registripidaja kontrollib su isikut ID-kaardi, Smart-ID või Mobiil-ID-ga või pangamaksega. Kui sul on hiljem OÜ, saab domeeni sellele üle kanda.
+6. Maksa. Domeen on tavaliselt kasutatav mõne minutiga.
 
-**Variant A: Netlify DNS (lihtsam).** Netlify näitab 4 nimeserverit. Registripidaja lehel asenda domeeni nimeserverid Netlify omadega. Muudatus võib jõuda kõikjale mõne minutiga, aga mõnikord kulub 24–48 tundi.
+> 💡 Pane kalendrisse meeldetuletus domeeni pikendamiseks (aasta pärast) või lülita registripidaja juures sisse **automaatne pikendamine**. Aegunud domeeniga pood ja e-post lakkavad töötamast.
 
-> ⚠️ Kui kasutad selle domeeniga e-posti (nt `info@age.ee`), vii pärast nimeserverite vahetust ka **MX-kirjed** Netlify DNS-i üle. Muidu lakkab e-post töötamast. Kui sa pole kindel, kasuta varianti B.
+### 9.2 DNS Cloudflare'i (tasuta)
 
-**Variant B: DNS jääb registripidaja juurde.** Lisa registripidaja DNS-i halduses kirjed, mida Netlify sulle näitab (tavaliselt `A`-kirje juurdomeenile ja `CNAME`-kirje `www` jaoks). **Kasuta alati neid väärtusi, mida Netlify sulle näitab.**
+1. Loo konto [dash.cloudflare.com](https://dash.cloudflare.com) lehel (paketti **Free**).
+2. Vajuta **Add a domain** (või *Add site*), kirjuta oma domeen (nt `agemangud.ee`) ja vali pakett **Free**.
+3. Cloudflare otsib olemasolevad kirjed. Uue domeeni puhul neid peaaegu pole, see on normaalne. Vajuta **Continue**.
+4. Cloudflare näitab **kahte nimeserverit**, näiteks `ada.ns.cloudflare.com` ja `bob.ns.cloudflare.com`. Kopeeri need.
+5. Mine registripidaja lehele (Zone/Veebimajutus) → sinu domeen → **Nimeserverid** (*Nameservers*, *DNS servers*). Vali „kasuta teisi nimeservereid“ ja asenda olemasolevad **kahe Cloudflare'i nimeserveriga**. Salvesta.
+6. Tagasi Cloudflare'is vajuta **Check nameservers**. Muudatus jõuab kohale tavaliselt mõne tunniga, mõnikord kuni 24 tunniga. Cloudflare saadab e-kirja, kui domeen on aktiivne.
 
-### 9.3 HTTPS
+### 9.3 Domeen Netlifysse ja HTTPS
 
-Kui DNS töötab, hangib Netlify tasuta sertifikaadi automaatselt. Seisu näed vaates **Domain management → HTTPS**.
+1. Netlifys ava oma projekt → **Domain management → Add a domain**. Kirjuta oma domeen (nt `agemangud.ee`) ja kinnita. Lisa ka `www`-versioon, kui Netlify seda pakub.
+2. Netlify näitab, milliseid DNS-kirjeid ta ootab („*Configure external DNS*“). Ära vali Netlify DNS-i (see on Cloudflare'is).
+3. Cloudflare'is: sinu domeen → **DNS → Records → Add record**. Lisa kaks kirjet:
+
+   | Type | Name | Target / Content | Proxy status |
+   |---|---|---|---|
+   | `CNAME` | `@` (juurdomeen) | `age-pood.netlify.app` (sinu Netlify aadress) | **DNS only** (hall pilv) |
+   | `CNAME` | `www` | `age-pood.netlify.app` | **DNS only** (hall pilv) |
+
+   - **Proxy status peab olema DNS only (hall pilv), mitte oranž.** Muidu ei saa Netlify HTTPS-sertifikaati teha.
+   - Kui Netlify näitab juurdomeeni jaoks hoopis `A`-kirjet (IP-aadressiga), kasuta seda: Type `A`, Name `@`, Content = Netlify näidatud IP.
+4. Netlifys **Domain management** vaates vali põhidomeeniks (*primary domain*) see, mida tahad kasutada (nt `www.agemangud.ee` või `agemangud.ee`). Teine suunatakse sinna ise.
+5. **HTTPS:** kui DNS töötab, hangib Netlify tasuta sertifikaadi ise (vaade **Domain management → HTTPS**, mõnikord kulub kuni tund). Kui ei hakka tööle, vajuta seal **Verify DNS configuration** ja kontrolli, et Cloudflare'is on hall pilv.
+
+✅ **Kontroll:** `https://agemangud.ee` (sinu domeen) avab poe ja aadressiribal on lukk.
 
 ### 9.4 Pärast domeeni käivitumist
 
-- [ ] **Stripe'i webhooki aadress uuele domeenile!** Netlify suunab `….netlify.app` aadressi põhidomeenile ja Stripe suunamisi ei järgi. Muuda testrežiimi (ja hiljem LIVE) endpointi URL-iks `https://www.age.ee/api/stripe-webhook` (oma domeeniga). Kui muudad olemasolevat endpointi, jääb saladus samaks. Kui lood uue, pane uus `whsec_…` Netlifysse.
-- [ ] `public/assets/js/site.js`: täida `url: 'https://www.age.ee'` (peatükk 16.5).
+- [ ] **Stripe'i webhooki aadress uuele domeenile!** Netlify suunab `….netlify.app` aadressi põhidomeenile ja Stripe suunamisi ei järgi. Muuda testrežiimi (ja hiljem LIVE) endpointi URL-iks `https://<sinu-domeen>/api/stripe-webhook` (nt `https://agemangud.ee/api/stripe-webhook`). Kasuta **täpselt põhidomeeni**: kui põhidomeen on `www`-ga, siis ka webhookis `www`-ga. Kui muudad olemasolevat endpointi, jääb saladus samaks. Kui lood uue, pane uus `whsec_…` Netlifysse.
+- [ ] `public/assets/js/site.js`: täida `url: 'https://agemangud.ee'` (oma põhidomeen, peatükk 16.5).
 - [ ] `public/sitemap.xml` ja `public/robots.txt`: asenda vana aadress uuega.
 - [ ] Stripe: **Settings → Business → Public details → Website** on uus aadress.
 - [ ] Tee Netlifys uus deploy ja üks testost (peatükk 8), et kinnitusleht avaneb uuel aadressil ja tellimus jõuab olekusse „Makstud“.
@@ -558,7 +639,32 @@ Kui DNS töötab, hangib Netlify tasuta sertifikaadi automaatselt. Seisu näed v
 
 ---
 
-## 10. E-kirjad: Resend
+## 10. E-post: poe aadress ja kirjad (Cloudflare + Resend)
+
+E-postiga on kaks eri asja:
+
+1. **Poe e-posti aadress** (nt `info@agemangud.ee`), kuhu kliendid kirjutavad. Odavaim viis: **Cloudflare Email Routing** suunab selle aadressi kirjad tasuta sinu tavalisse Gmaili. Eraldi postkasti pole vaja.
+2. **Automaatsed kirjad** (tellimuse kinnitus kliendile, teavitus sulle). Need saadab pood teenusega **Resend** (tasuta kuni 3000 kirja kuus).
+
+### 10.0 Poe e-posti aadress tasuta (Cloudflare Email Routing)
+
+Eeldus: domeeni DNS on Cloudflare'is (peatükk 9.2).
+
+1. Cloudflare'is ava oma domeen → **Email → Email Routing** → **Get started** / **Enable**.
+2. **Custom address:** kirjuta `info` (aadress tuleb `info@agemangud.ee`). **Destination:** sinu isiklik e-post (nt Gmail).
+3. Cloudflare saadab sinu Gmaili kinnituskirja. Ava see ja vajuta **Verify email address**.
+4. Cloudflare pakub lisada vajalikud DNS-kirjed (MX ja TXT). Vajuta **Add records and enable**.
+5. Proovi: saada mõnest teisest postkastist kiri aadressile `info@agemangud.ee`. See peab jõudma sinu Gmaili.
+
+Soovi korral lisa veel aadresse, nt `tellimused@…`. Kõik võivad suunata samasse Gmaili.
+
+**Vastamine poe aadressilt (valikuline).** Gmail lubab kirju saata ka `info@agemangud.ee` nimel. Kui Resend on seadistatud (10.1–10.2): Gmailis **Seaded → Kontod ja importimine → Saada kirju kui → Lisa teine e-posti aadress** → `info@agemangud.ee` → SMTP-server `smtp.resend.com`, port `465` (SSL), kasutajanimi `resend`, parool = Resendi API võti. Need kirjad lähevad Resendi tasuta kvoodi (3000 kuus) arvelt. Kui see ei õnnestu, vasta tavalisest Gmailist. Ka see on korras.
+
+**Pärast seda** pane poe aadress veebilehele: `public/assets/js/site.js` → `email: 'info@agemangud.ee'` (peatükk 16.5) ja Netlifysse `ADMIN_EMAIL` = sinu Gmail.
+
+> 💡 Teine tasuta variant on **Zoho Mail Free** (päris postkast, kuni 5 kasutajat). See on keerulisem seadistada ja seda pole vaja, kui Gmailist piisab.
+
+### 10.0.1 Automaatsed kirjad (Resend)
 
 Pood saadab kirju teenusega **Resend**:
 
@@ -575,7 +681,7 @@ Iga kiri saadetakse ainult üks kord, ka siis, kui Stripe sama teadet mitu korda
 
 1. Loo konto [resend.com](https://resend.com) lehel.
 2. Lisa Resendis oma domeen (jaotis **Domains**). Resend näitab mõned DNS-kirjed (tavaliselt `TXT` ja `MX`-kirjed allkirjade ja saatja kinnituse jaoks).
-3. Lisa **täpselt need kirjed** oma DNS-i: Netlify DNS-i kasutades Netlify domeeni DNS-kirjete alla, muidu registripidaja DNS-i halduses.
+3. Lisa **täpselt need kirjed** Cloudflare'is: domeen → **DNS → Records → Add record** (Type, Name ja Content täpselt nagu Resend näitab; Proxy status **DNS only**). Resendi kirjed on alamdomeenil (nt `send` ja `resend._domainkey`), seega ei sega need Cloudflare'i e-posti suunamist.
 4. Oota, kuni Resend näitab domeeni kinnitatuna (*Verified*). See võib võtta minuteid kuni tunde.
 
 Täpsed sammud: [resend.com/docs](https://resend.com/docs).
@@ -592,7 +698,7 @@ Lisa kolm muutujat (peatükk 5.1) ja tee uus deploy:
 | Nimi | Väärtus |
 |---|---|
 | `RESEND_API_KEY` | `re_…` (salajane) |
-| `MAIL_FROM` | `ÄGE <tellimused@age.ee>`. Aadress peab olema Resendis kinnitatud domeenil |
+| `MAIL_FROM` | `ÄGE <tellimused@agemangud.ee>`. Aadress peab olema Resendis kinnitatud domeenil |
 | `ADMIN_EMAIL` | Sinu e-post, kuhu tulevad teavitused uutest tellimustest ja taganemistest |
 
 ### 10.4 Mis juhtub, kui Resend pole seadistatud
@@ -624,6 +730,12 @@ Lisa kolm muutujat (peatükk 5.1) ja tee uus deploy:
 | **Vahendajad** (nt Montonio Shipping, Maksekeskus/MakeCommerce, Cargoson) | – | Üks liides mitmele vedajale (ühtne automaatide nimekiri ja sildid) | Leping vahendajaga |
 
 > ⚠️ Allikate kättesaadavust ei saanud arenduskeskkonnast kontrollida. **Kontrolli pärast avaldamist** (11.4).
+>
+> Posti teatas, et vana asukohateenuse API (v1–v3) suletakse 31.03.2026. Seega SmartPosti **varuallikas ei pruugi enam töötada** ja SmartPosti nimekiri sõltub aadressist `smartpost.ee/places.json`. Kui SmartPosti nimekiri ei lae:
+>
+> - kui leiad uue avaliku nimekirja aadressi, pane see Netlifysse muutujasse `SMARTPOST_LOCKERS_URL` (Omniva jaoks samamoodi `OMNIVA_LOCKERS_URL`) ja tee uus deploy;
+> - või jäta nii: klient saab SmartPosti automaadi nime kassas käsitsi kirjutada;
+> - või lülita SmartPost ajutiselt välja: `ENABLED_CARRIERS=omniva`.
 
 ### 11.3 `ENABLED_CARRIERS`: kuhu saab tellida
 
@@ -654,7 +766,7 @@ Lisa kolm muutujat (peatükk 5.1) ja tee uus deploy:
 ### 12.1 Enne aktiveerimist
 
 - [ ] Peatükk 8 on läbi tehtud ja kõik töötab.
-- [ ] Ettevõtte andmed on failis `public/assets/js/site.js` täidetud (nimi koos „OÜ“-ga, registrikood, e-post).
+- [ ] Müüja andmed on failis `public/assets/js/site.js` täidetud: nimi (ettevõtluskonto puhul sinu nimi, OÜ puhul nimi koos „OÜ“-ga ja registrikood), päris aadress ja e-post.
 - [ ] `/tingimused` ja `/privaatsus` on läbi loetud ja täiendatud. Peatükk 18 on läbi mõeldud.
 
 > 💡 Stripe vaatab aktiveerimisel ka sinu veebilehte. Seal peavad olema tooted koos hindadega, kontaktandmed, müügitingimused (sh taganemine) ja privaatsuspoliitika.
@@ -662,7 +774,7 @@ Lisa kolm muutujat (peatükk 5.1) ja tee uus deploy:
 ### 12.2 Stripe'i konto aktiveerimine
 
 1. Stripe'i töölaual alusta konto aktiveerimist (nupp nagu **Activate payments** või *Complete your profile*).
-2. Täida andmed: ettevõtte tüüp ja registrikood, esindaja andmed ja dokument, omanikud ja juhatuse liikmed, veebileht, tegevuse kirjeldus (nt *„Seltskonna- ja kaardimängude e-pood. Tarne Eesti pakiautomaatidesse.“*), pangakonto (IBAN) ja kaheastmeline sisselogimine.
+2. Täida andmed: müüja tüüp (eraisikust ettevõtja *individual / sole proprietor* või ettevõte koos registrikoodiga), isiku andmed ja dokument (OÜ puhul ka omanikud ja juhatuse liikmed), veebileht, tegevuse kirjeldus (nt *„Seltskonna- ja kaardimängude e-pood. Tarne Eesti pakiautomaatidesse.“*), pangakonto (IBAN) ja kaheastmeline sisselogimine.
 3. Oota kinnitust. Mõnikord küsib Stripe lisadokumente.
 
 ### 12.3 LIVE-võtmed ja LIVE-webhook
@@ -714,7 +826,7 @@ Testtellimused jäävad andmebaasi ja statistikasse. Kui tahad avada puhta leheg
 - [ ] E-kirjad jõuavad kliendile ja sulle.
 - [ ] `ENABLED_CARRIERS` vastab vedajatele, kellega saad päriselt pakke saata. Automaatide nimekiri laeb (11.4).
 - [ ] Netlify Formsis on vorm `soodus` (peatükk 15).
-- [ ] Müügitingimused, privaatsuspoliitika, registrikood ja tagastusaadress on korras (peatükk 18).
+- [ ] Müügitingimused, privaatsuspoliitika, müüja nimi ja aadress (registrikood, kui on) ning tagastusaadress on korras (peatükk 18).
 - [ ] Repo on privaatne (peatükk 18).
 - [ ] Sotsiaalmeedias on link poele. **Pood on avatud! 🎉**
 
@@ -849,6 +961,8 @@ Kui muudatus tehakse **eraldi harus** ja sellest luuakse GitHubis **Pull Request
 3. Ava link ja vaata poodi telefonis ja arvutis.
 4. Kui kõik on korras, vajuta GitHubis **Merge pull request**. Alles siis läheb muudatus päris poodi.
 
+> 💡 Eelvaated (*Deploy Previews*) on Netlify Free paketis tasuta. Krediiti (15) kulub alles siis, kui muudatus jõuab `main` harusse. Ühes PR-is võib olla ükskõik kui palju muudatusi.
+
 > ⚠️ **Eelvaates töötab ka kassa.** Eelvaade kasutab samu keskkonnamuutujaid, mis on lubatud *Deploy Previews* kontekstile, ja tõenäoliselt ka sama andmebaasi. Kui seal on LIVE-võti, oleks eelvaates tehtud ost **päris ost**. Eelvaates tehtud testtellimused ilmuvad ka halduspaneeli. Turvaline lahendus: pane *Deploy Previews* kontekstile Stripe'i **test**võti (peatükk 5.2) või ära tee eelvaates tellimusi.
 
 ### 14.2 Kohalik eelvaade arvutis (`npm run dev:mock`)
@@ -894,7 +1008,7 @@ Laadi Netlifyst CSV alla ja impordi see uudiskirjateenusesse. Kinnita importimis
 
 ---
 
-## 16. Sisu muutmine: hinnad, tekstid, pildid
+## 16. Sisu muutmine hiljem: hinnad, tekstid, pildid
 
 ### 16.1 Kuidas faili muuta (ilma programmeerimata)
 
@@ -906,6 +1020,8 @@ Laadi Netlifyst CSV alla ja impordi see uudiskirjateenusesse. Kinnita importimis
 4. Vajuta **Commit changes…**, kirjuta lühike kirjeldus (nt *„Muuda MIDA V!!!U hinda“*) ja kinnita.
 5. Netlify avaldab muudatuse umbes **1 minutiga** (**Deploys**: *Building* → *Published*).
 6. Värskenda poodi nii, et brauser vahemälu ei kasutaks: **Ctrl + Shift + R** (Mac: **Cmd + Shift + R**).
+
+> ⚠️ **Netlify Free krediit:** iga commit harusse `main` on üks avaldamine ja maksab **15 krediiti** (kuus on 300). Kui teed palju väikseid muudatusi, tee need **ühes harus** ja tõsta `main`-i korraga (peatükk 14.1). Eelvaated ei kuluta krediiti. Kasutust näed Netlifys: **Team settings → Billing → Usage**.
 
 **Turvalisem viis:** vali commitimisel *Create a new branch … and start a pull request*. Siis saad muudatust enne avaldamist eelvaates vaadata (peatükk 14.1).
 
@@ -962,7 +1078,7 @@ export const DISCOUNT_CODES = {
 - **Link, mis lisab koodi ise:** `https://<sinu-sait>/ostukorv?kood=AGE15`.
 - **Stripe'i kupongid** (nt `AGE15-263`) loob pood ise. **Ära neid muuda ega kustuta.**
 
-### 16.5 Ettevõtte ja kontaktandmed
+### 16.5 Müüja ja kontaktandmed
 
 Fail **`public/assets/js/site.js`**:
 
@@ -970,10 +1086,10 @@ Fail **`public/assets/js/site.js`**:
 |---|---|---|
 | `url` | Poe aadress | tühi (täida peatükis 9) |
 | `brand` | Brändi nimi | `ÄGE` |
-| `legalName` | Ettevõtte ametlik nimi | `Äärmiselt Geniaalne Ettevõtmine`. Lisa „OÜ“, kui OÜ on loodud |
-| `regCode` | Registrikood (jalus, tingimused) | **tühi, täida enne avamist** |
-| `address` | Aadress | `Tallinn, Eesti` |
-| `email` | Kontakt-e-post (jalus, kinnitusleht, vastused e-kirjadele) | `aarmiselt@gmail.com`. **Kontrolli, kas see on õige** |
+| `legalName` | Müüja nimi (jalus, tingimused, privaatsus) | `Äärmiselt Geniaalne Ettevõtmine`. **Ettevõtluskonto puhul kirjuta oma ees- ja perekonnanimi** (nt „Mari Maasikas (ÄGE)“), OÜ puhul nimi koos „OÜ“-ga |
+| `regCode` | Registrikood (jalus, tingimused) | tühi. Täida ainult siis, kui sul on OÜ või FIE. Tühjana rida ei kuvata |
+| `address` | Müüja aadress | `Tallinn, Eesti`. **Seadus nõuab päris aadressi** (tänav, maja, linn) |
+| `email` | Kontakt-e-post (jalus, kinnitusleht, vastused e-kirjadele) | `aarmiselt@gmail.com`. Pärast domeeni ostmist nt `info@agemangud.ee` (peatükk 10.0) |
 | `instagram`, `tiktok` + `…Handle` | Sotsiaalmeedia | `@ou.age` |
 | `pacdora3d` | 3D-mudeli link (peatükk 17) | Pacdora jagamislink |
 
@@ -1062,12 +1178,12 @@ Pood tunnistab nüüd **seadusjärgset 14-päevast taganemisõigust**. See on ki
 
 ### Ettevõtte andmed
 
-- [ ] **Ärinimi ja registrikood** on poes nähtaval: täida `legalName` ja `regCode` failis `public/assets/js/site.js` (peatükk 16.5). Failides `public/tingimused.html` ja `public/privaatsus.html` on kohad märgitud kommentaariga `TODO`.
+- [ ] **Müüja nimi ja aadress** on poes nähtaval: täida `legalName` (ettevõtluskonto puhul sinu ees- ja perekonnanimi, nt „Mari Maasikas (ÄGE)“), `address` (päris aadress) ja vajadusel `regCode` failis `public/assets/js/site.js` (peatükk 16.5). Failides `public/tingimused.html` ja `public/privaatsus.html` on kohad märgitud kommentaariga `TODO`.
 - [ ] Aadress ja kontakt-e-post on õiged.
 
 ### Isikuandmed (GDPR) ja privaatsuspoliitika
 
-- [ ] **Privaatsuspoliitika (`/privaatsus`)** loetleb kõik volitatud töötlejad: Netlify (majutus, vormid, serverifunktsioonid), Neon / Netlify DB (tellimuste andmebaas), Stripe (maksed), Resend (tehingukirjad), Omniva ja SmartPosti (tarne) ning hiljem uudiskirjateenus. Kontrolli, et nimekiri vastab sellele, mida päriselt kasutad.
+- [ ] **Privaatsuspoliitika (`/privaatsus`)** loetleb kõik volitatud töötlejad: Netlify (majutus, vormid, serverifunktsioonid), Neon (tellimuste andmebaas), Stripe (maksed), Resend (tehingukirjad), Omniva ja SmartPosti (tarne) ning hiljem uudiskirjateenus. Kontrolli, et nimekiri vastab sellele, mida päriselt kasutad.
 - [ ] **Säilitamine:** tellimuste andmed jäävad andmebaasi. Raamatupidamise algdokumente tuleb üldjuhul säilitada 7 aastat (küsi raamatupidajalt). Kirjuta privaatsuspoliitikasse, kui kaua andmeid hoiad.
 - [ ] Kinnituskirjas on link kinnituslehele salajase tunnusega (`/aitah?t=…`). Seda lehte otsingumootorid ei indekseeri ja link ei lähe kolmandatele osapooltele edasi.
 - [ ] Tellimuse andmeid (nimi, telefon, automaat) kasutad ainult tellimuse täitmiseks. Halduspaneeli parooli ei jaga kellegagi.
@@ -1102,7 +1218,7 @@ Pood tunnistab nüüd **seadusjärgset 14-päevast taganemisõigust**. See on ki
 | Mis juhtub | Tõenäoline põhjus | Lahendus |
 |---|---|---|
 | Kassas: *„Makse pole veel seadistatud. Võta meiega ühendust.“* | `STRIPE_SECRET_KEY` puudub, on vales vormingus (nt `pk_…`) või pärast lisamist pole uut deploy'd tehtud | Võti peab algama `sk_test_` või `sk_live_`. Tee uus deploy. Logi: `[checkout]` |
-| Kassas: *„Tellimuste vastuvõtt on hetkel ajutiselt peatatud …“* | Andmebaas puudub (`NETLIFY_DATABASE_URL` / `DATABASE_URL`) | Lisa Netlify DB (peatükk 4) ja tee uus deploy |
+| Kassas: *„Tellimuste vastuvõtt on hetkel ajutiselt peatatud …“* | Andmebaas puudub (`DATABASE_URL`) | Lisa Neoni andmebaas (peatükk 4) ja tee uus deploy |
 | Kassas: *„Tellimust ei õnnestunud salvestada …“* | Andmebaasi ühendus ebaõnnestus | Vaata logist `[checkout]`. Kontrolli Neoni konsoolis, et andmebaas on olemas ja aktiivne. Proovi mõne minuti pärast uuesti |
 | Kassas: *„Makset ei õnnestunud alustada …“* | Stripe lükkas päringu tagasi (võti tühistatud, LIVE-konto aktiveerimata, Stripe'i häire) | Logi `[checkout]`. Kontrolli Stripe'i kontot ja [status.stripe.com](https://status.stripe.com) |
 | Kassas: *„Selle vedajaga praegu tellida ei saa …“* | Vedaja pole `ENABLED_CARRIERS`-is | Nii on mõeldud (peatükk 11.3). Muuda `ENABLED_CARRIERS` ja tee uus deploy |
@@ -1241,7 +1357,8 @@ oh-mega-oof/
 |---|---|
 | Koodirepo | [github.com/christopherkingsepp/oh-mega-oof](https://github.com/christopherkingsepp/oh-mega-oof) |
 | Netlify töölaud | [app.netlify.com](https://app.netlify.com) |
-| Netlify dokumentatsioon (sh Netlify DB, keskkonnamuutujad) | [docs.netlify.com](https://docs.netlify.com) |
+| Netlify dokumentatsioon (keskkonnamuutujad, domeenid, krediidid) | [docs.netlify.com](https://docs.netlify.com) |
+| Neon (andmebaas) | [neon.com/docs](https://neon.com/docs) |
 | Neoni konsool | [console.neon.tech](https://console.neon.tech) |
 | Stripe'i töölaud | [dashboard.stripe.com](https://dashboard.stripe.com) |
 | Stripe'i webhookid | [docs.stripe.com/webhooks](https://docs.stripe.com/webhooks) |

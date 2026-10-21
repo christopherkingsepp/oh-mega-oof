@@ -20,10 +20,10 @@ body[data-product='oled-semu'] {
   --acc: #8b86ff;
   --acc-soft: #c9b8ff;
   --acc-rgb: 120, 118, 255;
-  --acc-2: #c56be0;
-  --theme-grad: linear-gradient(100deg, #2a63e0 0%, #8a6cf0 50%, #d77ae6 100%);
-  --blob-a: rgba(10, 75, 181, 0.62);
-  --blob-b: rgba(197, 107, 224, 0.5);
+  --acc-2: #cb6ce6;
+  --theme-grad: linear-gradient(100deg, #2a63e0 0%, #8a6cf0 50%, #cb6ce6 100%);
+  --blob-a: rgba(0, 74, 173, 0.62);
+  --blob-b: rgba(203, 108, 230, 0.5);
   --blob-c: rgba(255, 95, 180, 0.28);
 }
 body[data-product='vigur'] {

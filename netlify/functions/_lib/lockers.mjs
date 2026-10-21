@@ -237,13 +237,16 @@ export async function loadLockers(carrier, { fetchImpl, timeoutMs, env = {} } = 
     return { lockers, source };
   };
 
+  // Allika aadressi saab keskkonnamuutujaga üle kirjutada (kui vedaja muudab aadressi, pole koodi muutmist vaja).
+  const src = (name, key) => cleanText(env[name]) || SOURCES[key];
+
   if (carrier === 'omniva') {
-    return nonEmpty(normalizeOmniva(await fetchJson(SOURCES.omniva, opts)), 'omniva');
+    return nonEmpty(normalizeOmniva(await fetchJson(src('OMNIVA_LOCKERS_URL', 'omniva'), opts)), 'omniva');
   }
 
   if (carrier === 'smartpost') {
     try {
-      return nonEmpty(normalizeSmartpost(await fetchJson(SOURCES.smartpost, opts)), 'smartpost');
+      return nonEmpty(normalizeSmartpost(await fetchJson(src('SMARTPOST_LOCKERS_URL', 'smartpost'), opts)), 'smartpost');
     } catch (primaryErr) {
       try {
         return nonEmpty(normalizePosti(await fetchJson(SOURCES.smartpostFallback, opts)), 'posti');

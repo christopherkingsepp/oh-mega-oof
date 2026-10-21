@@ -40,7 +40,7 @@ const STAGE_HTML = `<!doctype html><html lang="et"><head><meta charset="utf-8">
 <style>
   html,body{margin:0;background:transparent}
   #stage{position:relative;overflow:hidden}
-  #stage.bg-semu{background:radial-gradient(90% 120% at 30% 20%,#b9a4ff 0%,#5a48c9 55%,#1b1452 100%)}
+  #stage.bg-semu{background:radial-gradient(70% 90% at 24% 22%,rgba(203,108,230,.55),transparent 62%),radial-gradient(60% 80% at 84% 82%,rgba(0,74,173,.75),transparent 62%),#0b0a2e}
   #stage.bg-vigur{background:radial-gradient(90% 120% at 30% 20%,#ff6fa6 0%,#d1124f 55%,#4a0620 100%)}
   #stage.bg-mida{background:radial-gradient(70% 90% at 22% 25%,rgba(255,47,168,.55),transparent 60%),radial-gradient(60% 80% at 85% 85%,rgba(255,47,168,.45),transparent 60%),#070006}
   #fit{position:absolute;left:0;top:0;transform-origin:0 0}
